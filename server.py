@@ -23,7 +23,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                     self.end_headers()
                     self.wfile.write(b"Username already taken")
                     return
-            users.add({
+            users.append({
                 'username': username,
                 'password': hashed_password,
                 'name': name
@@ -56,16 +56,11 @@ class RequestHandler(BaseHTTPRequestHandler):
                     self.end_headers()
                     self.wfile.write(json.dumps({"message": "User logged in", "session_token": token}).encode('utf-8'))
                     return
-                else:
-                    self.send_response(401)
-                    self.send_header("Content-type", "application/json")
-                    self.end_headers()
-                    self.wfile.write(b"Invalid credentials")
-                    return
             self.send_response(401)
             self.send_header("Content-type", "application/json")
             self.end_headers()
-            self.wfile.write(b"User not found")
+            self.wfile.write(b"Invalid credentials")
+            return
 
 
         elif self.path.startswith("/parking-lots"):
@@ -563,7 +558,16 @@ class RequestHandler(BaseHTTPRequestHandler):
             parking_lots = load_parking_lot_data()
             rid = self.path.replace("/reservations/", "")
             if rid:
-                if rid in reservations:
+                found = False 
+                listIndex = 0
+
+                for r in reservations:
+                    if r["id"] == rid:
+                        found = True
+                        listIndex = reservations.index(r)
+                        break
+
+                if found:
                     token = self.headers.get('Authorization')
                     if not token or not get_session(token):
                         self.send_response(401)
@@ -572,15 +576,15 @@ class RequestHandler(BaseHTTPRequestHandler):
                         self.wfile.write(b"Unauthorized: Invalid or missing session token")
                         return
                     session_user = get_session(token)
-                    if "ADMIN" == session_user.get('role') or session_user["username"] == reservations[rid].get("user"):
-                        del reservations[rid]
+                    if "ADMIN" == session_user.get('role') or session_user["username"] == reservations[listIndex].get("user"):
+                        del reservations[listIndex]
                     else:
                         self.send_response(403)
                         self.send_header("Content-type", "application/json")
                         self.end_headers()
                         self.wfile.write(b"Access denied")
                         return
-                    pid = reservations[rid]["parkinglot"]
+                    pid = reservations[listIndex]["parking_lot_id"]
                     parking_lots[pid]["reserved"] -= 1
                     save_reservation_data(reservations)
                     save_parking_lot_data(parking_lots)
