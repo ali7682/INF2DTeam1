@@ -678,56 +678,66 @@ class RequestHandler(BaseHTTPRequestHandler):
             lid = self.path.split("/")[2]
             parking_lots = load_parking_lot_data()
             token = self.headers.get('Authorization')
-            if lid:
-                if lid not in parking_lots:
-                    self.send_response(404)
+
+            if not lid:
+                self.send_response(200)
+                self.send_header("Content-type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps(parking_lots).encode("utf-8"))
+                return
+
+            if lid not in parking_lots:
+                self.send_response(404)
+                self.send_header("Content-type", "application/json")
+                self.end_headers()
+                self.wfile.write(b"Parking lot not found")
+                return
+            
+            if 'sessions' in self.path:
+                if not token or not get_session(token):
+                    self.send_response(401)
                     self.send_header("Content-type", "application/json")
                     self.end_headers()
-                    self.wfile.write(b"Parking lot not found")
+                    self.wfile.write(b"Unauthorized: Invalid or missing session token")
                     return
-                if 'sessions' in self.path:
-                    if not token or not get_session(token):
-                        self.send_response(401)
-                        self.send_header("Content-type", "application/json")
-                        self.end_headers()
-                        self.wfile.write(b"Unauthorized: Invalid or missing session token")
-                        return
-                    sessions = load_json(f'data/pdata/p{lid}-sessions.json')
-                    rsessions = []
-                    if self.path.endswith('/sessions'):
-                        if "ADMIN" == session_user.get('role'):
-                            rsessions = sessions
-                        else:
-                            for session in sessions:
-                                if session['user'] == session_user['username']:
-                                    rsessions.append(session)
-                        self.send_response(200)
-                        self.send_header("Content-type", "application/json")
-                        self.end_headers()
-                        self.wfile.write(json.dumps(rsessions).encode('utf-8'))  
+                
+                session_user = get_session(token)
+                sessions = load_json(f'data/pdata/p{lid}-sessions.json')
+                rsessions = []
+
+                if self.path.endswith('/sessions'):
+                    if "ADMIN" == session_user.get('role'):
+                        rsessions = sessions
                     else:
-                        sid = self.path.split("/")[-1]
-                        if not "ADMIN" == session_user.get('role') and not session_user["username"] == sessions[sid].get("user"):
-                            self.send_response(403)
-                            self.send_header("Content-type", "application/json")
-                            self.end_headers()
-                            self.wfile.write(b"Access denied")
-                            return
-                        self.send_response(200)
-                        self.send_header("Content-type", "application/json")
-                        self.end_headers()
-                        self.wfile.write(json.dumps(sessions[sid]).encode('utf-8'))
-                        return
-                else:
+                        for session in sessions:
+                            if session['user'] == session_user['username']:
+                                rsessions.append(session)
+
                     self.send_response(200)
                     self.send_header("Content-type", "application/json")
                     self.end_headers()
-                    self.wfile.write(json.dumps(parking_lots[lid]).encode('utf-8'))
+                    self.wfile.write(json.dumps(rsessions).encode('utf-8'))
                     return
+                else:
+                    sid = self.path.split("/")[-1]
+                    if not "ADMIN" == session_user.get('role') and not session_user["username"] == sessions[sid].get("user"):
+                        self.send_response(403)
+                        self.send_header("Content-type", "application/json")
+                        self.end_headers()
+                        self.wfile.write(b"Access denied")
+                        return
+
+                    self.send_response(200)
+                    self.send_header("Content-type", "application/json")
+                    self.end_headers()
+                    self.wfile.write(json.dumps(parking_lots[sid]).encode('utf-8'))
+                    return
+                
             self.send_response(200)
             self.send_header("Content-type", "application/json")
             self.end_headers()
-            self.wfile.write(json.dumps(parking_lots).encode('utf-8'))
+            self.wfile.write(json.dumps(parking_lots[lid].encode("utf-8")))
+            return
 
 
         elif self.path.startswith("/reservations/"):
