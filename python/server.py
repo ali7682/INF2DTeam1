@@ -615,7 +615,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 vehicles = load_json("data/vehicles.json")
                 uvehicles = vehicles.get(session_user["username"], {})
                 if lid not in uvehicles:
-                    self.send_response(403)
+                    self.send_response(404)
                     self.send_header("Content-type", "application/json")
                     self.end_headers()
                     self.wfile.write(b"Vehicle not found!")
