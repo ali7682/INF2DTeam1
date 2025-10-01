@@ -355,6 +355,11 @@ class RequestHandler(BaseHTTPRequestHandler):
                     self.end_headers()
                     self.wfile.write(b"Parking lot not found")
                     return
+            else:
+                self.send_response(400)
+                self.send_header("Content-type", "application/json")
+                self.end_headers()
+                self.wfile.write(b"Parking lot ID is required")
     
                 
         elif self.path == "/profile":
