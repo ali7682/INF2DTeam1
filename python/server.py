@@ -647,23 +647,26 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         elif self.path == "/logout":
             token = self.headers.get('Authorization')
-            if token and get_session(token):
-                remove_session(token)
-                self.send_response(200)
-                self.send_header("Content-type", "application/json")
-                self.end_headers()
-                self.wfile.write(b"User logged out")
-                return
-            if not token and not get_session(token):
+
+            if not token:
                 self.send_response(401)
                 self.send_header("Content-type", "application/json")
                 self.end_headers()
-                self.wfile.write(b"Unaothorized: Missing session token")
+                self.wfile.write(b"Unathorized: Missing session token")
                 return
-            self.send_response(400)
+
+            if not get_session(token):
+                self.send_response(401)
+                self.send_header("Content-type", "application/json")
+                self.end_headers()
+                self.wfile.write(b"Unatorized: Invalid session token")
+                return
+
+            remove_session(token)
+            self.send_response(200)
             self.send_header("Content-type", "application/json")
             self.end_headers()
-            self.wfile.write(b"Invalid session token")
+            self.wfile.write(b"User logged out")
 
 
         elif self.path.startswith("/parking-lots/"):
