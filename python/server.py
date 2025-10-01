@@ -372,6 +372,13 @@ class RequestHandler(BaseHTTPRequestHandler):
                 return
             session_user = get_session(token)
             data  = json.loads(self.rfile.read(int(self.headers.get("Content-Length", -1))))
+            oldPassword = data["oldPassword"]
+            if not oldPassword or hashlib.md5(oldPassword.encode()).hexdigest() != session_user["password"]:
+                self.send_response(401)
+                self.send_header("Content-type", "application/json")
+                self.end_headers()
+                self.wfile.write(b"Old credentials are incorrect")
+                return
             data["username"] = session_user["username"]
             if data["password"]:
                 data["password"] = hashlib.md5(data["password"].encode()).hexdigest()
