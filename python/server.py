@@ -492,7 +492,15 @@ class RequestHandler(BaseHTTPRequestHandler):
             payments = load_payment_data()
             session_user = get_session(token)
             data  = json.loads(self.rfile.read(int(self.headers.get("Content-Length", -1))))
-            payment = next(p for p in payments if p["transaction"] == pid)
+            payment = next((p for p in payments if p["transaction"] == pid), None)
+
+            if not payment:
+                self.send_response(401)
+                self.send_header("Content-type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps({"Unauthorized"}).encode("utf-8"))
+                return
+            
             if payment:
                 for field in ["t_data", "validation"]:
                     if not field in data:
