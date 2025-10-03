@@ -406,10 +406,12 @@ class RequestHandler(BaseHTTPRequestHandler):
             rid = self.path.replace("/reservations/", "")
             if rid:
                 found = False 
+                reservation = None
 
                 for r in reservations:
                     if r["id"] == rid:
                         found = True
+                        reservation = r
                         break
 
                 if found:
@@ -436,8 +438,15 @@ class RequestHandler(BaseHTTPRequestHandler):
                             self.wfile.write(json.dumps({"error": "Require field missing", "field": "user"}).encode("utf-8"))
                             return
                     else:
+                        if session_user["id"] != reservation.get("user_id"):
+                            self.send_response(403)
+                            self.send_header("Content-type", "application/json")
+                            self.end_headers()
+                            self.wfile.write(b"Access denied")
+                            return
+
                         data["user"] = session_user["username"]
-                    reservations[rid] = data
+                    reservation = data
                     save_reservation_data(reservations)
                     self.send_response(200)
                     self.send_header("Content-type", "application/json")
