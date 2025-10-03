@@ -638,7 +638,11 @@ class RequestHandler(BaseHTTPRequestHandler):
                     self.end_headers()
                     self.wfile.write(b"Reservation not found")
                     return
-                
+            else:
+                self.send_response(400)
+                self.send_header("Content-type", "application/json")
+                self.end_headers()
+                self.wfile.write(b"Reservation ID is required")
 
         elif self.path.startswith("/vehicles/"):
             lid = self.path.replace("/vehicles/", "")
