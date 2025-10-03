@@ -416,14 +416,14 @@ class RequestHandler(BaseHTTPRequestHandler):
                     session_user = get_session(token)
                     for field in ["licenseplate", "startdate", "enddate", "parkinglot"]:
                         if not field in data:
-                            self.send_response(401)
+                            self.send_response(400)
                             self.send_header("Content-type", "application/json")
                             self.end_headers()
                             self.wfile.write(json.dumps({"error": "Require field missing", "field": field}).encode("utf-8"))
                             return
                     if 'ADMIN' == session_user.get('role'):
                         if not "user" in data:
-                            self.send_response(401)
+                            self.send_response(400)
                             self.send_header("Content-type", "application/json")
                             self.end_headers()
                             self.wfile.write(json.dumps({"error": "Require field missing", "field": "user"}).encode("utf-8"))
