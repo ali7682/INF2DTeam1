@@ -405,7 +405,14 @@ class RequestHandler(BaseHTTPRequestHandler):
             reservations = load_reservation_data()
             rid = self.path.replace("/reservations/", "")
             if rid:
-                if rid in reservations:
+                found = False 
+
+                for r in reservations:
+                    if r["id"] == rid:
+                        found = True
+                        break
+
+                if found:
                     token = self.headers.get('Authorization')
                     if not token or not get_session(token):
                         self.send_response(401)
