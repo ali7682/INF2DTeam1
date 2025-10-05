@@ -782,7 +782,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             reservations = load_reservation_data()
             rid = self.path.replace("/reservations/", "")
             if rid:
-                if rid in reservations:
+                if any(r['id'] == rid for r in reservations):
                     token = self.headers.get('Authorization')
                     if not token or not get_session(token):
                         self.send_response(401)
@@ -801,7 +801,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                     self.send_response(200)
                     self.send_header("Content-type", "application/json")
                     self.end_headers()
-                    self.wfile.write(json.dumps(reservations[rid]).encode("utf-8"))
+                    self.wfile.write(json.dumps(reservations[int(rid) - 1]).encode("utf-8"))
                     return
                 else:
                     self.send_response(404)
