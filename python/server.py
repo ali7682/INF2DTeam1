@@ -756,20 +756,31 @@ class RequestHandler(BaseHTTPRequestHandler):
                     self.end_headers()
                     self.wfile.write(json.dumps(rsessions).encode('utf-8'))
                     return
+
                 else:
                     sid = self.path.split("/")[-1]
-                    if not "ADMIN" == session_user.get('role') and not session_user["username"] == sessions[sid].get("user"):
-                        self.send_response(403)
+                    if sid in parking_lots:
+                        if not "ADMIN" == session_user.get('role') and not session_user["username"] == sessions[sid].get("user"):
+                            self.send_response(403)
+                            self.send_header("Content-type", "application/json")
+                            self.end_headers()
+                            self.wfile.write(b"Access denied")
+                            return
+
+                        self.send_response(200)
                         self.send_header("Content-type", "application/json")
                         self.end_headers()
-                        self.wfile.write(b"Access denied")
+                        self.wfile.write(json.dumps(parking_lots[sid]).encode('utf-8'))
                         return
 
-                    self.send_response(200)
-                    self.send_header("Content-type", "application/json")
-                    self.end_headers()
-                    self.wfile.write(json.dumps(parking_lots[sid]).encode('utf-8'))
-                    return
+                    else:
+                        self.send_response(404)
+                        self.send_header("Content-type", "application/json")
+                        self.end_headers()
+                        self.wfile.write(b"Parking lot not found")
+                        return
+                
+                
                 
             self.send_response(200)
             self.send_header("Content-type", "application/json")
