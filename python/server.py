@@ -670,16 +670,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                     self.end_headers()
                     self.wfile.write(b"Vehicle not found!")
                     return
-
-                # uvehicles = vehicles.get(session_user["username"], {})
-                # if lid not in uvehicles:
-                #     self.send_response(404)
-                #     self.send_header("Content-type", "application/json")
-                #     self.end_headers()
-                #     self.wfile.write(b"Vehicle not found!")
-                #     return
                 
-                # del vehicles[session_user["username"]][lid]
                 vehicles.remove(vehicles_to_delete)
                 save_data("data/vehicles.json", vehicles)
 
