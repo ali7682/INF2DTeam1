@@ -654,17 +654,35 @@ class RequestHandler(BaseHTTPRequestHandler):
                     self.end_headers()
                     self.wfile.write(b"Unauthorized: Invalid or missing session token")
                     return
+                
                 session_user = get_session(token)
                 vehicles = load_json("data/vehicles.json")
-                uvehicles = vehicles.get(session_user["username"], {})
-                if lid not in uvehicles:
+
+                vehicles_to_delete = None
+                for i in vehicles:
+                    if i.get("id") == lid:
+                        vehicles_to_delete = i
+                        break
+
+                if not vehicles_to_delete:
                     self.send_response(404)
                     self.send_header("Content-type", "application/json")
                     self.end_headers()
                     self.wfile.write(b"Vehicle not found!")
                     return
-                del vehicles[session_user["username"]][lid]
+
+                # uvehicles = vehicles.get(session_user["username"], {})
+                # if lid not in uvehicles:
+                #     self.send_response(404)
+                #     self.send_header("Content-type", "application/json")
+                #     self.end_headers()
+                #     self.wfile.write(b"Vehicle not found!")
+                #     return
+                
+                # del vehicles[session_user["username"]][lid]
+                vehicles.remove(vehicles_to_delete)
                 save_data("data/vehicles.json", vehicles)
+
                 self.send_response(200)
                 self.send_header("Content-type", "application/json")
                 self.end_headers()
