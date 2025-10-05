@@ -6,10 +6,10 @@ import uuid
 
 def calculate_price(parkinglot, sid, data):
     price = 0
-    start = datetime.strptime(data["started"], "%d-%m-%Y %H:%M:%S")
+    start = datetime.strptime(data["started"], "%Y-%m-%dT%H:%M:%SZ")
 
     if data.get("stopped"):
-        end = datetime.strptime(data["stopped"], "%d-%m-%Y %H:%M:%S")
+        end = datetime.strptime(data["stopped"], "%Y-%m-%dT%H:%M:%SZ")
     else:
         end = datetime.now()
 
