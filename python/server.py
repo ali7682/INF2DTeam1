@@ -833,7 +833,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             payments = []
             session_user = get_session(token)
             for payment in load_payment_data():
-                if payment["username"] == session_user["username"]:
+                if payment["initiator"] == session_user["username"]:
                     payments.append(payment)
             self.send_response(200)
             self.send_header("Content-type", "application/json")
@@ -860,7 +860,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 self.wfile.write(b"Access denied")
                 return
             for payment in load_payment_data():
-                if payment["username"] == session_user["username"]:
+                if payment["initiator"] == user:
                     payments.append(payment)
             self.send_response(200)
             self.send_header("Content-type", "application/json")
