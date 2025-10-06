@@ -899,3 +899,8 @@ pyrightconfig.json
 # Additional files built by Visual Studio
 
 # End of https://www.toptal.com/developers/gitignore/api/python,csharp,dotnetcore,visualstudio,visualstudiocode,aspnetcore
+api-new/obj/api-new.csproj.nuget.dgspec.json
+api-new/obj/api-new.csproj.nuget.g.props
+api-new/obj/project.assets.json
+api-new/obj/project.nuget.cache
+INF2DTeam1.sln
