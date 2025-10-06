@@ -7,12 +7,12 @@ public class UserModel
     public string Email { get; set; }
     public string Phone { get; set; }
     public string Role { get; set; }
-    public string CreatedAt { get; set; }
-    public string BirthYear { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public int BirthYear { get; set; }
     public bool Active { get; set; }
 
     public UserModel(int id, string username, string password, string name, string email,
-    string phone, string role, string createdAt, string birthYear, int active)
+    string phone, string role, DateTime createdAt, int birthYear, int active)
     {
         ID = id;
         UserName = username;
