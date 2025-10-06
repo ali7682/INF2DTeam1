@@ -6,18 +6,18 @@ public class PaymentModel
 
     public string Initiator { get; set; }
 
-    public string Created_At { get; set; }
+    public string Created_at { get; set; }
     
     public string Completed { get; set; }
 
     public string Hash { get; set; }
 
-    public PaymentModel(string transactionId, double amount, string initiator, string created_At, string completed, string hash)
+    public PaymentModel(string transactionId, double amount, string initiator, string created_at, string completed, string hash)
     {
         TransactionId = transactionId;
         Amount = amount;
         Initiator = initiator;
-        Created_At = created_At;
+        Created_at = created_at;
         Completed = completed;
         Hash = hash;
     }
