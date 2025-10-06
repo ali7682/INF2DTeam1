@@ -27,6 +27,4 @@ public class VehicleModel
         Year = year;
         CreatedAt = createdAt;
     }
-    
-    public VehicleModel() { }
 }
