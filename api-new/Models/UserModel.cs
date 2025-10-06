@@ -6,13 +6,13 @@ public class UserModel
     public string Name { get; set; }
     public string Email { get; set; }
     public string Phone { get; set; }
-    public string Role { get; set; }
+    public Enum Role { get; set; }
     public DateTime CreatedAt { get; set; }
     public int BirthYear { get; set; }
     public bool Active { get; set; }
 
     public UserModel(int id, string username, string password, string name, string email,
-    string phone, string role, DateTime createdAt, int birthYear, int active)
+    string phone, Enum role, DateTime createdAt, int birthYear, int active)
     {
         ID = id;
         UserName = username;
