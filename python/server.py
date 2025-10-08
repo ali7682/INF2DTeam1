@@ -873,12 +873,14 @@ class RequestHandler(BaseHTTPRequestHandler):
                 return
             data = []
             session_user = get_session(token)
+            payments = sc.load_payment_data()
             for pid, parkinglot in load_parking_lot_data().items():
-                for sid, session in load_json(f'data/pdata/p{pid}-sessions.json').items():
-                    if session["user"] == session_user["username"]:
+                sessions = load_json(f'data/pdata/p{pid}-sessions.json')
+                for sid, session in sessions.items():
+                    if session["user"] == user:
                         amount, hours, days = sc.calculate_price(parkinglot, sid, session)
                         transaction = sc.generate_payment_hash(sid, session)
-                        payed = sc.check_payment_amount(transaction)
+                        payed = sum(p["amount"] for p in payments if p["transaction"] == transaction)
                         data.append({
                             "session": {k: v for k, v in session.items() if k in ["licenseplate", "started", "stopped"]} | {"hours": hours, "days": days},
                             "parking": {k: v for k, v in parkinglot.items() if k in ["name", "location", "tariff", "daytariff"]},
@@ -911,12 +913,14 @@ class RequestHandler(BaseHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(b"Access denied")
                 return
+            payments = sc.load_payment_data()
             for pid, parkinglot in load_parking_lot_data().items():
-                for sid, session in load_json(f'data/pdata/p{pid}-sessions.json').items():
+                sessions = load_json(f'data/pdata/p{pid}-sessions.json')
+                for sid, session in sessions.items():
                     if session["user"] == user:
                         amount, hours, days = sc.calculate_price(parkinglot, sid, session)
                         transaction = sc.generate_payment_hash(sid, session)
-                        payed = sc.check_payment_amount(transaction)
+                        payed = sum(p["amount"] for p in payments if p["transaction"] == transaction)
                         data.append({
                             "session": {k: v for k, v in session.items() if k in ["licenseplate", "started", "stopped"]} | {"hours": hours, "days": days},
                             "parking": {k: v for k, v in parkinglot.items() if k in ["name", "location", "tariff", "daytariff"]},
