@@ -8,6 +8,8 @@ builder.Services.AddControllers();
 
 var app = builder.Build();
 
+UserAccess.SetConfig(builder.Configuration);
+
 // Configure the HTTP request pipeline.
 
 app.UseAuthorization();
