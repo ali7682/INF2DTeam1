@@ -9,17 +9,4 @@ public class ParkinglotModel
     public decimal Tariff { get; set; }
     public decimal DayTariff { get; set; }
     public DateTime CreatedAt { get; set; }
-
-    public ParkinglotModel(int id, string name, string location, string address, int capacity, int reserved, decimal tariff, decimal dayTariff, DateTime createdAt)
-    {
-        ID = id;
-        Name = name;
-        Location = location;
-        Address = address;
-        Capacity = capacity;
-        Reserved = reserved;
-        Tariff = tariff;
-        DayTariff = dayTariff;
-        CreatedAt = createdAt;
-    }
 }

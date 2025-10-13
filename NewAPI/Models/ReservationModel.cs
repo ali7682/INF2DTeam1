@@ -9,17 +9,4 @@ public class ReservationModel
     public Enum? Status { get; set; }
     public DateTime CreatedAt { get; set; }
     public decimal Cost { get; set; }
-
-    public ReservationModel(int id, int userID, int parkinglotID, int vehicleID, DateTime startTime, DateTime endTime, Enum status, DateTime createdAt, decimal cost)
-    {
-        ID = id;
-        UserID = userID;
-        ParkinglotID = parkinglotID;
-        VehicleID = vehicleID;
-        StartTime = startTime;
-        EndTime = endTime;
-        Status = status;
-        CreatedAt = createdAt;
-        Cost = cost;
-    }
 }
