@@ -10,4 +10,12 @@ public sealed class UserModel
     public DateTime? CreatedAt { get; set; }
     public short? BirthYear { get; set; }
     public bool Active { get; set; }
+    public bool IsAdmin()
+    {
+        return Role == "ADMIN";
+    }
+    public bool Update()
+    {
+        return UserAccess.UpdateUser(this);
+    }
 }
