@@ -19,6 +19,11 @@ public class LoginResponse
     }
 }
 
+public class ChangeProfileRequest
+{
+    public string Username { get; set; }
+}
+
 public class RegisterRequest
 {
     public string SessionToken { get; set; }
@@ -79,6 +84,38 @@ namespace NewAPI.Controllers
             SessionManager.RemoveSession(sessionToken);
 
             return Ok(new { message = "User logged out successfully" });
+        }
+
+        [HttpPut("Profile")]
+        public IActionResult Profile([FromBody] ChangeProfileRequest body)
+        {
+            string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
+            UserModel? user = SessionManager.GetSession(sessionToken);
+
+            if (sessionToken == null || user == null)
+            {
+                return Unauthorized("Unauthorized: Invalid or missing session token");
+            }
+
+            user.Username = body.Username;
+
+            user.Update();
+
+            return user.Update() ? Ok("Ok: Changed username") : NotFound("NotFound: No rows were changed");
+        }
+
+        [HttpGet("Profile")]
+        public IActionResult Profile()
+        {
+            string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
+            UserModel? user = SessionManager.GetSession(sessionToken);
+
+            if (sessionToken == null || user == null)
+            {
+                return Unauthorized("Unauthorized: Invalid or missing session token");
+            }
+
+            return Ok(user);
         }
     }
 }

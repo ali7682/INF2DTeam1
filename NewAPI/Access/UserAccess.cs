@@ -81,4 +81,40 @@ public static class UserAccess
 
         return conn.Query<UserModel>(sql, new { userName }).First();
     }
+
+    public static bool UpdateUser(UserModel user)
+    {
+        string cs = _config.GetConnectionString("DefaultConnection")!;
+        using MySqlConnection conn = new(cs);
+        conn.Open();
+
+        const string sql = """
+            UPDATE users
+            SET
+                username   = @Username,
+                password   = @Password,
+                name       = @Name,
+                email      = @Email,
+                phone      = @Phone,
+                role       = @Role,
+                birth_year = @BirthYear,
+                active     = @Active
+            WHERE id = @Id;
+        """;
+
+        int affectedRows = conn.Execute(sql, new
+        {
+            user.Id,
+            user.Username,
+            user.Password,
+            user.Name,
+            user.Email,
+            user.Phone,
+            user.Role,
+            user.BirthYear,
+            user.Active
+        });
+
+        return affectedRows > 0;
+    }
 }
