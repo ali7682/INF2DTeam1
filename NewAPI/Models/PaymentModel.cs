@@ -1,6 +1,6 @@
 public sealed class PaymentModel
 {
-    public readonly int TransactionId { get; set; }
+    public int TransactionId { get; init; }
     public double? Amount { get; set; }
     public string? Initiator { get; set; }
     public DateTime? Created_at { get; set; }
