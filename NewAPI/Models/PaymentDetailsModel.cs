@@ -1,7 +1,7 @@
 public sealed class PaymentDetailModel
 {
-    public readonly int Id { get; set; }
-    public readonly int TransactionId { get; set; }
+    public int Id { get; init; }
+    public int TransactionId { get; init; }
     public double? Amount { get; set; }
     public DateTime? Date { get; set; }
     public string? Method { get; set; }
