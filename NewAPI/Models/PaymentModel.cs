@@ -6,4 +6,5 @@ public sealed class PaymentModel
     public DateTime? Created_at { get; set; }
     public DateTime? Completed { get; set; }
     public string? Hash { get; set; }
+    public PaymentDetailModel? t_data { get; set; }
 }
