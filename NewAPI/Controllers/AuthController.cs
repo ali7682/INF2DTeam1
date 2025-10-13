@@ -62,10 +62,20 @@ namespace NewAPI.Controllers
             if (body is null || string.IsNullOrWhiteSpace(body.Username) || string.IsNullOrWhiteSpace(body.Password))
                 return BadRequest(new { error = "Missing user data" });
 
-            body.CreatedAt = DateTime.UtcNow;
-            body.Active = true;
+            UserModel newUser = new UserModel
+            {
+                Username = body.Username,
+                Password = body.Password,
+                Name = body.Name,
+                Email = body.Email,
+                Phone = body.Phone,
+                Role = body.Role,
+                CreatedAt = DateTime.UtcNow,
+                BirthYear = body.BirthYear,
+                Active = true,
+            };
 
-            int newUserId = UserAccess.CreateUser(body);
+            int newUserId = UserAccess.CreateUser(newUser);
 
             return Ok(new { message = $"User created successfully with ID {newUserId}" });
         }
