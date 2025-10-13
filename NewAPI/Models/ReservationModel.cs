@@ -1,9 +1,9 @@
 public class ReservationModel
 {
-    public readonly int ID { get; set; }
-    public readonly int UserID { get; set; }
-    public readonly int ParkinglotID { get; set; }
-    public readonly int VehicleID { get; set; }
+    public int ID { get; init; }
+    public int UserID { get; init; }
+    public int ParkinglotID { get; init; }
+    public int VehicleID { get; init; }
     public DateTime StartTime { get; set; }
     public DateTime EndTime { get; set; }
     public Enum? Status { get; set; }

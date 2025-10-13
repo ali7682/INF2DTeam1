@@ -1,6 +1,6 @@
 public class ParkinglotModel
 {
-    public readonly int ID { get; set; }
+    public int ID { get; init; }
     public string? Name { get; set; }
     public string? Location { get; set; }
     public string? Address { get; set; }
