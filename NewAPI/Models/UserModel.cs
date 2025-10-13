@@ -18,4 +18,9 @@ public sealed class UserModel
     {
         return UserAccess.UpdateUser(this);
     }
+
+    public UserModel()
+    {
+        CreatedAt = DateTime.UtcNow;
+    }
 }
