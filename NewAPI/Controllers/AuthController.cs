@@ -73,12 +73,12 @@ namespace NewAPI.Controllers
         [HttpGet("Logout")]
         public IActionResult Logout([FromBody] RegisterRequest body)
         {
-            string sessionToken = body.SessionToken;
+            string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
 
             if (sessionToken == null || sessionToken == string.Empty)
                 return Unauthorized(new { message = "Unauthorized: Missing session token" });
 
-            if (SessionManager.GetSession(sessionToken) == null)
+            if (!SessionManager.DoesSessionExist(sessionToken))
                 return Unauthorized(new { message = "Unauthorized: Invalid session token" });
 
             SessionManager.RemoveSession(sessionToken);
