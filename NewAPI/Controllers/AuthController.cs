@@ -62,7 +62,7 @@ namespace NewAPI.Controllers
             if (body is null || string.IsNullOrWhiteSpace(body.Username) || string.IsNullOrWhiteSpace(body.Password))
                 return BadRequest(new { error = "Missing user data" });
 
-            UserModel newUser = new UserModel
+            UserModel newUser = new()
             {
                 Username = body.Username,
                 Password = body.Password,
