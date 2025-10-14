@@ -35,7 +35,7 @@ public static class ReservationAccess
         return conn.Query<ReservationModel>(sql, new { reservationId }).First();
     }
 
-    public static List<ReservationModel> GetReservationsByVehicleId(int vehicleId, string status)
+    public static List<ReservationModel> GetReservationsByVehicleId(int vehicleId, string status = "")
     {
         string cs = _config.GetConnectionString("DefaultConnection")!;
         using MySqlConnection conn = new(cs);
@@ -62,7 +62,7 @@ public static class ReservationAccess
         return conn.Query<ReservationModel>(sql, new { vehicleId }).ToList();
     }
 
-    public static List<ReservationModel> GetReservationsByUserId(int userId, string status)
+    public static List<ReservationModel> GetReservationsByUserId(int userId, string status = "")
     {
         string cs = _config.GetConnectionString("DefaultConnection")!;
         using MySqlConnection conn = new(cs);
@@ -89,7 +89,7 @@ public static class ReservationAccess
         return conn.Query<ReservationModel>(sql, new { userId }).ToList();
     }
 
-    public static List<ReservationModel> GetReservationsByParkingLotId(int parkingLotId, string status)
+    public static List<ReservationModel> GetReservationsByParkingLotId(int parkingLotId, string status = "")
     {
         string cs = _config.GetConnectionString("DefaultConnection")!;
         using MySqlConnection conn = new(cs);
