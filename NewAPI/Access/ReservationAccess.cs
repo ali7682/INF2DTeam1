@@ -35,13 +35,13 @@ public static class ReservationAccess
         return conn.Query<ReservationModel>(sql, new { reservationId }).First();
     }
 
-    public static List<ReservationModel> GetReservationsByVehicleId(int vehicleId)
+    public static List<ReservationModel> GetReservationsByVehicleId(int vehicleId, string status)
     {
         string cs = _config.GetConnectionString("DefaultConnection")!;
         using MySqlConnection conn = new(cs);
         conn.Open();
 
-        const string sql = """
+        string sql = """
             SELECT 
                 id              AS Id,
                 user_id         AS UserId,
@@ -56,16 +56,19 @@ public static class ReservationAccess
             WHERE vehicle_id = @vehicleId;
         """;
 
+        if (status != null && status != "")
+            sql += " AND status = @status";
+
         return conn.Query<ReservationModel>(sql, new { vehicleId }).ToList();
     }
 
-    public static List<ReservationModel> GetReservationsByUserId(int userId)
+    public static List<ReservationModel> GetReservationsByUserId(int userId, string status)
     {
         string cs = _config.GetConnectionString("DefaultConnection")!;
         using MySqlConnection conn = new(cs);
         conn.Open();
 
-        const string sql = """
+        string sql = """
             SELECT 
                 id              AS Id,
                 user_id         AS UserId,
@@ -80,16 +83,19 @@ public static class ReservationAccess
             WHERE user_id = @userId;
         """;
 
+        if (status != null && status != "")
+            sql += " AND status = @status";
+
         return conn.Query<ReservationModel>(sql, new { userId }).ToList();
     }
 
-    public static List<ReservationModel> GetReservationsByParkingLotId(int parkingLotId)
+    public static List<ReservationModel> GetReservationsByParkingLotId(int parkingLotId, string status)
     {
         string cs = _config.GetConnectionString("DefaultConnection")!;
         using MySqlConnection conn = new(cs);
         conn.Open();
 
-        const string sql = """
+        string sql = """
             SELECT 
                 id              AS Id,
                 user_id         AS UserId,
@@ -103,6 +109,9 @@ public static class ReservationAccess
             FROM reservations
             WHERE parking_lot_id = @parkingLotId;
         """;
+
+        if (status != null && status != "")
+            sql += " AND status = @status";
 
         return conn.Query<ReservationModel>(sql, new { parkingLotId }).ToList();
     }
