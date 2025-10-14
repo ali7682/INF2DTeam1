@@ -22,4 +22,9 @@
 
         return null;
     }
+
+    public static bool DoesSessionExist(string token)
+    {
+        return Sessions.ContainsKey(token);
+    }
 }
