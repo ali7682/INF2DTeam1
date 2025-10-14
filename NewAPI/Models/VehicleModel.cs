@@ -11,4 +11,9 @@ public class VehicleModel
     public string? Model { get; set; }
     public string? Color { get; set; }
     public int Year { get; set; }
+
+    public bool Update()
+    {
+        return VehicleAccess.UpdateVehicle(this);
+    }
 }
