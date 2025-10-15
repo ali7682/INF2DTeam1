@@ -187,4 +187,46 @@ public class VehiclesController : ControllerBase
 
         return Ok(ReservationAccess.GetReservationsByVehicleId(vId, "confirmed"));
     }
+
+    [HttpPut("{vId:int}")]
+    public IActionResult PutVehicle(int vId, [FromBody] VehicleModel updatedVehicle)
+    {
+        if (updatedVehicle == null)
+        {
+            return BadRequest("Invalid vehicle data");
+        }
+
+        var authHeader = HttpContext.Request.Headers.Authorization.FirstOrDefault();
+        if (string.IsNullOrEmpty(authHeader))
+        {
+            return Unauthorized("Unauthorized: Missing session token");
+        }
+
+        UserModel? user = SessionManager.GetSession(authHeader);
+        if (user == null)
+        {
+            return Unauthorized("Unauthorized: Invalid session token");
+        }
+
+        if (!user.IsAdmin())
+        {
+            return StatusCode(403, new { message = "Forbidden: You do not have access to this vehicle" });
+        }
+
+        VehicleModel? vehicle = VehicleAccess.GetVehicleById(vId);
+        if (vehicle == null)
+        {
+            return NotFound($"Vehicle with ID {vId} not found");
+        }
+
+        // Update vehicle data
+        vehicle.Make = updatedVehicle.Make;
+        vehicle.Model = updatedVehicle.Model;
+        vehicle.Year = updatedVehicle.Year;
+        vehicle.Color = updatedVehicle.Color;
+
+        VehicleAccess.UpdateVehicle(vehicle);
+
+        return Ok(new { message = "Vehicle updated successfully", vehicle });
+    }
 }
