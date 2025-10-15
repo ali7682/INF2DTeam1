@@ -98,12 +98,13 @@ public static class VehicleAccess
 
         int affectedRows = conn.Execute(sql, new
         {
-            model.ID,
+            model.UserID,
             model.LicensePlate,
             model.Make,
             model.Model,
             model.Color,
-            model.Year
+            model.Year,
+            model.ID
         });
 
         return affectedRows > 0;
