@@ -8,6 +8,7 @@ var app = builder.Build();
 
 UserAccess.SetConfig(builder.Configuration);
 VehicleAccess.SetConfig(builder.Configuration);
+ReservationAccess.SetConfig(builder.Configuration);
 
 // Configure the HTTP request pipeline.
 
