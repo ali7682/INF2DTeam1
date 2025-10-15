@@ -24,7 +24,8 @@ public class VehiclesController : ControllerBase
 
         if (!(user.Id == vehicle.UserID))
         {
-            return Forbid("Forbidden: You do not have access to this vehicle");
+            //return Forbid("Forbidden: You do not have access to this vehicle");
+            return StatusCode(403, new { message = "Forbidden: You do not have access to this vehicle" });
         }
 
         return Ok(vehicle);
@@ -43,7 +44,8 @@ public class VehiclesController : ControllerBase
 
         if (!user.IsAdmin())
         {
-            return Forbid("Forbidden: You do not have access to this vehicle");
+            //return Forbid("Forbidden: You do not have access to this vehicle");
+            return StatusCode(403, new { message = "Forbidden: You do not have access to this vehicle" });
         }
 
         UserModel? requestedUser = UserAccess.GetUserByUsername(userName);
@@ -83,7 +85,8 @@ public class VehiclesController : ControllerBase
 
         if (!(user.Id == vehicle.UserID))
         {
-            return Forbid("Forbidden: You do not have access to this vehicle\'s reservations");
+            //return Forbid("Forbidden: You do not have access to this vehicle\'s reservations");
+            return StatusCode(403, new { message = "Forbidden: You do not have access to this vehicle\'s reservations" });
         }
 
         return Ok(ReservationAccess.GetReservationsByVehicleId(vId));
@@ -102,7 +105,8 @@ public class VehiclesController : ControllerBase
 
         if (!user.IsAdmin())
         {
-            return Forbid("Forbidden: You do not have access to this vehicle\'s reservations");
+            //return Forbid("Forbidden: You do not have access to this vehicle\'s reservations");
+            return StatusCode(403, new { message = "Forbidden: You do not have access to this vehicle\'s reservations" });
         }
 
         UserModel? requestedUser = UserAccess.GetUserByUsername(userName);
@@ -142,7 +146,8 @@ public class VehiclesController : ControllerBase
 
         if (!(user.Id == vehicle.UserID))
         {
-            return Forbid("Forbidden: You do not have access to this vehicle\'s history");
+            //return Forbid("Forbidden: You do not have access to this vehicle\'s history");
+            return StatusCode(403, new { message = "Forbidden: You do not have access to this vehicle\'s reservations" });
         }
 
         return Ok(ReservationAccess.GetReservationsByVehicleId(vId, "completed"));
@@ -162,7 +167,8 @@ public class VehiclesController : ControllerBase
 
         if (!user.IsAdmin())
         {
-            return Forbid("Forbidden: You do not have access to this vehicle\'s history");
+            //return Forbid("Forbidden: You do not have access to this vehicle\'s history");
+            return StatusCode(403, new { message = "Forbidden: You do not have access to this vehicle\'s history" });
         }
 
         UserModel? requestedUser = UserAccess.GetUserByUsername(userName);
