@@ -5,19 +5,25 @@ namespace NewAPITests
     [TestClass]
     public class SessionManagerTest
     {
-        const string token = "d5cadeb43f2244bb8a337e973b3d82ce";
-
         [TestMethod]
         public void TestAddSession()
         {
+            string token = Guid.NewGuid().ToString("N");
+
             SessionManager.AddSession(token, new UserModel { Id = 1 });
 
             Assert.IsTrue(SessionManager.Sessions.ContainsKey(token));
+
+            // Clean up 
+
+            SessionManager.Sessions.Remove(token);
         }
 
         [TestMethod]
         public void TestRemoveSession()
         {
+            string token = Guid.NewGuid().ToString("N");
+
             SessionManager.AddSession(token, new UserModel { Id = 1 });
 
             bool removed = SessionManager.RemoveSession(token);
@@ -29,6 +35,8 @@ namespace NewAPITests
         [TestMethod]
         public void TestGetSession()
         {
+            string token = Guid.NewGuid().ToString("N");
+
             SessionManager.AddSession(token, new UserModel { Id = 1 });
 
             UserModel? user = SessionManager.GetSession(token);
@@ -40,6 +48,8 @@ namespace NewAPITests
         [TestMethod]
         public void TestDoesSessionExist()
         {
+            string token = Guid.NewGuid().ToString("N");
+
             SessionManager.AddSession(token, new UserModel { Id = 1 });
 
             bool exists = SessionManager.DoesSessionExist(token);
