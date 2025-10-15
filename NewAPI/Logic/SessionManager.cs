@@ -1,4 +1,4 @@
-﻿static class SessionManager
+﻿public static class SessionManager
 {
     public static Dictionary<string, UserModel> Sessions = new();
 
@@ -23,6 +23,7 @@
         return null;
     }
 
+    // AuthController gebruikte 'DoesSessionExist', maar hij bestond niet (gaf een error)
     public static bool DoesSessionExist(string token)
     {
         return Sessions.ContainsKey(token);
