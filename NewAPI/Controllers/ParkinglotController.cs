@@ -19,7 +19,7 @@ namespace NewAPI.Controllers
         public IActionResult DeleteParkingLot(int lid)
         {
             string token = HttpContext.Request.Headers.Authorization.ToString();
-            var sessionUser = SessionManager.GetSession(token);
+            UserModel? sessionUser = SessionManager.GetSession(token);
 
             if (string.IsNullOrEmpty(token) || sessionUser == null)
                 return Unauthorized(new { message = "Unauthorized: Invalid or missing session token" });
@@ -41,7 +41,7 @@ namespace NewAPI.Controllers
         public IActionResult DeleteParkingSession(int lid, int sid)
         {
             string token = HttpContext.Request.Headers.Authorization.ToString();
-            var sessionUser = SessionManager.GetSession(token);
+            UserModel? sessionUser = SessionManager.GetSession(token);
 
             if (string.IsNullOrEmpty(token) || sessionUser == null)
                 return Unauthorized(new { message = "Unauthorized: Invalid or missing session token" });
