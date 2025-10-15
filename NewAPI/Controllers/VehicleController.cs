@@ -150,7 +150,7 @@ public class VehiclesController : ControllerBase
             return StatusCode(403, new { message = "Forbidden: You do not have access to this vehicle\'s reservations" });
         }
 
-        return Ok(ReservationAccess.GetReservationsByVehicleId(vId, "completed"));
+        return Ok(ReservationAccess.GetReservationsByVehicleId(vId, "confirmed"));
     }
 
     [HttpGet("{userName}/{vId:int}/history")]
@@ -185,6 +185,6 @@ public class VehiclesController : ControllerBase
             return NotFound("NotFound: Vehicle not found");
         }
 
-        return Ok(ReservationAccess.GetReservationsByVehicleId(vId, "completed"));
+        return Ok(ReservationAccess.GetReservationsByVehicleId(vId, "confirmed"));
     }
 }
