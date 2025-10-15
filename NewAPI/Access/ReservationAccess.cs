@@ -35,13 +35,13 @@ public static class ReservationAccess
         return conn.Query<ReservationModel>(sql, new { reservationId }).First();
     }
 
-    public static List<ReservationModel> GetReservationsByVehicleId(int vehicleId)
+    public static List<ReservationModel> GetReservationsByVehicleId(int vehicleId, string status = "")
     {
         string cs = _config.GetConnectionString("DefaultConnection")!;
         using MySqlConnection conn = new(cs);
         conn.Open();
 
-        const string sql = """
+        string sql = """
             SELECT 
                 id              AS Id,
                 user_id         AS UserId,
@@ -53,19 +53,22 @@ public static class ReservationAccess
                 created_at      AS CreatedAt,
                 cost            AS Cost
             FROM reservations
-            WHERE vehicle_id = @vehicleId;
+            WHERE vehicle_id = @vehicleId
         """;
 
-        return conn.Query<ReservationModel>(sql, new { vehicleId }).ToList();
+        if (status != null && status != "")
+            sql += " AND status = @status";
+
+        return conn.Query<ReservationModel>(sql, new { vehicleId, status }).ToList();
     }
 
-    public static List<ReservationModel> GetReservationsByUserId(int userId)
+    public static List<ReservationModel> GetReservationsByUserId(int userId, string status = "")
     {
         string cs = _config.GetConnectionString("DefaultConnection")!;
         using MySqlConnection conn = new(cs);
         conn.Open();
 
-        const string sql = """
+        string sql = """
             SELECT 
                 id              AS Id,
                 user_id         AS UserId,
@@ -80,16 +83,19 @@ public static class ReservationAccess
             WHERE user_id = @userId;
         """;
 
-        return conn.Query<ReservationModel>(sql, new { userId }).ToList();
+        if (status != null && status != "")
+            sql += " AND status = @status";
+
+        return conn.Query<ReservationModel>(sql, new { userId, status }).ToList();
     }
 
-    public static List<ReservationModel> GetReservationsByParkingLotId(int parkingLotId)
+    public static List<ReservationModel> GetReservationsByParkingLotId(int parkingLotId, string status = "")
     {
         string cs = _config.GetConnectionString("DefaultConnection")!;
         using MySqlConnection conn = new(cs);
         conn.Open();
 
-        const string sql = """
+        string sql = """
             SELECT 
                 id              AS Id,
                 user_id         AS UserId,
@@ -104,6 +110,9 @@ public static class ReservationAccess
             WHERE parking_lot_id = @parkingLotId;
         """;
 
-        return conn.Query<ReservationModel>(sql, new { parkingLotId }).ToList();
+        if (status != null && status != "")
+            sql += " AND status = @status";
+
+        return conn.Query<ReservationModel>(sql, new { parkingLotId, status }).ToList();
     }
 }
