@@ -59,7 +59,7 @@ public static class ReservationAccess
         if (status != null && status != "")
             sql += " AND status = @status";
 
-        return conn.Query<ReservationModel>(sql, new { vehicleId }).ToList();
+        return conn.Query<ReservationModel>(sql, new { vehicleId, status }).ToList();
     }
 
     public static List<ReservationModel> GetReservationsByUserId(int userId, string status = "")
@@ -86,7 +86,7 @@ public static class ReservationAccess
         if (status != null && status != "")
             sql += " AND status = @status";
 
-        return conn.Query<ReservationModel>(sql, new { userId }).ToList();
+        return conn.Query<ReservationModel>(sql, new { userId, status }).ToList();
     }
 
     public static List<ReservationModel> GetReservationsByParkingLotId(int parkingLotId, string status = "")
@@ -113,6 +113,6 @@ public static class ReservationAccess
         if (status != null && status != "")
             sql += " AND status = @status";
 
-        return conn.Query<ReservationModel>(sql, new { parkingLotId }).ToList();
+        return conn.Query<ReservationModel>(sql, new { parkingLotId, status }).ToList();
     }
 }
