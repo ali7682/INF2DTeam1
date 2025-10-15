@@ -22,4 +22,10 @@
 
         return null;
     }
+
+    // AuthController gebruikte 'DoesSessionExist', maar hij bestond niet (gaf een error)
+    public static bool DoesSessionExist(string token)
+    {
+        return Sessions.ContainsKey(token);
+    }
 }
