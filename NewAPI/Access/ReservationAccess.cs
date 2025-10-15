@@ -53,7 +53,7 @@ public static class ReservationAccess
                 created_at      AS CreatedAt,
                 cost            AS Cost
             FROM reservations
-            WHERE vehicle_id = @vehicleId;
+            WHERE vehicle_id = @vehicleId
         """;
 
         if (status != null && status != "")
