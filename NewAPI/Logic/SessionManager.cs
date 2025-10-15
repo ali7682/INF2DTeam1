@@ -1,4 +1,4 @@
-﻿static class SessionManager
+﻿public static class SessionManager
 {
     public static Dictionary<string, UserModel> Sessions = new();
 
