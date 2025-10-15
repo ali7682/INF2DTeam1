@@ -19,9 +19,9 @@ public static class VehicleAccess
 
         const string query = """
         INSERT INTO vehicles
-            (id, user_id, license_plate, make, model, color, year, created_at)
+            (user_id, license_plate, make, model, color, year, created_at)
         VALUES
-            (@ID, @UserID, @LicensePlate, @Make, @Model, @Color, @Year, @CreatedAt);
+            (@UserID, @LicensePlate, @Make, @Model, @Color, @Year, @CreatedAt);
         SELECT LAST_INSERT_ID();
         """;
 
