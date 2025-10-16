@@ -26,10 +26,10 @@ namespace NewAPI.Controllers
                 Initiator = body.Transaction,
                 Created_at = DateTime.UtcNow,
                 Completed = null,
-                Hash = 
+                Hash = Guid.NewGuid().ToString("N")
             };
 
-            int newId = PaymentAcces.CreatePayment(newPayment);
+            int newId = PaymentAccess.CreatePayment(newPayment);
 
             return Ok(new { message = $"Payment created successfully with ID {newId}" });
         }

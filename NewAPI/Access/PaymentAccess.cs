@@ -11,7 +11,7 @@ public static class PaymentAccess
         _config = config;
     }
 
-    public static int CreatePayment(Payment user)
+    public static int CreatePayment(PaymentModel payment)
     {
         string cs = _config.GetConnectionString("DefaultConnection")!;
         using MySqlConnection conn = new(cs);
@@ -25,7 +25,7 @@ public static class PaymentAccess
         SELECT LAST_INSERT_ID();
         """;
 
-        int newId = conn.ExecuteScalar<int>(query, user);
+        int newId = conn.ExecuteScalar<int>(query, payment);
 
         return newId;
     }
