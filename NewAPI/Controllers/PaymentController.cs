@@ -44,7 +44,7 @@ namespace NewAPI.Controllers
         }
 
         [HttpPost("Payments/refund")]
-        public async Task<ActionResult<PaymentModel>> Payments([FromBody] PaymentRequest body, CancellationToken ct)
+        public async Task<ActionResult<PaymentModel>> PaymentsRefund([FromBody] PaymentRequest body, CancellationToken ct)
         {
 
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
@@ -76,6 +76,65 @@ namespace NewAPI.Controllers
             int newId = PaymentAccess.CreatePayment(newPayment);
 
             return Ok(new { message = $"Payment created successfully with ID {newId}" });
+        }
+
+        [HttpGet("{pId:int}")]
+        public IActionResult GetPayments(int pId)
+        {
+            string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
+            UserModel? user = SessionManager.GetSession(sessionToken);
+
+            if (sessionToken == null || user == null)
+            {
+                return Unauthorized("Unauthorized: Invalid or missing session token");
+            }
+
+            PaymentModel? payment = PaymentAccess.GetPaymentByTransactionId(pId);
+
+            if (payment == null)
+            {
+                return NotFound("NotFound: Payment not found");
+            }
+
+            if (!(user.Id == payment.TransactionId))
+            {
+                return StatusCode(403, new { message = "Forbidden: You do not have access to this payment" });
+            }
+
+            return Ok(payment);
+        }
+
+        [HttpGet("{username}/{pId:int}")]
+        public IActionResult GetPaymentsByUserName(string userName, int pId)
+        {
+            string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
+            UserModel? user = SessionManager.GetSession(sessionToken);
+
+            if (sessionToken == null || user == null)
+            {
+                return Unauthorized("Unauthorized: Invalid or missing session token");
+            }
+
+            if (!user.IsAdmin())
+            {
+                return StatusCode(403, new { message = "Forbidden: You do not have access to this vehicle" });
+            }
+
+            UserModel? requestUser = UserAccess.GetUserByUsername(userName);
+
+            if (requestUser == null)
+            {
+                return NotFound("NotFound: User not found");
+            }
+
+            PaymentModel? payment = PaymentAccess.GetPaymentByTransactionId(pId);
+
+            if (payment == null)
+            {
+                return NotFound("NotFound: User not found");
+            }
+
+            return Ok(payment);
         }
     }
 }
