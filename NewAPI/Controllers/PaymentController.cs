@@ -3,7 +3,7 @@ using System.Text.Json.Nodes;
 
 public class PaymentRequest
 {
-    public string Transaction { get; set; }
+    public string? Transaction { get; set; }
     public decimal Amount { get; set; }
 }
 
