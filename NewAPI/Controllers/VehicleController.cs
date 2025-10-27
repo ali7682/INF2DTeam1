@@ -187,4 +187,30 @@ public class VehiclesController : ControllerBase
 
         return Ok(ReservationAccess.GetReservationsByVehicleId(vId, "confirmed"));
     }
+
+    // DELETE /vehicles/{vid}
+    [HttpDelete("{vid:int}")]
+    public IActionResult DeleteVehicle(int vid)
+    {
+        string token = HttpContext.Request.Headers.Authorization.ToString();
+        UserModel? sessionUser = SessionManager.GetSession(token);
+
+        if (string.IsNullOrEmpty(token) || sessionUser == null)
+            return Unauthorized(new { message = "Unauthorized: Invalid or missing session token" });
+
+        VehicleModel? vehicle = VehicleAccess.GetVehicleById(vid);
+
+        if (vehicle == null)
+            return NotFound(new { message = "Vehicle not found" });
+
+        if (sessionUser.Role != "ADMIN" && sessionUser.Id != vehicle.UserID)
+            return StatusCode(403, new { message = "Access denied" });
+
+        bool deleted = VehicleAccess.DeleteVehicleById(vid);
+
+        if (!deleted)
+            return NotFound(new { message = "Vehicle not found" });
+
+        return Ok(new { message = "Vehicle deleted" });
+    }
 }
