@@ -117,7 +117,7 @@ namespace NewAPI.Controllers
 
             if (!user.IsAdmin())
             {
-                return StatusCode(403, new { message = "Forbidden: You do not have access to this vehicle" });
+                return StatusCode(403, new { message = "Forbidden: You do not have access to this payment" });
             }
 
             UserModel? requestUser = UserAccess.GetUserByUsername(userName);
@@ -134,7 +134,39 @@ namespace NewAPI.Controllers
                 return NotFound("NotFound: User not found");
             }
 
+            if (!(user.Id == payment.TransactionId))
+            {
+                return StatusCode(403, new { message = "Forbidden: You do not have access to this billing" });
+            }
+
             return Ok(payment);
+        }
+
+        [HttpGet("billing/{pId:int}")]
+        public IActionResult GetBilling(int pId)
+        {
+            string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
+            UserModel? user = SessionManager.GetSession(sessionToken);
+
+            if (sessionToken == null || user == null)
+            {
+                return Unauthorized("Unauthorized: Invalid or missing session token");
+            }
+
+            PaymentModel? payment = PaymentAccess.GetPaymentByTransactionId(pId);
+
+            if (payment == null)
+            {
+                return NotFound("NotFound: Billing not found");
+            }
+
+            return Ok(pId);
+        }
+
+        [HttpGet("billing/{userName}/{pId:int}")]
+        public IActionResult GetBillingByUser(string userName, int pId)
+        {
+            return Ok(pId);
         }
     }
 }
