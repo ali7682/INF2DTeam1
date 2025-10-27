@@ -166,7 +166,39 @@ namespace NewAPI.Controllers
         [HttpGet("billing/{userName}/{pId:int}")]
         public IActionResult GetBillingByUser(string userName, int pId)
         {
-            return Ok(pId);
+            string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
+            UserModel? user = SessionManager.GetSession(sessionToken);
+
+            if (sessionToken == null || user == null)
+            {
+                return Unauthorized("Unauthorized: Invalid or missing session token");
+            }
+
+            if (!user.IsAdmin())
+            {
+                return StatusCode(403, new { message = "Forbidden: you do not have access to biling" });
+            }
+
+            UserModel? requestUser = UserAccess.GetUserByUsername(userName);
+
+            if (requestUser == null)
+            {
+                return NotFound("NotFound: User not found");
+            }
+
+            PaymentModel? payment = PaymentAccess.GetPaymentByTransactionId(pId);
+
+            if (payment == null)
+            {
+                return NotFound("NotFound: Billing not found");
+            }
+
+            if (!(user.Id == payment.TransactionId))
+            {
+                return StatusCode(403, new { message = "Forbidden: You do not have access to this billing" });
+            }
+
+            return Ok(payment);
         }
     }
 }
