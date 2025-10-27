@@ -229,4 +229,72 @@ public class VehiclesController : ControllerBase
 
         return Ok(new { message = "Vehicle updated successfully", vehicle });
     }
+
+    [HttpPost]
+    public IActionResult PostVehicle([FromBody] VehicleModel newVehicle)
+    {
+        if (newVehicle == null)
+        {
+            return BadRequest("Invalid vehicle data");
+        }
+
+        var authHeader = HttpContext.Request.Headers.Authorization.FirstOrDefault();
+        if (string.IsNullOrEmpty(authHeader))
+        {
+            return Unauthorized("Unauthorized: Missing session token");
+        }
+
+        UserModel? user = SessionManager.GetSession(authHeader);
+        if (user == null)
+        {
+            return Unauthorized("Unauthorized: Invalid session token");
+        }
+
+        if (!user.IsAdmin())
+        {
+            return StatusCode(403, new { message = "Forbidden: You do not have access to create vehicles" });
+        }
+
+        if (string.IsNullOrWhiteSpace(newVehicle.LicensePlate) ||
+            string.IsNullOrWhiteSpace(newVehicle.Make) ||
+            string.IsNullOrWhiteSpace(newVehicle.Model))
+        {
+            return BadRequest("Vehicle must have a license plate, make, and model");
+        }
+
+        var vehicleToCreate = new VehicleModel
+        {
+            LicensePlate = newVehicle.LicensePlate,
+            Make = newVehicle.Make,
+            Model = newVehicle.Model,
+            Color = newVehicle.Color,
+            Year = newVehicle.Year,
+            CreatedAt = DateTime.Now
+        };
+
+        int newVehicleId = VehicleAccess.CreateVehicle(vehicleToCreate);
+
+        if (newVehicleId <= 0)
+        {
+            return StatusCode(500, new { message = "Failed to create vehicle" });
+        }
+
+        vehicleToCreate = new VehicleModel
+        {
+            ID = newVehicleId,
+            LicensePlate = newVehicle.LicensePlate,
+            Make = newVehicle.Make,
+            Model = newVehicle.Model,
+            Color = newVehicle.Color,
+            Year = newVehicle.Year,
+            CreatedAt = DateTime.Now
+        };
+
+        return Ok(new
+        {
+            message = "Vehicle created successfully",
+            vehicle = vehicleToCreate
+        });
+    }
+
 }
