@@ -173,23 +173,20 @@ public static class ReservationAccess
                         start_time      = @StartTime,
                         end_time        = @EndTime,
                         status          = @Status,
-                        created_at      = @CreatedAt,
                         cost            = @Cost
-                    WHERE id = @ReservationId;
+                    WHERE id = @Id;
                 """;
 
         int affectedRows = conn.Execute(sql, new
         {
-            updatedReservation.ReservationId,
+            Id = reservationId,
             updatedReservation.UserId,
             updatedReservation.ParkingLotId,
             updatedReservation.VehicleId,
             updatedReservation.StartTime,
             updatedReservation.EndTime,
             updatedReservation.Status,
-            updatedReservation.CreatedAt,
             updatedReservation.Cost,
-            reservationId
         });
 
         return affectedRows > 0;
