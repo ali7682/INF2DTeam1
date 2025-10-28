@@ -163,7 +163,7 @@ namespace NewAPI.Controllers
             parkingLot.DayTariff = updatedParkingLot.DayTariff;
             parkingLot.CreatedAt = updatedParkingLot.CreatedAt;
 
-            
+            ParkingLotAccess.UpdateParkingLotById(lid, parkingLot);
 
             return Ok(new { message = "Parking lot updated succesfully", parkingLot });
         }
