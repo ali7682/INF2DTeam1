@@ -155,7 +155,43 @@ public static class ReservationAccess
             conn.Execute(updateLotSql, new { parkingLotId });
             return true;
         }
-
         return false;
+    }
+
+
+    public static bool UpdateReservationById(int reservationId, ReservationModel updatedReservation)
+    {
+        string cs = _config.GetConnectionString("DefaultConnection")!;
+        using MySqlConnection conn = new(cs);
+        conn.Open();
+        const string sql = """
+                    UPDATE reservations
+                    SET 
+                        user_id         = @UserId,
+                        parking_lot_id  = @ParkingLotId,
+                        vehicle_id      = @VehicleId,
+                        start_time      = @StartTime,
+                        end_time        = @EndTime,
+                        status          = @Status,
+                        created_at      = @CreatedAt,
+                        cost            = @Cost
+                    WHERE id = @ReservationId;
+                """;
+
+        int affectedRows = conn.Execute(sql, new
+        {
+            updatedReservation.ReservationId,
+            updatedReservation.UserId,
+            updatedReservation.ParkingLotId,
+            updatedReservation.VehicleId,
+            updatedReservation.StartTime,
+            updatedReservation.EndTime,
+            updatedReservation.Status,
+            updatedReservation.CreatedAt,
+            updatedReservation.Cost,
+            reservationId
+        });
+
+        return affectedRows > 0;
     }
 }
