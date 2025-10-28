@@ -39,5 +39,41 @@ namespace NewAPI.Controllers
 
             return Ok(new { message = "Reservation deleted" });
         }
+
+        [HttpPut("{rid:int}")]
+        public IActionResult UpdateReservationsById(int rid, [FromBody] ReservationModel updatedReservation)
+        {
+            if (reservation == null)
+            {
+                return BadRequest("Bad Request: Invalid reservation data");
+            }
+
+            string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
+            UserModel? user = SessionManager.GetSession(sessionToken);
+
+            if (user == null || sessionToken == null)
+            {
+                return Unauthorized("Unauthorized: Invalid or missing session token");
+            }
+
+            if (!user.IsAdmin())
+            {
+                return StatusCode(403, new { message = "Forbidden: You do not have access to this reservation" });
+            }
+
+            ReservationModel? reservation = ReservationAccess.GetReservationById(rid);
+            if (reservation == null)
+            {
+                return NotFound("NotFound: Reservation not found");
+            }
+
+            reservation.StartTime = updatedReservation.StartTime;
+            reservation.EndTime = updatedReservation.EndTime;
+            reservation.Status = updatedReservation.Status;
+            reservation.CreatedAt = updatedReservation.CreatedAt;
+            reservation.Cost = updatedReservation.Cost;
+
+            return Ok(new { message = "Reservation updated successfully", reservation });
+        }
     }
 }
