@@ -53,4 +53,23 @@ public static class ParkingLotAccess
         int affectedRows = conn.Execute(sql, new { parkingLotId, sessionId });
         return affectedRows > 0;
     }
+
+    public static int CreateParkinglot(ParkingLotModel parkinglot)
+    {
+        string cs = _config.GetConnectionString("DefaultConnection")!;
+        using MySqlConnection conn = new(cs);
+        conn.Open();
+
+        const string query = """
+        INSERT INTO parking_lots
+            (name, location, address, capacity, reserved, tariff, daytariff)
+        VALUES
+            (@Name, @Location, @Address, @Capacity, @Reserved, @Tariff, @DayTariff);
+        SELECT LAST_INSERT_ID();
+        """;
+
+        int newId = conn.ExecuteScalar<int>(query, parkinglot);
+
+        return newId;
+    }
 }
