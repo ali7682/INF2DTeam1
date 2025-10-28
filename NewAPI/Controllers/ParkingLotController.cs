@@ -135,10 +135,10 @@ namespace NewAPI.Controllers
                 return BadRequest("Invalid parking lot data");
             }
 
-            string sessionTekon = HttpContext.Request.Headers.Authorization.ToString();
-            UserModel? user = SessionManager.GetSession(sessionTekon);
+            string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
+            UserModel? user = SessionManager.GetSession(sessionToken);
 
-            if (user == null || sessionTekon == null)
+            if (user == null || sessionToken == null)
             {
                 return Unauthorized("Unauthorized: Invalid or missing session token");
             }

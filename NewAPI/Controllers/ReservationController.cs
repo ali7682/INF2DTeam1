@@ -43,7 +43,7 @@ namespace NewAPI.Controllers
         [HttpPut("{rid:int}")]
         public IActionResult UpdateReservationsById(int rid, [FromBody] ReservationModel updatedReservation)
         {
-            if (reservation == null)
+            if (updatedReservation == null)
             {
                 return BadRequest("Bad Request: Invalid reservation data");
             }
