@@ -30,6 +30,29 @@ public static class PaymentAccess
         return newId;
     }
 
+    // GET alle payments
+    // Endpoint: /payments
+    public static List<PaymentModel> GetAllPayments()
+    {
+        string cs = _config.GetConnectionString("DefaultConnection")!;
+        using MySqlConnection conn = new(cs);
+        conn.Open();
+
+        const string sql = """
+        SELECT 
+            transaction_id     AS TransactionId,
+            amount             AS Amount,
+            initiator          AS Initiator,
+            created_at         AS Created_at,
+            completed          AS Completed,
+            hash               AS Hash
+            FROM payments;
+        """;
+
+        List<PaymentModel> result = conn.Query<PaymentModel>(sql).ToList();
+        return result;
+    }
+
     public static PaymentModel GetPaymentByTransactionId(int transaction_Id)
     {
         string cs = _config.GetConnectionString("DefaultConnection")!;
