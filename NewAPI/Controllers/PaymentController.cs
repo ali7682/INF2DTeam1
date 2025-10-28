@@ -78,6 +78,7 @@ namespace NewAPI.Controllers
             return Ok(new { message = $"Payment created successfully with ID {newId}" });
         }
 
+        // GET /payments
         [HttpGet]
         public IActionResult GetPayments()
         {
@@ -99,6 +100,7 @@ namespace NewAPI.Controllers
             return Ok(userPayments);
         }
 
+        // GET /payments/{username}
         [HttpGet("{username}")]
         public IActionResult GetPaymentsByUserName(string userName)
         {
