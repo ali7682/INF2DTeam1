@@ -93,8 +93,8 @@ namespace NewAPI.Controllers
             return Ok(payment);
         }
 
-        [HttpGet("{username}/{pId:int}")]
-        public IActionResult GetPaymentsByUserName(string userName, int pId)
+        [HttpGet("{username}")]
+        public IActionResult GetPaymentsByUserName(string userName)
         {
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
             UserModel? user = SessionManager.GetSession(sessionToken);
@@ -110,25 +110,20 @@ namespace NewAPI.Controllers
             }
 
             UserModel? requestUser = UserAccess.GetUserByUsername(userName);
-
             if (requestUser == null)
             {
                 return NotFound("NotFound: User not found");
             }
 
-            PaymentModel? payment = PaymentAccess.GetPaymentByTransactionId(pId);
-
+            PaymentModel? payment = PaymentAccess.GetAllPayments();
             if (payment == null)
             {
-                return NotFound("NotFound: User not found");
+                return NotFound("NotFound: Payment not found");
             }
 
-            if (!(user.Id == payment.TransactionId))
-            {
-                return StatusCode(403, new { message = "Forbidden: You do not have access to this billing" });
-            }
-
-            return Ok(payment);
+            List<PaymentModel> userPayments = payment.Where(x => x.Initiator == requestUser.Username).ToList();
+            
+            return Ok(userPayments);
         }
 
         [HttpGet("billing/{pId:int}")]
