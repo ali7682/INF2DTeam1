@@ -32,7 +32,7 @@ public static class PaymentDetailsAccess
 
     // GET alle payment details
     // Endpoint: /paymentdetails
-    public static PaymentDetailsModel GetAllDetails()
+    public static PaymentDetailsModel GetAllPaymentDetails()
     {
         string cs = _config.GetConnectionString("DefaultConnection")!;
         using MySqlConnection conn = new(cs);
