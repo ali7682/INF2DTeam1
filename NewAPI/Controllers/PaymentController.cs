@@ -133,7 +133,7 @@ namespace NewAPI.Controllers
         }
 
         [HttpGet("billing")]
-        public IActionResult GetBilling(int pId)
+        public IActionResult GetBilling()
         {
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
             UserModel? user = SessionManager.GetSession(sessionToken);
@@ -143,18 +143,20 @@ namespace NewAPI.Controllers
                 return Unauthorized("Unauthorized: Invalid or missing session token");
             }
 
-            PaymentModel? payment = PaymentAccess.GetPaymentByTransactionId(pId);
+            List<PaymentModel> paymentDetails = PaymentDetailsAccess.GetAllPaymentDetails();
 
-            if (payment == null)
+            if (paymentDetails == null)
             {
                 return NotFound("NotFound: Billing not found");
             }
 
-            return Ok(pId);
+            List<PaymentModel> userPaymentDetails = payment.Where(x => x.Initiator == user.Username).ToList();
+
+            return Ok(userPaymentDetails);
         }
 
         [HttpGet("billing/{userName}")]
-        public IActionResult GetBillingByUser(string userName, int pId)
+        public IActionResult GetBillingByUser(string userName)
         {
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
             UserModel? user = SessionManager.GetSession(sessionToken);
@@ -176,19 +178,16 @@ namespace NewAPI.Controllers
                 return NotFound("NotFound: User not found");
             }
 
-            PaymentModel? payment = PaymentAccess.GetPaymentByTransactionId(pId);
+            List<PaymentModel> paymentDetails = PaymentDetailsAccess.GetAllPaymentDetails();
 
-            if (payment == null)
+            if (paymentDetails == null)
             {
                 return NotFound("NotFound: Billing not found");
             }
 
-            if (!(user.Id == payment.TransactionId))
-            {
-                return StatusCode(403, new { message = "Forbidden: You do not have access to this billing" });
-            }
+            List<PaymentModel> userPaymentDetails = payment.Where(x => x.Initiator == requestUser.Username).ToList();
 
-            return Ok(payment);
+            return Ok(userPaymentDetails);
         }
     }
 }
