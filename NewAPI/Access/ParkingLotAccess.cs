@@ -164,7 +164,7 @@ public static class ParkingLotAccess
         return affectedRows > 0;
     }
 
-    public static bool UpdateParkingLot()
+    public static bool UpdateParkingLotById(int parkingLotId, ParkingLotModel model)
     {
         string cs = _config.GetConnectionString("DefaultConnection")!;
         using MySqlConnection conn = new(cs);
@@ -173,10 +173,31 @@ public static class ParkingLotAccess
         const string sql = """
             UPDATE parking_session
             SET
-            id = @id
+            parking_lot_id = @ParkingLotID,
+            licenseplate = @LicensePlate,
+            started = @Started,
+            stopped = @Stopped,
+            user = @User,
+            duration_minutes = @DurationMinutes,
+            cost = @Cost,
+            payment_status = @PaymentStatus
+            WHERE id = @parkingLotId
         """;
 
-        return true;
+        int affectedRows = conn.Execute(sql, new
+        {
+            model.ParkingLotID,
+            model.LicensePlate,
+            model.Started,
+            model.Stopped,
+            model.User,
+            model.DurationMinutes,
+            model.Cost,
+            model.PaymentStatus,
+            parkingLotId
+        });
+
+        return affectedRows > 0;
 
     }
 }
