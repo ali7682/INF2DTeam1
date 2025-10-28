@@ -11,6 +11,116 @@ public static class ParkingLotAccess
         _config = config;
     }
 
+    // GET alle parking lots
+    // Endpoint: /parking-lots
+    public static List<ParkingLotModel> GetAllParkingLots()
+    {
+        string cs = _config.GetConnectionString("DefaultConnection")!;
+        using MySqlConnection conn = new(cs);
+        conn.Open();
+
+        const string sql = """
+            SELECT 
+                id              AS ID,
+                name            AS Name,
+                location        AS Location,
+                address         AS Address,
+                capacity        AS Capacity,
+                reserved        AS Reserved,
+                tariff          AS Tariff,
+                daytariff       AS DayTariff,
+                created_at      AS CreatedAt
+            FROM parking_lots;
+        """;
+
+        List<ParkingLotModel> result = conn.Query<ParkingLotModel>(sql).ToList();
+        return result;
+    }
+
+    // GET een parking lot met parking lot ID
+    // Endpoint: /parking-lots/{lid}
+    public static ParkingLotModel? GetParkingLotById(int parkingLotId)
+    {
+        string cs = _config.GetConnectionString("DefaultConnection")!;
+        using MySqlConnection conn = new(cs);
+        conn.Open();
+
+        const string sql = """
+            SELECT 
+                id              AS ID,
+                name            AS Name,
+                location        AS Location,
+                address         AS Address,
+                capacity        AS Capacity,
+                reserved        AS Reserved,
+                tariff          AS Tariff,
+                daytariff       AS DayTariff,
+                created_at      AS CreatedAt
+            FROM parking_lots
+            WHERE id = @parkingLotId
+            LIMIT 1;
+        """;
+
+        ParkingLotModel? parkingLot = conn.QueryFirstOrDefault<ParkingLotModel>(sql, new { parkingLotId });
+        return parkingLot;
+    }
+
+    // GET alle parking sessions voor een parking lot met parking lot ID
+    // Endpoint: /parking-lots/{lid}/sessions
+    public static List<ParkingSessionModel> GetParkingSessionsByLotId(int parkingLotId)
+    {
+        string cs = _config.GetConnectionString("DefaultConnection")!;
+        using MySqlConnection conn = new(cs);
+        conn.Open();
+
+        const string sql = """
+            SELECT 
+                id                  AS ID,
+                parking_lot_id      AS ParkingLotID,
+                licenseplate        AS LicensePlate,
+                started             AS Started,
+                stopped             AS Stopped,
+                user                AS User,
+                duration_minutes    AS DurationMinutes,
+                cost                AS Cost,
+                payment_status      AS PaymentStatus
+            FROM parking_sessions
+            WHERE parking_lot_id = @parkingLotId;
+        """;
+
+        List<ParkingSessionModel> sessions = conn.Query<ParkingSessionModel>(sql, new { parkingLotId }).ToList();
+        return sessions;
+    }
+
+    // GET een parking session met parking lot ID en parking session ID
+    // Endpoint: /parking-lots/{lid}/sessions/{sid}
+    public static ParkingSessionModel? GetParkingSessionById(int parkingLotId, int sessionId)
+    {
+        string cs = _config.GetConnectionString("DefaultConnection")!;
+        using MySqlConnection conn = new(cs);
+        conn.Open();
+
+        const string sql = """
+            SELECT 
+                id                  AS ID,
+                parking_lot_id      AS ParkingLotID,
+                licenseplate        AS LicensePlate,
+                started             AS Started,
+                stopped             AS Stopped,
+                user                AS User,
+                duration_minutes    AS DurationMinutes,
+                cost                AS Cost,
+                payment_status      AS PaymentStatus
+            FROM parking_sessions
+            WHERE parking_lot_id = @parkingLotId
+            AND id = @sessionId
+            LIMIT 1;
+        """;
+
+        ParkingSessionModel? session = conn.QueryFirstOrDefault<ParkingSessionModel>(sql, new { parkingLotId, sessionId });
+        return session;
+    }
+
     // DELETE een parking lot met bijbehorende parking sessions met parking lot ID
     // Endpoint: /parking-lots/{lid}
     public static bool DeleteParkingLotById(int parkingLotId)
