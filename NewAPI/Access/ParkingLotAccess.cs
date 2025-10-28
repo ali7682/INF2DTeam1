@@ -164,6 +164,8 @@ public static class ParkingLotAccess
         return affectedRows > 0;
     }
 
+    // UPDATE een parking lot met parking lot ID
+    // Endpoint: /parking-lots/{lid}
     public static bool UpdateParkingLotById(int parkingLotId, ParkingLotModel model)
     {
         string cs = _config.GetConnectionString("DefaultConnection")!;

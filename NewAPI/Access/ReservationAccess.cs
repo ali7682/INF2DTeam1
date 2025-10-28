@@ -158,7 +158,8 @@ public static class ReservationAccess
         return false;
     }
 
-
+    // UPDATE een reservation met reservation ID
+    // Endpoint: /reservations/{rid}
     public static bool UpdateReservationById(int reservationId, ReservationModel updatedReservation)
     {
         string cs = _config.GetConnectionString("DefaultConnection")!;
