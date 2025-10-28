@@ -94,7 +94,7 @@ namespace NewAPI.Controllers
             {
                 return NotFound("NotFound: Payment not found");
             }
-            
+
             List<PaymentModel> userPayments = payment.Where(x => x.Initiator == user.Username).ToList();
             return Ok(userPayments);
         }
@@ -132,7 +132,7 @@ namespace NewAPI.Controllers
             return Ok(userPayments);
         }
 
-        [HttpGet("billing/{pId:int}")]
+        [HttpGet("billing")]
         public IActionResult GetBilling(int pId)
         {
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
@@ -153,7 +153,7 @@ namespace NewAPI.Controllers
             return Ok(pId);
         }
 
-        [HttpGet("billing/{userName}/{pId:int}")]
+        [HttpGet("billing/{userName}")]
         public IActionResult GetBillingByUser(string userName, int pId)
         {
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
