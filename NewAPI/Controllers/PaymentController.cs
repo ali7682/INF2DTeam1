@@ -132,7 +132,7 @@ namespace NewAPI.Controllers
             return Ok(userPayments);
         }
 
-        [HttpGet("billing")]
+        [HttpGet]
         public IActionResult GetBilling()
         {
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
@@ -155,7 +155,7 @@ namespace NewAPI.Controllers
             return Ok(userPaymentDetails);
         }
 
-        [HttpGet("billing/{userName}")]
+        [HttpGet("{userName}")]
         public IActionResult GetBillingByUser(string userName)
         {
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
