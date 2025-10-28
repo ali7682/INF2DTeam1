@@ -1,4 +1,16 @@
+using System.Net.Sockets;
 using Microsoft.AspNetCore.Mvc;
+
+public class ParkinglotRequest
+{
+    public string Name { get; set; }
+    public string Location { get; set; }
+    public string Address { get; set; }
+    public int Capacity { get; set; }
+    public int Reserved { get; set; }
+    public decimal Tariff { get; set; }
+    public decimal DayTariff { get; set; }
+}
 
 namespace NewAPI.Controllers
 {
@@ -26,7 +38,7 @@ namespace NewAPI.Controllers
 
             if (sessionUser.Role != "ADMIN")
                 return StatusCode(403, new { message = "Access denied" });
-                // return Forbid("Access denied");
+            // return Forbid("Access denied");
 
             bool deleted = ParkingLotAccess.DeleteParkingLotById(lid);
 
@@ -48,7 +60,7 @@ namespace NewAPI.Controllers
 
             if (sessionUser.Role != "ADMIN")
                 return StatusCode(403, new { message = "Access denied" });
-                // return Forbid("Access denied");
+            // return Forbid("Access denied");
 
             bool deleted = ParkingLotAccess.DeleteParkingSessionById(lid, sid);
 
@@ -56,6 +68,39 @@ namespace NewAPI.Controllers
                 return NotFound("Parking session not found");
 
             return Ok(new { message = "Parking session deleted" });
+        }
+
+        //POST /parking-lots
+        public async Task<ActionResult<ParkingLotModel>> PostParkinglot([FromBody] ParkinglotRequest body, CancellationToken ct)
+        {
+            string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
+            UserModel? user = SessionManager.GetSession(sessionToken);
+
+            if (sessionToken == null || user == null)
+                return Unauthorized("Unauthorized: Invalid or missing session token");
+
+            if (user.Role != "ADMIN")
+                return StatusCode(403, new { message = "Access denied" });
+
+            if (body is null || string.IsNullOrWhiteSpace(body.Name) || string.IsNullOrWhiteSpace(body.Location) || string.IsNullOrWhiteSpace(body.Address) ||
+                body.Capacity <= 0 || body.Tariff < 0 || body.DayTariff < 0)
+                return BadRequest(new { error = "Bad request: Missing or invalid parking lot details" });
+
+            ParkingLotModel newParkinglot = new()
+            {
+                Name = body.Name,
+                Location = body.Location,
+                Address = body.Address,
+                Capacity = body.Capacity,
+                Reserved = body.Reserved,
+                Tariff = body.Tariff,
+                DayTariff = body.DayTariff
+            };
+            
+            int newId = ParkingLotAccess.CreateParkinglot(newParkinglot);
+
+            return Ok(new { message = $"Parking lot created successfully with ID {newId}" });
+
         }
     }
 }

@@ -15,7 +15,7 @@ namespace NewAPI.Controllers
         public PaymentController(IConfiguration config) { }
 
         [HttpPost("Payments")]
-        public async Task<ActionResult<PaymentModel>> Payments([FromBody] PaymentRequest body, CancellationToken ct)
+        public async Task<ActionResult<PaymentModel>> PostPayments([FromBody] PaymentRequest body, CancellationToken ct)
         {
 
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
@@ -44,7 +44,7 @@ namespace NewAPI.Controllers
         }
 
         [HttpPost("Payments/refund")]
-        public async Task<ActionResult<PaymentModel>> Payments([FromBody] PaymentRequest body, CancellationToken ct)
+        public async Task<ActionResult<PaymentModel>> PostPaymentsRefunds([FromBody] PaymentRequest body, CancellationToken ct)
         {
 
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
