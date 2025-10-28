@@ -161,7 +161,6 @@ namespace NewAPI.Controllers
             parkingLot.Reserved = updatedParkingLot.Reserved;
             parkingLot.Tariff = updatedParkingLot.Tariff;
             parkingLot.DayTariff = updatedParkingLot.DayTariff;
-            parkingLot.CreatedAt = updatedParkingLot.CreatedAt;
 
             ParkingLotAccess.UpdateParkingLotById(lid, parkingLot);
 

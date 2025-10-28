@@ -56,12 +56,12 @@ namespace NewAPI.Controllers
                 return Unauthorized("Unauthorized: Invalid or missing session token");
             }
 
-            if (!user.IsAdmin())
+            ReservationModel? reservation = ReservationAccess.GetReservationById(rid);
+            if (!user.IsAdmin() && reservation.UserID != user.Id)
             {
                 return StatusCode(403, new { message = "Forbidden: You do not have access to this reservation" });
             }
 
-            ReservationModel? reservation = ReservationAccess.GetReservationById(rid);
             if (reservation == null)
             {
                 return NotFound("NotFound: Reservation not found");
@@ -70,7 +70,6 @@ namespace NewAPI.Controllers
             reservation.StartTime = updatedReservation.StartTime;
             reservation.EndTime = updatedReservation.EndTime;
             reservation.Status = updatedReservation.Status;
-            reservation.CreatedAt = updatedReservation.CreatedAt;
             reservation.Cost = updatedReservation.Cost;
 
             ReservationAccess.UpdateReservationById(rid, reservation);
