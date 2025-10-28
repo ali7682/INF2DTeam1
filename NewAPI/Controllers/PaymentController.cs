@@ -78,8 +78,8 @@ namespace NewAPI.Controllers
             return Ok(new { message = $"Payment created successfully with ID {newId}" });
         }
 
-        [HttpGet("{pId:int}")]
-        public IActionResult GetPayments(int pId)
+        [HttpGet]
+        public IActionResult GetPayments()
         {
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
             UserModel? user = SessionManager.GetSession(sessionToken);
@@ -89,18 +89,7 @@ namespace NewAPI.Controllers
                 return Unauthorized("Unauthorized: Invalid or missing session token");
             }
 
-            PaymentModel? payment = PaymentAccess.GetPaymentByTransactionId(pId);
-
-            if (payment == null)
-            {
-                return NotFound("NotFound: Payment not found");
-            }
-
-            if (!(user.Id == payment.TransactionId))
-            {
-                return StatusCode(403, new { message = "Forbidden: You do not have access to this payment" });
-            }
-
+            List<PaymentModel> payment = PaymentAccess.GetAllPayments();
             return Ok(payment);
         }
 
