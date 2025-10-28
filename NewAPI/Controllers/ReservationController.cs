@@ -40,6 +40,7 @@ namespace NewAPI.Controllers
             return Ok(new { message = "Reservation deleted" });
         }
 
+        // PUT /reservations/{rid}
         [HttpPut("{rid:int}")]
         public IActionResult UpdateReservationsById(int rid, [FromBody] ReservationModel updatedReservation)
         {
