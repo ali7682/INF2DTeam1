@@ -90,7 +90,13 @@ namespace NewAPI.Controllers
             }
 
             List<PaymentModel> payment = PaymentAccess.GetAllPayments();
-            return Ok(payment);
+            if (payment == null)
+            {
+                return NotFound("NotFound: Payment not found");
+            }
+            
+            List<PaymentModel> userPayments = payment.Where(x => x.Initiator == user.Username).ToList();
+            return Ok(userPayments);
         }
 
         [HttpGet("{username}")]
@@ -115,7 +121,7 @@ namespace NewAPI.Controllers
                 return NotFound("NotFound: User not found");
             }
 
-            PaymentModel? payment = PaymentAccess.GetAllPayments();
+            List<PaymentModel> payment = PaymentAccess.GetAllPayments();
             if (payment == null)
             {
                 return NotFound("NotFound: Payment not found");

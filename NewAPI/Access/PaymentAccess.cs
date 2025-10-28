@@ -43,7 +43,7 @@ public static class PaymentAccess
             transaction_id     AS TransactionId,
             amount             AS Amount,
             initiator          AS Initiator,
-            created_at         AS Created_at,
+            created_at         AS CreatedAt,
             completed          AS Completed,
             hash               AS Hash
             FROM payments;
