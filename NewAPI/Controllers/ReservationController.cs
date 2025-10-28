@@ -73,6 +73,8 @@ namespace NewAPI.Controllers
             reservation.CreatedAt = updatedReservation.CreatedAt;
             reservation.Cost = updatedReservation.Cost;
 
+            ReservationAccess.UpdateReservationById(rid, reservation);
+
             return Ok(new { message = "Reservation updated successfully", reservation });
         }
     }
