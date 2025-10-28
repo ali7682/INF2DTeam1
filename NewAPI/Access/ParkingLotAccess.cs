@@ -163,4 +163,20 @@ public static class ParkingLotAccess
         int affectedRows = conn.Execute(sql, new { parkingLotId, sessionId });
         return affectedRows > 0;
     }
+
+    public static bool UpdateParkingLot()
+    {
+        string cs = _config.GetConnectionString("DefaultConnection")!;
+        using MySqlConnection conn = new(cs);
+        conn.Open();
+
+        const string sql = """
+            UPDATE parking_session
+            SET
+            id = @id
+        """;
+
+        return true;
+
+    }
 }
