@@ -127,6 +127,7 @@ namespace NewAPI.Controllers
             return Ok(new { message = "Parking session deleted" });
         }
 
+        // PUT /parking-lots/{lid}
         [HttpPut("{lid:int}")]
         public IActionResult UpdateParkingLotsById(int lid, [FromBody] ParkingLotModel updatedParkingLot)
         {
