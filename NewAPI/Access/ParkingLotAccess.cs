@@ -171,29 +171,27 @@ public static class ParkingLotAccess
         conn.Open();
 
         const string sql = """
-            UPDATE parking_session
+            UPDATE parking_lots
             SET
-            parking_lot_id = @ParkingLotID,
-            licenseplate = @LicensePlate,
-            started = @Started,
-            stopped = @Stopped,
-            user = @User,
-            duration_minutes = @DurationMinutes,
-            cost = @Cost,
-            payment_status = @PaymentStatus
+                name = @Name,
+                location = @Location,
+                address = @Address,
+                capacity = @Capacity,
+                reserved = @Reserved,
+                tariff = @Tariff,
+                daytariff = @DayTariff,
             WHERE id = @parkingLotId
         """;
 
         int affectedRows = conn.Execute(sql, new
         {
-            model.ParkingLotID,
-            model.LicensePlate,
-            model.Started,
-            model.Stopped,
-            model.User,
-            model.DurationMinutes,
-            model.Cost,
-            model.PaymentStatus,
+            model.Name,
+            model.Location,
+            model.Address,
+            model.Capacity,
+            model.Reserved,
+            model.Tarriff,
+            model.DayTariff,
             parkingLotId
         });
 
