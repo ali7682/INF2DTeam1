@@ -10,11 +10,17 @@ public class PaymentRequest
 namespace NewAPI.Controllers
 {
     [ApiController]
+    [Route("Payments")]
     public class PaymentController : Controller
     {
-        public PaymentController(IConfiguration config) { }
+        public IConfiguration _config;
+        public PaymentController(IConfiguration config)
+        {
+            _config = config;
+            PaymentAccess.SetConfig(config);
+        }
 
-        [HttpPost("Payments")]
+        [HttpPost]
         public async Task<ActionResult<PaymentModel>> Payments([FromBody] PaymentRequest body, CancellationToken ct)
         {
 
@@ -43,7 +49,7 @@ namespace NewAPI.Controllers
             return Ok(new { message = $"Payment created successfully with ID {newId}" });
         }
 
-        [HttpPost("Payments/refund")]
+        [HttpPost("refund")]
         public async Task<ActionResult<PaymentModel>> PaymentsRefund([FromBody] PaymentRequest body, CancellationToken ct)
         {
 
