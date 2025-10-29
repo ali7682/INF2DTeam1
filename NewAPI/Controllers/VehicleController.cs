@@ -299,4 +299,33 @@ public class VehiclesController : ControllerBase
         });
     }
 
+    [HttpPost("{licensePlate}/entry")]
+    public IActionResult VehicleEntry(string licensePlate, [FromBody] Dictionary<string, string> data)
+    {
+        var authHeader = HttpContext.Request.Headers.Authorization.FirstOrDefault();
+        if (string.IsNullOrEmpty(authHeader))
+            return StatusCode(401, new { status = "error", message = "Missing session token" });
+
+        UserModel? user = SessionManager.GetSession(authHeader);
+        if (user == null)
+            return StatusCode(401, new { status = "error", message = "Invalid session token" });
+
+        if (!data.ContainsKey("parkinglot") || string.IsNullOrWhiteSpace(data["parkinglot"]))
+            return StatusCode(400, new { status = "error", message = "Required field missing", field = "parkinglot" });
+
+        VehicleModel? vehicle = VehicleAccess.GetVehicleByLicensePlate(licensePlate);
+
+        if (vehicle == null)
+            return StatusCode(404, new { status = "error", message = "Vehicle not found", licensePlate });
+
+        if (vehicle.UserID != user.Id)
+            return StatusCode(403, new { status = "error", message = "Vehicle does not belong to this user", licensePlate });
+
+        return StatusCode(200, new
+        {
+            status = "success",
+            vehicle,
+            parkinglot = data["parkinglot"]
+        });
+    }
 }

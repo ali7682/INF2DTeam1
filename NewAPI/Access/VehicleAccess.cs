@@ -75,7 +75,7 @@ public static class VehicleAccess
             LIMIT 1;
         """;
 
-        return conn.Query<VehicleModel>(sql, new { licensePlate }).First();
+        return conn.Query<VehicleModel>(sql, new { licensePlate }).FirstOrDefault();
     }
 
     public static bool UpdateVehicle(VehicleModel model)
@@ -109,4 +109,6 @@ public static class VehicleAccess
 
         return affectedRows > 0;
     }
+
+
 }
