@@ -995,6 +995,6 @@ class RequestHandler(BaseHTTPRequestHandler):
                 return
             
 
-server = HTTPServer(('0.0.0.0', 8000), RequestHandler)
-print(f"Server running on 0.0.0.0:{server.server_port}")
+server = HTTPServer(('localhost', 8000), RequestHandler)
+print("Server running on http://localhost:8000")
 server.serve_forever()
