@@ -129,7 +129,6 @@ namespace NewAPI.Controllers
 
         }
 
-
         //////////
         public static int CreateParkinglot(ParkingLotModel parkinglot)
     {
