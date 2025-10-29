@@ -269,7 +269,8 @@ public class VehiclesController : ControllerBase
             Model = newVehicle.Model,
             Color = newVehicle.Color,
             Year = newVehicle.Year,
-            CreatedAt = DateTime.Now
+            CreatedAt = DateTime.Now,
+            UserID = user.Id
         };
 
         int newVehicleId = VehicleAccess.CreateVehicle(vehicleToCreate);
@@ -287,7 +288,8 @@ public class VehiclesController : ControllerBase
             Model = newVehicle.Model,
             Color = newVehicle.Color,
             Year = newVehicle.Year,
-            CreatedAt = DateTime.Now
+            CreatedAt = DateTime.Now,
+            UserID = user.Id
         };
 
         return Ok(new
