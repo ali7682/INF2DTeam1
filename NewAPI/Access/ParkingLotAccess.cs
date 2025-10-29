@@ -181,7 +181,7 @@ public static class ParkingLotAccess
                 capacity = @Capacity,
                 reserved = @Reserved,
                 tariff = @Tariff,
-                daytariff = @DayTariff,
+                daytariff = @DayTariff
             WHERE id = @parkingLotId
         """;
 
