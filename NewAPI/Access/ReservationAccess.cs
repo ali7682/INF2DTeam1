@@ -158,4 +158,31 @@ public static class ReservationAccess
 
         return false;
     }
+
+    // POST een nieuwe reservation
+    // Endpoint: /reservations
+    public static int CreateReservation(ReservationModel reservation)
+    {
+        string cs = _config.GetConnectionString("DefaultConnection")!;
+        using MySqlConnection conn = new(cs);
+        conn.Open();
+
+        const string sql = """
+            INSERT INTO reservations (user_id, parking_lot_id, vehicle_id, start_time, end_time, status, created_at, cost)
+            VALUES (@UserId, @ParkingLotId, @VehicleId, @StartTime, @EndTime, @Status, @CreatedAt, @Cost);
+            SELECT LAST_INSERT_ID();
+        """;
+
+        int newId = conn.QuerySingle<int>(sql, reservation);
+
+        // Na het toevoegen van de reservation wordt 'reserved' count van parking lot met 1 verhoogd
+        const string updateLotSql = """
+            UPDATE parking_lots
+            SET reserved = reserved + 1
+            WHERE id = @ParkingLotId;
+        """;
+        conn.Execute(updateLotSql, new { reservation.ParkinglotID });
+
+        return newId;
+    }
 }

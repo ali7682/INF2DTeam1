@@ -1,5 +1,14 @@
 using Microsoft.AspNetCore.Mvc;
 
+public class ReservationRequest
+{
+    public string Licenseplate { get; set; }
+    public string Stardate { get; set; }
+    public string Enddate { get; set; }
+    public int ParkingLot { get; set; }
+    public string User { get; set; }
+}
+
 namespace NewAPI.Controllers
 {
     [ApiController]
@@ -38,6 +47,49 @@ namespace NewAPI.Controllers
                 return NotFound(new { message = "Reservation not found" });
 
             return Ok(new { message = "Reservation deleted" });
+        }
+
+        // POST /reservations
+        [HttpDelete("/reservations")]
+        public async Task<ActionResult<ReservationModel>> PostReservation([FromBody] ReservationRequest body, CancellationToken ct, int lid)
+        {
+            string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
+            UserModel? user = SessionManager.GetSession(sessionToken);
+
+            if (sessionToken == null || user == null)
+                return Unauthorized("Unauthorized: Invalid or missing session token");
+
+            if (body is null || string.IsNullOrWhiteSpace(body.Licenseplate) || string.IsNullOrWhiteSpace(body.Stardate) || string.IsNullOrWhiteSpace(body.Enddate) || body.ParkingLot <= 0)
+                return BadRequest(new { error = "Bad request: Missing or invalid reservation details" });
+
+            List<ParkingLotModel> parkingLots = ParkingLotAccess.GetAllParkingLots();
+
+            if (!parkingLots.Any(pl => pl.ID == body.ParkingLot))
+            {
+                return BadRequest(new { error = "Bad request: Specified parking lot does not exist" });
+            }
+            
+            if (user.Role == "ADMIN")
+            {
+                if (body.User == null)
+                    return StatusCode(403, new { message = "Access denied" });
+            }
+
+            ReservationModel newReservation = new()
+            {
+                UserID = user.Role == "ADMIN" ? UserAccess.GetUserByUsername(body.User).Id : user.Id,
+                ParkinglotID = body.ParkingLot,
+                VehicleID = VehicleAccess.GetVehicleByLicensePlate(body.Licenseplate).ID,
+                StartTime = DateTime.Parse(body.Stardate),
+                EndTime = DateTime.Parse(body.Enddate),
+                Status = "pending",
+                CreatedAt = DateTime.Now, 
+                Cost = 0m
+            };
+
+            int newId = ReservationAccess.CreateReservation(newReservation);
+
+            return Ok(new { message = $"Reservation created successfully with ID {newId}" });
         }
     }
 }

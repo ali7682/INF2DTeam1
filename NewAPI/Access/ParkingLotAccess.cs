@@ -230,7 +230,7 @@ public static class ParkingLotAccess
 
     // GET een parking lot met licenseplate
     // Endpoint: /parking-lots/{lid}/sessions/start
-    public static List<ParkingSessionModel> FindParkingSessionsByLicenseplate(string liscenseplate)
+    public static List<ParkingSessionModel> FindParkingSessionsByLicenseplate(string licenseplate)
     {
         string cs = _config.GetConnectionString("DefaultConnection")!;
         using MySqlConnection conn = new(cs);
