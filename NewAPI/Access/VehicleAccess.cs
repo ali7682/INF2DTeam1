@@ -51,7 +51,7 @@ public static class VehicleAccess
             LIMIT 1;
         """;
 
-        return conn.Query<VehicleModel>(sql, new { vehicleId }).First();
+        return conn.Query<VehicleModel>(sql, new { vehicleId }).FirstOrDefault();
     }
 
     public static VehicleModel GetVehicleByLicensePlate(string licensePlate)
@@ -75,7 +75,7 @@ public static class VehicleAccess
             LIMIT 1;
         """;
 
-        return conn.Query<VehicleModel>(sql, new { licensePlate }).FirstOrDefault();
+        return conn.Query<VehicleModel>(sql, new { licensePlate }).First();
     }
 
     public static bool UpdateVehicle(VehicleModel model)
@@ -110,5 +110,20 @@ public static class VehicleAccess
         return affectedRows > 0;
     }
 
+    // DELETE een vehicle met vehicle ID
+    // Endpoint: /vehicles/{vid}
+    public static bool DeleteVehicleById(int vehicleId)
+    {
+        string cs = _config.GetConnectionString("DefaultConnection")!;
+        using MySqlConnection conn = new(cs);
+        conn.Open();
 
+        const string sql = """
+            DELETE FROM vehicles
+            WHERE id = @vehicleId;
+        """;
+
+        int affectedRows = conn.Execute(sql, new { vehicleId });
+        return affectedRows > 0;
+    }
 }

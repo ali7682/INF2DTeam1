@@ -32,7 +32,7 @@ public static class ReservationAccess
             WHERE id = @reservationId;
         """;
 
-        return conn.Query<ReservationModel>(sql, new { reservationId }).First();
+        return conn.Query<ReservationModel>(sql, new { reservationId }).FirstOrDefault();
     }
 
     public static List<ReservationModel> GetReservationsByVehicleId(int vehicleId, string status = "")
@@ -114,5 +114,48 @@ public static class ReservationAccess
             sql += " AND status = @status";
 
         return conn.Query<ReservationModel>(sql, new { parkingLotId, status }).ToList();
+    }
+
+    // DELETE een reservation met reservation ID
+    // Endpoint: /reservations/{rid}
+    public static bool DeleteReservationById(int reservationId)
+    {
+        string cs = _config.GetConnectionString("DefaultConnection")!;
+        using MySqlConnection conn = new(cs);
+        conn.Open();
+
+        // Eerst de bijbehorende parking lot ID (proberen) te krijgen
+        const string getLotSql = """
+            SELECT parking_lot_id
+            FROM reservations
+            WHERE id = @reservationId;
+        """;
+
+        // Als de er geen reservation gevonden is met de parking lot ID, dan bestaat het niet
+        int? parkingLotId = conn.QueryFirstOrDefault<int?>(getLotSql, new { reservationId });
+        if (parkingLotId == null)
+            return false;
+
+        // Als het wel bestaat, delete de reservation
+        const string deleteSql = """
+            DELETE FROM reservations
+            WHERE id = @reservationId;
+        """;
+
+        int affectedRows = conn.Execute(deleteSql, new { reservationId });
+
+        if (affectedRows > 0)
+        {
+            // Na de deletion wordt 'reserved' count van parking lot met 1 verminderd
+            const string updateLotSql = """
+                UPDATE parking_lots
+                SET reserved = reserved - 1
+                WHERE id = @parkingLotId;
+            """;
+            conn.Execute(updateLotSql, new { parkingLotId });
+            return true;
+        }
+
+        return false;
     }
 }
