@@ -191,7 +191,7 @@ namespace NewAPI.Controllers
             if (body is null || string.IsNullOrWhiteSpace(body.Licenseplate))
                 return BadRequest(new { error = "Bad request: Missing or invalid licenseplate details" });
 
-            if (ParkingLotAccess.GetParkingLotById(lid).Any())
+            if (ParkingLotAccess.GetParkingSessionsByLotId(lid).Any())
                 return StatusCode(401, new { message = "Cannot start a session when another sessions for this licesenplate is already started." });
 
             ParkingSessionModel newSession = new()
