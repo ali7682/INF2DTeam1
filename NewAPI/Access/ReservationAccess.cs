@@ -168,9 +168,9 @@ public static class ReservationAccess
         const string sql = """
                     UPDATE reservations
                     SET 
-                        user_id         = @UserId,
-                        parking_lot_id  = @ParkingLotId,
-                        vehicle_id      = @VehicleId,
+                        user_id         = @UserID,
+                        parking_lot_id  = @ParkingLotID,
+                        vehicle_id      = @VehicleID,
                         start_time      = @StartTime,
                         end_time        = @EndTime,
                         status          = @Status,
@@ -181,9 +181,9 @@ public static class ReservationAccess
         int affectedRows = conn.Execute(sql, new
         {
             Id = reservationId,
-            updatedReservation.UserId,
-            updatedReservation.ParkingLotId,
-            updatedReservation.VehicleId,
+            updatedReservation.UserID,
+            updatedReservation.ParkinglotID,
+            updatedReservation.VehicleID,
             updatedReservation.StartTime,
             updatedReservation.EndTime,
             updatedReservation.Status,

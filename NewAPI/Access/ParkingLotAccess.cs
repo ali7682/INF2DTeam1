@@ -192,7 +192,7 @@ public static class ParkingLotAccess
             model.Address,
             model.Capacity,
             model.Reserved,
-            model.Tarriff,
+            model.Tariff,
             model.DayTariff,
             parkingLotId
         });
