@@ -163,4 +163,41 @@ public static class ParkingLotAccess
         int affectedRows = conn.Execute(sql, new { parkingLotId, sessionId });
         return affectedRows > 0;
     }
+
+    // UPDATE een parking lot met parking lot ID
+    // Endpoint: /parking-lots/{lid}
+    public static bool UpdateParkingLotById(int parkingLotId, ParkingLotModel model)
+    {
+        string cs = _config.GetConnectionString("DefaultConnection")!;
+        using MySqlConnection conn = new(cs);
+        conn.Open();
+
+        const string sql = """
+            UPDATE parking_lots
+            SET
+                name = @Name,
+                location = @Location,
+                address = @Address,
+                capacity = @Capacity,
+                reserved = @Reserved,
+                tariff = @Tariff,
+                daytariff = @DayTariff
+            WHERE id = @parkingLotId
+        """;
+
+        int affectedRows = conn.Execute(sql, new
+        {
+            model.Name,
+            model.Location,
+            model.Address,
+            model.Capacity,
+            model.Reserved,
+            model.Tariff,
+            model.DayTariff,
+            parkingLotId
+        });
+
+        return affectedRows > 0;
+
+    }
 }

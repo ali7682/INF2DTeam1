@@ -155,7 +155,41 @@ public static class ReservationAccess
             conn.Execute(updateLotSql, new { parkingLotId });
             return true;
         }
-
         return false;
+    }
+
+    // UPDATE een reservation met reservation ID
+    // Endpoint: /reservations/{rid}
+    public static bool UpdateReservationById(int reservationId, ReservationModel updatedReservation)
+    {
+        string cs = _config.GetConnectionString("DefaultConnection")!;
+        using MySqlConnection conn = new(cs);
+        conn.Open();
+        const string sql = """
+                    UPDATE reservations
+                    SET 
+                        user_id         = @UserID,
+                        parking_lot_id  = @ParkingLotID,
+                        vehicle_id      = @VehicleID,
+                        start_time      = @StartTime,
+                        end_time        = @EndTime,
+                        status          = @Status,
+                        cost            = @Cost
+                    WHERE id = @Id;
+                """;
+
+        int affectedRows = conn.Execute(sql, new
+        {
+            Id = reservationId,
+            updatedReservation.UserID,
+            updatedReservation.ParkinglotID,
+            updatedReservation.VehicleID,
+            updatedReservation.StartTime,
+            updatedReservation.EndTime,
+            updatedReservation.Status,
+            updatedReservation.Cost,
+        });
+
+        return affectedRows > 0;
     }
 }
