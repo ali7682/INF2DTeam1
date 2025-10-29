@@ -26,14 +26,14 @@ namespace NewAPI.Controllers
                 return Unauthorized("Unauthorized: Invalid or missing session token");
             }
 
-            List<PaymentModel> paymentDetails = PaymentDetailsAccess.GetAllPaymentDetails();
+            List<PaymentDetailsModel> paymentDetails = PaymentDetailsAccess.GetAllPaymentDetails();
 
             if (paymentDetails == null)
             {
                 return NotFound("NotFound: Billing not found");
             }
 
-            List<PaymentModel> userPaymentDetails = payment.Where(x => x.Initiator == user.Username).ToList();
+            List<PaymentDetailsModel> userPaymentDetails = paymentDetails.Where(x => x.Issuer == user.Username).ToList();
 
             return Ok(userPaymentDetails);
         }
@@ -62,14 +62,14 @@ namespace NewAPI.Controllers
                 return NotFound("NotFound: User not found");
             }
 
-            List<PaymentModel> paymentDetails = PaymentDetailsAccess.GetAllPaymentDetails();
+            List<PaymentDetailsModel> paymentDetails = PaymentDetailsAccess.GetAllPaymentDetails();
 
             if (paymentDetails == null)
             {
                 return NotFound("NotFound: Billing not found");
             }
 
-            List<PaymentModel> userPaymentDetails = payment.Where(x => x.Initiator == requestUser.Username).ToList();
+            List<PaymentDetailsModel> userPaymentDetails = paymentDetails.Where(x => x.Issuer == requestUser.Username).ToList();
 
             return Ok(userPaymentDetails);
         }
