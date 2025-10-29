@@ -41,6 +41,7 @@ public static class PaymentAccess
         const string sql = """
         SELECT 
             transaction_id     AS TransactionId,
+            transaction        AS Transaction
             amount             AS Amount,
             initiator          AS Initiator,
             created_at         AS CreatedAt,
