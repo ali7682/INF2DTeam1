@@ -191,6 +191,52 @@ namespace NewAPI.Controllers
             if (body is null || string.IsNullOrWhiteSpace(body.Licenseplate))
                 return BadRequest(new { error = "Bad request: Missing or invalid licenseplate details" });
 
+            if (ParkingLotAccess.GetParkingLotById(lid).Any())
+                return StatusCode(401, new { message = "Cannot start a session when another sessions for this licesenplate is already started." });
+
+            ParkingSessionModel newSession = new()
+            {
+                ParkingLotID = lid,
+                LicensePlate = body.Licenseplate,
+                Started = DateTime.Now,
+                Stopped = null,
+                User = user.Username,
+                DurationMinutes = null,
+                Cost = null,
+                PaymentStatus = "pending"
+            };
+
+            int newId = ParkingLotAccess.CreateParkingsession(newSession);
+
+            return Ok(new { message = $"Parking session started successfully for licenseplate {body.Licenseplate} with ID {newId}" });
+        }
+
+        //POST /parking-lots/{lid}/sessions/stop
+        [HttpPost("/parking-lots/{lid}/sessions/stop")]
+        public async Task<ActionResult<ParkingLotModel>> PostParkinglotStop([FromBody] LicenseplateRequest body, CancellationToken ct, int lid)
+        {
+            string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
+            UserModel? user = SessionManager.GetSession(sessionToken);
+
+            if (sessionToken == null || user == null)
+                return Unauthorized("Unauthorized: Invalid or missing session token");
+
+            if (body is null || string.IsNullOrWhiteSpace(body.Licenseplate))
+                return BadRequest(new { error = "Bad request: Missing or invalid licenseplate details" });
+
+            List<ParkingSessionModel> sessions = ParkingLotAccess.FindParkingSessionsByLicenseplate(body.Licenseplate);
+
+            if (!sessions.Any())
+                return StatusCode(401, new { message = "Cannot stop a session when there is no session for this licesenplate." });
+
+            ParkingSessionModel sessionToUpdate = sessions.First();
+
+            sessionToUpdate.Stopped = DateTime.Now;
+            sessionToUpdate.DurationMinutes = (int?)(sessionToUpdate.Stopped - sessionToUpdate.Started)?.TotalMinutes;
+
+            ParkingLotAccess.UpdateParkingSession(sessionToUpdate);
+
+            return Ok(new { message = $"Parking session stopped successfully for licenseplate {body.Licenseplate}" });
         }
     }
 }
