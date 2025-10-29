@@ -12,6 +12,11 @@ public class ParkinglotRequest
     public decimal DayTariff { get; set; }
 }
 
+public class LicenseplateRequest
+{
+    public string Licenseplate { get; set; }
+}
+
 namespace NewAPI.Controllers
 {
     [ApiController]
@@ -71,6 +76,7 @@ namespace NewAPI.Controllers
         }
 
         //POST /parking-lots
+        [HttpPost("parking-lots")]
         public async Task<ActionResult<ParkingLotModel>> PostParkinglot([FromBody] ParkinglotRequest body, CancellationToken ct)
         {
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
@@ -96,10 +102,25 @@ namespace NewAPI.Controllers
                 Tariff = body.Tariff,
                 DayTariff = body.DayTariff
             };
-            
+
             int newId = ParkingLotAccess.CreateParkinglot(newParkinglot);
 
             return Ok(new { message = $"Parking lot created successfully with ID {newId}" });
+
+        }
+
+        //POST /parking-lots/{lid}/sessions/start
+        [HttpPost("/parking-lots/{lid}/sessions/start")]
+        public async Task<ActionResult<ParkingLotModel>> PostParkinglotStart([FromBody] LicenseplateRequest body, CancellationToken ct, int lid)
+        {
+            string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
+            UserModel? user = SessionManager.GetSession(sessionToken);
+
+            if (sessionToken == null || user == null)
+                return Unauthorized("Unauthorized: Invalid or missing session token");
+
+            if (body is null || string.IsNullOrWhiteSpace(body.Licenseplate))
+                return BadRequest(new { error = "Bad request: Missing or invalid licenseplate details" });
 
         }
     }
