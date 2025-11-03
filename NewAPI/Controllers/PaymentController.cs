@@ -80,8 +80,6 @@ namespace NewAPI.Controllers
                 var bytes = md5.ComputeHash(System.Text.Encoding.UTF8.GetBytes(input));
                 TransactionsHash = Convert.ToHexString(bytes).ToLower();
             }
-            
-            //Console.WriteLine(-Math.Abs(body.Amount));
 
             PaymentModel newPayment = new()
             {

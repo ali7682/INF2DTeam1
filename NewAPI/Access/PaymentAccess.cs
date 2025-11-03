@@ -17,7 +17,7 @@ public static class PaymentAccess
         using MySqlConnection conn = new(cs);
         conn.Open();
 
-        Console.WriteLine(payment.Amount);
+        //Console.WriteLine(payment.Amount);
 
         const string query = """
         INSERT INTO payments

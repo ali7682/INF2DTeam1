@@ -202,10 +202,12 @@ public static class ReservationAccess
         conn.Open();
 
         const string sql = """
-            INSERT INTO reservations (user_id, parking_lot_id, vehicle_id, start_time, end_time, status, created_at, cost)
-            VALUES (@UserId, @ParkingLotId, @VehicleId, @StartTime, @EndTime, @Status, @CreatedAt, @Cost);
-            SELECT LAST_INSERT_ID();
-        """;
+        INSERT INTO reservations 
+            (user_id, parking_lot_id, vehicle_id, start_time, end_time, status, created_at, cost)
+        VALUES 
+            (@UserID, @ParkinglotID, @VehicleID, @StartTime, @EndTime, @Status, @CreatedAt, @Cost);
+        SELECT LAST_INSERT_ID();
+    """;
 
         int newId = conn.QuerySingle<int>(sql, reservation);
 

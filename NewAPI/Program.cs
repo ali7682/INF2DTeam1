@@ -10,6 +10,7 @@ UserAccess.SetConfig(builder.Configuration);
 VehicleAccess.SetConfig(builder.Configuration);
 ReservationAccess.SetConfig(builder.Configuration);
 PaymentAccess.SetConfig(builder.Configuration);
+ParkingLotAccess.SetConfig(builder.Configuration);
 
 // Configure the HTTP request pipeline.
 
