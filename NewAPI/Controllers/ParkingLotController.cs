@@ -145,7 +145,7 @@ namespace NewAPI.Controllers
         }
 
         //POST /parking-lots
-        [HttpPost("parking-lots")]
+        [HttpPost]
         public async Task<ActionResult<ParkingLotModel>> PostParkinglot([FromBody] ParkinglotRequest body, CancellationToken ct)
         {
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
