@@ -30,6 +30,29 @@ public static class PaymentDetailsAccess
         return newId;
     }
 
+    // GET alle payment details
+    // Endpoint: /paymentdetails
+    public static List<PaymentDetailsModel> GetAllPaymentDetails()
+    {
+        string cs = _config.GetConnectionString("DefaultConnection")!;
+        using MySqlConnection conn = new(cs);
+        conn.Open();
+
+        const string sql = """
+        SELECT 
+            transaction_id     AS TransactionId,
+            amount             AS Amount,
+            date               AS Date,
+            method             AS Method,
+            issuer             AS Issuer,
+            bank               AS Bank
+            FROM payment_details;
+        """;
+
+        List<PaymentDetailsModel> result = conn.Query<PaymentDetailsModel>(sql).ToList();
+        return result;
+    }
+
     public static PaymentModel GetPaymentByTransactionId(int transaction_Id)
     {
         string cs = _config.GetConnectionString("DefaultConnection")!;

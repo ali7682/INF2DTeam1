@@ -134,7 +134,7 @@ namespace NewAPI.Controllers
 
             if (sessionUser.Role != "ADMIN")
                 return StatusCode(403, new { message = "Access denied" });
-                // return Forbid("Access denied");
+            // return Forbid("Access denied");
 
             bool deleted = ParkingLotAccess.DeleteParkingSessionById(lid, sid);
 
@@ -237,6 +237,47 @@ namespace NewAPI.Controllers
             ParkingLotAccess.UpdateParkingSession(sessionToUpdate);
 
             return Ok(new { message = $"Parking session stopped successfully for licenseplate {body.Licenseplate}" });
+        }
+
+        // PUT /parking-lots/{lid}
+        [HttpPut("{lid:int}")]
+        public IActionResult UpdateParkingLotsById(int lid, [FromBody] ParkingLotModel updatedParkingLot)
+        {
+            if (updatedParkingLot == null)
+            {
+                return BadRequest("Invalid parking lot data");
+            }
+
+            string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
+            UserModel? user = SessionManager.GetSession(sessionToken);
+
+            if (user == null || sessionToken == null)
+            {
+                return Unauthorized("Unauthorized: Invalid or missing session token");
+            }
+
+            if (!user.IsAdmin())
+            {
+                return StatusCode(403, new { message = "Forbidden: You do not have access to this parking lot" });
+            }
+
+            ParkingLotModel? parkingLot = ParkingLotAccess.GetParkingLotById(lid);
+            if (parkingLot == null)
+            {
+                return NotFound("NotFound: Parking lot not found");
+            }
+
+            parkingLot.Name = updatedParkingLot.Name;
+            parkingLot.Location = updatedParkingLot.Location;
+            parkingLot.Address = updatedParkingLot.Address;
+            parkingLot.Capacity = updatedParkingLot.Capacity;
+            parkingLot.Reserved = updatedParkingLot.Reserved;
+            parkingLot.Tariff = updatedParkingLot.Tariff;
+            parkingLot.DayTariff = updatedParkingLot.DayTariff;
+
+            ParkingLotAccess.UpdateParkingLotById(lid, parkingLot);
+
+            return Ok(new { message = "Parking lot updated succesfully", parkingLot });
         }
     }
 }

@@ -164,6 +164,43 @@ public static class ParkingLotAccess
         return affectedRows > 0;
     }
 
+    // UPDATE een parking lot met parking lot ID
+    // Endpoint: /parking-lots/{lid}
+    public static bool UpdateParkingLotById(int parkingLotId, ParkingLotModel model)
+    {
+        string cs = _config.GetConnectionString("DefaultConnection")!;
+        using MySqlConnection conn = new(cs);
+        conn.Open();
+
+        const string sql = """
+            UPDATE parking_lots
+            SET
+                name = @Name,
+                location = @Location,
+                address = @Address,
+                capacity = @Capacity,
+                reserved = @Reserved,
+                tariff = @Tariff,
+                daytariff = @DayTariff
+            WHERE id = @parkingLotId
+        """;
+
+        int affectedRows = conn.Execute(sql, new
+        {
+            model.Name,
+            model.Location,
+            model.Address,
+            model.Capacity,
+            model.Reserved,
+            model.Tariff,
+            model.DayTariff,
+            parkingLotId
+        });
+
+        return affectedRows > 0;
+
+    }
+
     // POST een nieuwe parking lot
     // Endpoint: /parking-lots
     public static int CreateParkinglot(ParkingLotModel parkinglot)
@@ -254,5 +291,4 @@ public static class ParkingLotAccess
         List<ParkingSessionModel> sessions = conn.Query<ParkingSessionModel>(sql, new { licenseplate }).ToList();
         return sessions;
     }
-
 }

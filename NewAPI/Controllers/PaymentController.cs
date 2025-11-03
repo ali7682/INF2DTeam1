@@ -5,7 +5,7 @@ using System.Transactions;
 
 public class PaymentRequest
 {
-    public string Transaction { get; set; }
+    public string? Transaction { get; set; }
     public decimal Amount { get; set; }
 }
 
@@ -22,7 +22,6 @@ namespace NewAPI.Controllers
             _config = config;
             ParkingLotAccess.SetConfig(_config);
         }
-        
 
         [HttpPost]
         public async Task<ActionResult<PaymentModel>> PostPayments([FromBody] PaymentRequest body, CancellationToken ct)
@@ -97,6 +96,62 @@ namespace NewAPI.Controllers
             int newId = PaymentAccess.CreatePayment(newPayment);
 
             return Ok(new { message = $"Payment created successfully with ID {newId}" });
+        }
+
+        // GET /payments
+        [HttpGet]
+        public IActionResult GetPayments()
+        {
+            string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
+            UserModel? user = SessionManager.GetSession(sessionToken);
+
+            if (sessionToken == null || user == null)
+            {
+                return Unauthorized("Unauthorized: Invalid or missing session token");
+            }
+
+            List<PaymentModel> payment = PaymentAccess.GetAllPayments();
+            if (payment == null)
+            {
+                return NotFound("NotFound: Payment not found");
+            }
+
+            List<PaymentModel> userPayments = payment.Where(x => x.Initiator == user.Username).ToList();
+            return Ok(userPayments);
+        }
+
+        // GET /payments/{username}
+        [HttpGet("{username}")]
+        public IActionResult GetPaymentsByUserName(string userName)
+        {
+            string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
+            UserModel? user = SessionManager.GetSession(sessionToken);
+
+            if (sessionToken == null || user == null)
+            {
+                return Unauthorized("Unauthorized: Invalid or missing session token");
+            }
+
+            if (!user.IsAdmin())
+            {
+                return StatusCode(403, new { message = "Forbidden: You do not have access to this payment" });
+            }
+
+            UserModel? requestUser = UserAccess.GetUserByUsername(userName);
+            if (requestUser == null)
+            {
+                return NotFound("NotFound: User not found");
+            }
+
+            List<PaymentModel> payment = PaymentAccess.GetAllPayments();
+            if (payment == null)
+            {
+                return NotFound("NotFound: Payment not found");
+            }
+
+            List<PaymentModel> userPayments = payment.Where(x => x.Initiator == requestUser.Username).ToList();
+            
+            return Ok(userPayments);
         }
     }
 }
