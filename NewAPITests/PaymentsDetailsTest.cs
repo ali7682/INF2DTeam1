@@ -11,7 +11,7 @@ namespace NewAPITests
     public class PaymentsDetailsControllerTests
     {
         [TestMethod]
-        public void GetBillings()
+        public void TestGetBillings()
         {
             PaymentsDetailsController controller = new PaymentsDetailsController();
             var result = controller.GetBillings() as OkObjectResult;
@@ -19,5 +19,23 @@ namespace NewAPITests
             Assert.IsNotNull(result, "Expected a OkObject response but got null");
             Assert.AreEqual(200, result.StatusCode, "Expected 200 OK response");
         }
+
+        // Test GET: /billings/{username}
+        [TestMethod]
+        public void TestValidGetBillingsByUserName()
+        {
+            PaymentsDetailsController controller = new PaymentsDetailsController();
+            var result = controller.GetBillingByUser("JohnDeer12") as OkObjectResult;
+
+            Assert.IsNotNull(result, "Expected a OkObject response but got null");
+            Assert.AreEqual(200, result.StatusCode, "Expected 200 OK response");
+        }
+
+        [TestMethod]
+        public void TestInvalidGetBillingsByUserName()
+        {
+            
+        }
     }
+
 }
