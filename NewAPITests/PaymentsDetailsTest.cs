@@ -34,7 +34,11 @@ namespace NewAPITests
         [TestMethod]
         public void TestInvalidGetBillingsByUserName()
         {
-            
+            PaymentsDetailsController controller = new PaymentsDetailsController();
+            var result = controller.GetBillingsByUser("") as BadRequestObjectResult;
+
+            Assert.IsNotNull(result, "Expected as Bad Request response but got null");
+            Assert.AreEqual(400, result.StatusCode, "Expected 400 Bad request response");
         }
     }
 
