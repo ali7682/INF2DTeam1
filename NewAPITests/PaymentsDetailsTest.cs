@@ -25,7 +25,7 @@ namespace NewAPITests
         public void TestValidGetBillingsByUserName()
         {
             PaymentsDetailsController controller = new PaymentsDetailsController();
-            var result = controller.GetBillingByUser("JohnDeer12") as OkObjectResult;
+            var result = controller.GetBillingByUser("JohnDeere12") as OkObjectResult;
 
             Assert.IsNotNull(result, "Expected a OkObject response but got null");
             Assert.AreEqual(200, result.StatusCode, "Expected 200 OK response");
