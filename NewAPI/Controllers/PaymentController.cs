@@ -86,7 +86,7 @@ namespace NewAPI.Controllers
 
         // GET /payments
         [HttpGet]
-        public IActionResult GetPayments()
+        public async Task<IActionResult> GetPayments(CancellationToken ct)
         {
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
             UserModel? user = SessionManager.GetSession(sessionToken);
@@ -96,7 +96,7 @@ namespace NewAPI.Controllers
                 return Unauthorized("Unauthorized: Invalid or missing session token");
             }
 
-            List<PaymentModel> payment = PaymentAccess.GetAllPayments();
+            List<PaymentModel> payment = await PaymentAccess.GetAllPaymentsAsync(ct);
             if (payment == null)
             {
                 return NotFound("NotFound: Payment not found");
@@ -108,7 +108,7 @@ namespace NewAPI.Controllers
 
         // GET /payments/{username}
         [HttpGet("{username}")]
-        public async Task<IActionResult> GetPaymentsByUserName(string userName)
+        public async Task<IActionResult> GetPaymentsByUserName(string userName, CancellationToken ct)
         {
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
             UserModel? user = SessionManager.GetSession(sessionToken);
@@ -129,13 +129,13 @@ namespace NewAPI.Controllers
                 return NotFound("NotFound: User not found");
             }
 
-            List<PaymentModel> payment = PaymentAccess.GetAllPayments();
+            List<PaymentModel> payment = await PaymentAccess.GetAllPaymentsAsync();
             if (payment == null)
             {
                 return NotFound("NotFound: Payment not found");
             }
 
-            List<PaymentModel> userPayments = payment.Where(x => x.Initiator == requestUser.Username).ToList();
+            List<PaymentModel> userPayments = await payment.Where(x => x.Initiator == requestUser.Username).ToList();
             
             return Ok(userPayments);
         }
