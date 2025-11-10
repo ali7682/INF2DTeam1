@@ -125,7 +125,7 @@ namespace NewAPI.Controllers
 
         // PUT /parking-lots/{lid}
         [HttpPut("{lid:int}")]
-        public IActionResult UpdateParkingLotsById(int lid, [FromBody] ParkingLotModel updatedParkingLot)
+        public async IActionResult UpdateParkingLotsById(int lid, [FromBody] ParkingLotModel updatedParkingLot, CancellationToken ct)
         {
             if (updatedParkingLot == null)
             {
@@ -145,7 +145,7 @@ namespace NewAPI.Controllers
                 return StatusCode(403, new { message = "Forbidden: You do not have access to this parking lot" });
             }
 
-            ParkingLotModel? parkingLot = ParkingLotAccess.GetParkingLotById(lid);
+            ParkingLotModel? parkingLot = await ParkingLotAccess.GetParkingLotByIdAsync(lid, ct);
             if (parkingLot == null)
             {
                 return NotFound("NotFound: Parking lot not found");
@@ -159,7 +159,7 @@ namespace NewAPI.Controllers
             parkingLot.Tariff = updatedParkingLot.Tariff;
             parkingLot.DayTariff = updatedParkingLot.DayTariff;
 
-            ParkingLotAccess.UpdateParkingLotById(lid, parkingLot);
+            ParkingLotAccess.UpdateParkingLotByIdAsync(lid, parkingLot, ct);
 
             return Ok(new { message = "Parking lot updated succesfully", parkingLot });
         }
