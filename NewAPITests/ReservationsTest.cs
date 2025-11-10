@@ -1,16 +1,15 @@
 using System.Reflection;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using NewAPI.Controllers;
 using NewAPI.Models;
 
 namespace NewAPITest
 {
     // Test PUT: /reservations/{rid}
-    [TestClass]
     public class ReservationControllerTest
     {
-        [TestMethod]
+        [Fact]
         public void TestValidUpdateParkingLotsById()
         {
             ReservationController controller = new ReservationController();
