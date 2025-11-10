@@ -16,7 +16,7 @@ namespace NewAPI.Controllers
 
         // GET /billings
         [HttpGet]
-        public IActionResult GetBilling()
+        public async IActionResult GetBilling(CancellationToken ct)
         {
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
             UserModel? user = SessionManager.GetSession(sessionToken);
@@ -26,21 +26,21 @@ namespace NewAPI.Controllers
                 return Unauthorized("Unauthorized: Invalid or missing session token");
             }
 
-            List<PaymentDetailsModel> paymentDetails = PaymentDetailsAccess.GetAllPaymentDetails();
+            List<PaymentDetailsModel> paymentDetails = await PaymentDetailsAccess.GetAllPaymentDetails(ct);
 
             if (paymentDetails == null)
             {
                 return NotFound("NotFound: Billing not found");
             }
 
-            List<PaymentDetailsModel> userPaymentDetails = paymentDetails.Where(x => x.Issuer == user.Username).ToList();
+            List<PaymentDetailsModel> userPaymentDetails = await paymentDetails.Where(x => x.Issuer == user.Username).ToList();
 
             return Ok(userPaymentDetails);
         }
 
         // GET /billings/{username}
         [HttpGet("{userName}")]
-        public async Task<IActionResult> GetBillingByUser(string userName)
+        public async Task<IActionResult> GetBillingByUser(string userName, CancellationToken ct)
         {
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
             UserModel? user = SessionManager.GetSession(sessionToken);
@@ -62,14 +62,14 @@ namespace NewAPI.Controllers
                 return NotFound("NotFound: User not found");
             }
 
-            List<PaymentDetailsModel> paymentDetails = PaymentDetailsAccess.GetAllPaymentDetails();
+            List<PaymentDetailsModel> paymentDetails = await PaymentDetailsAccess.GetAllPaymentDetails(ct);
 
             if (paymentDetails == null)
             {
                 return NotFound("NotFound: Billing not found");
             }
 
-            List<PaymentDetailsModel> userPaymentDetails = paymentDetails.Where(x => x.Issuer == requestUser.Username).ToList();
+            List<PaymentDetailsModel> userPaymentDetails = await paymentDetails.Where(x => x.Issuer == requestUser.Username).ToList();
 
             return Ok(userPaymentDetails);
         }
