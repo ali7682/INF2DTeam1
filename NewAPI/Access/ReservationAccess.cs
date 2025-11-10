@@ -194,7 +194,7 @@ public static class ReservationAccess
         await using var conn = new MySqlConnection(Cs);
         await conn.OpenAsync(ct);
 
-        var cmd = CommandDefinition(sql, new
+        var cmd = new CommandDefinition(sql, new
         {
             Id = reservationId,
             updatedReservation.UserID,

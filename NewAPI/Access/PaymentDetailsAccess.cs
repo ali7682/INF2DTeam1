@@ -49,7 +49,8 @@ public static class PaymentDetailsAccess
         await conn.OpenAsync(ct);
 
         var cmd = new CommandDefinition(sql, cancellationToken: ct, commandTimeout: 5);
-        return await conn.QueryFirstOrDefaultAsync<PaymentDetailsModel>(cmd);
+        var result = await conn.QueryFirstOrDefaultAsync<PaymentDetailsModel>(cmd);
+        return result.ToList();
     }
 
     public static PaymentModel GetPaymentByTransactionId(int transaction_Id)
