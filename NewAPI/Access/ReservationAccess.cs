@@ -6,10 +6,21 @@ public static class ReservationAccess
     public static readonly string TableName = "reservations";
     private static IConfiguration _config;
 
-    public static void SetConfig(IConfiguration config)
-    {
-        _config = config;
-    }
+    public static void SetConfig(IConfiguration config) => _config = config;
+    private static string Cs => _config.GetConnectionString("DefaultConnection")!;
+    private const string SqlSelectBase = """
+        SELECT 
+            id              AS Id,
+            user_id         AS UserId,
+            parking_lot_id  AS ParkingLotId,
+            vehicle_id      AS VehicleId,
+            start_time      AS StartTime,
+            end_time        AS EndTime,
+            status          AS Status,
+            created_at      AS CreatedAt,
+            cost            AS Cost
+        FROM reservations
+    """;
 
     public static ReservationModel GetReservationById(int reservationId)
     {
@@ -160,11 +171,8 @@ public static class ReservationAccess
 
     // UPDATE een reservation met reservation ID
     // Endpoint: /reservations/{rid}
-    public static bool UpdateReservationById(int reservationId, ReservationModel updatedReservation)
+    public static async Task<bool> UpdateReservationById(int reservationId, ReservationModel updatedReservation, CancellationToken ct = default)
     {
-        string cs = _config.GetConnectionString("DefaultConnection")!;
-        using MySqlConnection conn = new(cs);
-        conn.Open();
         const string sql = """
                     UPDATE reservations
                     SET 
@@ -178,7 +186,10 @@ public static class ReservationAccess
                     WHERE id = @Id;
                 """;
 
-        int affectedRows = conn.Execute(sql, new
+        await using var conn = new MySqlConnection(Cs);
+        await conn.OpenAsync(ct);
+
+        var cmd = CommandDefinition(sql, new
         {
             Id = reservationId,
             updatedReservation.UserID,
@@ -188,8 +199,9 @@ public static class ReservationAccess
             updatedReservation.EndTime,
             updatedReservation.Status,
             updatedReservation.Cost,
-        });
+        }, cancellationToken: ct, commandTimeout: 5);
 
+        var affectedRows = await conn.ExecuteAsync(cmd);
         return affectedRows > 0;
     }
 }

@@ -6,10 +6,20 @@ public static class PaymentDetailsAccess
     public static readonly string TableName = "payment_details";
     private static IConfiguration _config;
 
-    public static void SetConfig(IConfiguration config)
-    {
-        _config = config;
-    }
+    public static void SetConfig(IConfiguration config) => _config = config;
+
+    private static string Cs => _config.GetConnectionString("DefaultConnection")!;
+
+    private const string SqlSelectBase = """
+        SELECT
+            transaction_id     AS TransactionId,
+            amount             AS Amount,
+            date               AS Date,
+            method             AS Method,
+            issuer             AS Issuer,
+            bank               AS Bank
+        FROM payment_details
+    """;
 
     public static int CreatePaymentDetails(PaymentDetailsModel paymentdetails)
     {
@@ -32,25 +42,14 @@ public static class PaymentDetailsAccess
 
     // GET alle payment details
     // Endpoint: /paymentdetails
-    public static List<PaymentDetailsModel> GetAllPaymentDetails()
+    public static async Task<PaymentDetailsModel?> GetAllPaymentDetails(CancellationToken ct = default)
     {
-        string cs = _config.GetConnectionString("DefaultConnection")!;
-        using MySqlConnection conn = new(cs);
-        conn.Open();
+        var sql = $"{SqlSelectBase};";
+        await using var conn = new MySqlConnection(Cs);
+        await conn.OpenAsync(ct);
 
-        const string sql = """
-        SELECT 
-            transaction_id     AS TransactionId,
-            amount             AS Amount,
-            date               AS Date,
-            method             AS Method,
-            issuer             AS Issuer,
-            bank               AS Bank
-            FROM payment_details;
-        """;
-
-        List<PaymentDetailsModel> result = conn.Query<PaymentDetailsModel>(sql).ToList();
-        return result;
+        var cmd = new CommandDefinition(sql, cancellationToken: ct, commandTimeout: 5);
+        return await conn.QueryFirstOrDefaultAsync<PaymentDetailsModel>(cmd);
     }
 
     public static PaymentModel GetPaymentByTransactionId(int transaction_Id)

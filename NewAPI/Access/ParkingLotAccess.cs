@@ -6,10 +6,21 @@ public static class ParkingLotAccess
     public static readonly string TableName = "parking_lots";
     private static IConfiguration _config;
 
-    public static void SetConfig(IConfiguration config)
-    {
-        _config = config;
-    }
+    public static void SetConfig(IConfiguration config) => _config = config;
+    private static string Cs => _config.GetConnectionString("DefaultConnection")!;
+    private const string SqlSelectBase = """
+        SELECT 
+            id              AS ID,
+            name            AS Name,
+            location        AS Location,
+            address         AS Address,
+            capacity        AS Capacity,
+            reserved        AS Reserved,
+            tariff          AS Tariff,
+            daytariff       AS DayTariff,
+            created_at      AS CreatedAt
+        FROM parking_lots
+    """;
 
     // GET alle parking lots
     // Endpoint: /parking-lots
@@ -166,12 +177,8 @@ public static class ParkingLotAccess
 
     // UPDATE een parking lot met parking lot ID
     // Endpoint: /parking-lots/{lid}
-    public static bool UpdateParkingLotById(int parkingLotId, ParkingLotModel model)
+    public static async Task<bool> UpdateParkingLotById(int parkingLotId, ParkingLotModel model, CancellationToken ct = default)
     {
-        string cs = _config.GetConnectionString("DefaultConnection")!;
-        using MySqlConnection conn = new(cs);
-        conn.Open();
-
         const string sql = """
             UPDATE parking_lots
             SET
@@ -185,7 +192,10 @@ public static class ParkingLotAccess
             WHERE id = @parkingLotId
         """;
 
-        int affectedRows = conn.Execute(sql, new
+        await using var conn = new MySqlConnection(Cs);
+        await conn.OpenAsync(ct);
+
+        var cmd = new CommandDefinition(sql, new
         {
             model.Name,
             model.Location,
@@ -195,9 +205,9 @@ public static class ParkingLotAccess
             model.Tariff,
             model.DayTariff,
             parkingLotId
-        });
+        }, cancellationToken: ct, commandTimeout: 5);
 
+        var affectedRows = await conn.ExecuteAsync(cmd);
         return affectedRows > 0;
-
     }
 }
