@@ -1,4 +1,21 @@
+using System.Net.Sockets;
 using Microsoft.AspNetCore.Mvc;
+
+public class ParkinglotRequest
+{
+    public string Name { get; set; }
+    public string Location { get; set; }
+    public string Address { get; set; }
+    public int Capacity { get; set; }
+    public int Reserved { get; set; }
+    public decimal Tariff { get; set; }
+    public decimal DayTariff { get; set; }
+}
+
+public class LicenseplateRequest
+{
+    public string Licenseplate { get; set; }
+}
 
 namespace NewAPI.Controllers
 {
@@ -123,6 +140,101 @@ namespace NewAPI.Controllers
             return Ok(new { message = "Parking session deleted" });
         }
 
+        //POST /parking-lots
+        [HttpPost]
+        public async Task<ActionResult<ParkingLotModel>> PostParkinglot([FromBody] ParkinglotRequest body, CancellationToken ct)
+        {
+            string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
+            UserModel? user = SessionManager.GetSession(sessionToken);
+
+            if (sessionToken == null || user == null)
+                return Unauthorized("Unauthorized: Invalid or missing session token");
+
+            if (user.Role != "ADMIN")
+                return StatusCode(403, new { message = "Access denied" });
+
+            if (body is null || string.IsNullOrWhiteSpace(body.Name) || string.IsNullOrWhiteSpace(body.Location) || string.IsNullOrWhiteSpace(body.Address) ||
+                body.Capacity <= 0 || body.Tariff < 0 || body.DayTariff < 0)
+                return BadRequest(new { error = "Bad request: Missing or invalid parking lot details" });
+
+            ParkingLotModel newParkinglot = new()
+            {
+                Name = body.Name,
+                Location = body.Location,
+                Address = body.Address,
+                Capacity = body.Capacity,
+                Reserved = body.Reserved,
+                Tariff = body.Tariff,
+                DayTariff = body.DayTariff
+            };
+
+            int newId = ParkingLotAccess.CreateParkinglot(newParkinglot);
+
+            return Ok(new { message = $"Parking lot created successfully with ID {newId}" });
+
+        }
+
+        //POST /parking-lots/{lid}/sessions/start
+        [HttpPost("/parking-lots/{lid}/sessions/start")]
+        public async Task<ActionResult<ParkingLotModel>> PostParkinglotStart([FromBody] LicenseplateRequest body, CancellationToken ct, int lid)
+        {
+            string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
+            UserModel? user = SessionManager.GetSession(sessionToken);
+
+            if (sessionToken == null || user == null)
+                return Unauthorized("Unauthorized: Invalid or missing session token");
+
+            if (body is null || string.IsNullOrWhiteSpace(body.Licenseplate))
+                return BadRequest(new { error = "Bad request: Missing or invalid licenseplate details" });
+
+            if (ParkingLotAccess.GetParkingSessionsByLotId(lid).Any())
+                return StatusCode(401, new { message = "Cannot start a session when another sessions for this licesenplate is already started." });
+
+            ParkingSessionModel newSession = new()
+            {
+                ParkingLotID = lid,
+                LicensePlate = body.Licenseplate,
+                Started = DateTime.Now,
+                Stopped = null,
+                User = user.Username,
+                DurationMinutes = null,
+                Cost = null,
+                PaymentStatus = "pending"
+            };
+
+            int newId = ParkingLotAccess.CreateParkingsession(newSession);
+
+            return Ok(new { message = $"Parking session started successfully for licenseplate {body.Licenseplate} with ID {newId}" });
+        }
+
+        //POST /parking-lots/{lid}/sessions/stop
+        [HttpPost("/parking-lots/{lid}/sessions/stop")]
+        public async Task<ActionResult<ParkingLotModel>> PostParkinglotStop([FromBody] LicenseplateRequest body, CancellationToken ct, int lid)
+        {
+            string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
+            UserModel? user = SessionManager.GetSession(sessionToken);
+
+            if (sessionToken == null || user == null)
+                return Unauthorized("Unauthorized: Invalid or missing session token");
+
+            if (body is null || string.IsNullOrWhiteSpace(body.Licenseplate))
+                return BadRequest(new { error = "Bad request: Missing or invalid licenseplate details" });
+
+            List<ParkingSessionModel> sessions = ParkingLotAccess.FindParkingSessionsByLicenseplate(body.Licenseplate);
+
+            if (!sessions.Any())
+                return StatusCode(401, new { message = "Cannot stop a session when there is no session for this licesenplate." });
+
+            ParkingSessionModel sessionToUpdate = sessions.First();
+
+            sessionToUpdate.Stopped = DateTime.Now;
+            sessionToUpdate.DurationMinutes = (int?)(sessionToUpdate.Stopped - sessionToUpdate.Started)?.TotalMinutes;
+
+            ParkingLotAccess.UpdateParkingSession(sessionToUpdate);
+
+            return Ok(new { message = $"Parking session stopped successfully for licenseplate {body.Licenseplate}" });
+        }
+
         // PUT /parking-lots/{lid}
         [HttpPut("{lid:int}")]
         public async IActionResult UpdateParkingLotsById(int lid, [FromBody] ParkingLotModel updatedParkingLot, CancellationToken ct)
@@ -165,3 +277,4 @@ namespace NewAPI.Controllers
         }
     }
 }
+
