@@ -19,9 +19,9 @@ public static class PaymentAccess
 
         const string query = """
         INSERT INTO payments
-            (amount, initiator, created_at, completed, hash)
+            (amount, transaction, initiator, created_at, completed, hash)
         VALUES
-            (@Amount, @Initiator, @Created_at, @Completed, @Hash);
+            (@Amount, @Transaction, @Initiator, @Created_at, @Completed, @Hash);
         SELECT LAST_INSERT_ID();
         """;
 
