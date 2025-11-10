@@ -48,7 +48,7 @@ namespace NewAPI.Controllers
                 Hash = Guid.NewGuid().ToString("N")
             };
 
-            int newId = PaymentAccess.CreatePayment(newPayment);
+            int newId = await PaymentAccess.CreatePaymentAsync(newPayment, ct);
 
             return Ok(new { message = $"Payment created successfully with ID {newId}" });        }
 
@@ -91,7 +91,7 @@ namespace NewAPI.Controllers
                 Hash = Guid.NewGuid().ToString("N")
             };
 
-            int newId = PaymentAccess.CreatePayment(newPayment);
+            int newId = await PaymentAccess.CreatePaymentAsync(newPayment, ct);
 
             return Ok(new { message = $"Payment created successfully with ID {newId}" });
         }

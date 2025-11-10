@@ -212,13 +212,9 @@ public static class ReservationAccess
 
     // POST een nieuwe reservation
     // Endpoint: /reservations
-    public static int CreateReservation(ReservationModel reservation)
+    public static async Task<int> CreateReservationAsync(ReservationModel reservation, CancellationToken ct = default)
     {
-        string cs = _config.GetConnectionString("DefaultConnection")!;
-        using MySqlConnection conn = new(cs);
-        conn.Open();
-
-        const string sql = """
+        const string query = """
         INSERT INTO reservations 
             (user_id, parking_lot_id, vehicle_id, start_time, end_time, status, created_at, cost)
         VALUES 
@@ -226,16 +222,24 @@ public static class ReservationAccess
         SELECT LAST_INSERT_ID();
     """;
 
-        int newId = conn.QuerySingle<int>(sql, reservation);
+        await using var conn = new MySqlConnection(Cs);
+        await conn.OpenAsync(ct);
+
+        var insertCmd = new CommandDefinition(query, reservation, cancellationToken: ct, commandTimeout: 5);
+        int reservationId = await conn.ExecuteScalarAsync<int>(insertCmd);
+
 
         // Na het toevoegen van de reservation wordt 'reserved' count van parking lot met 1 verhoogd
-        const string updateLotSql = """
+        const string updateLotQuery = """
             UPDATE parking_lots
             SET reserved = reserved + 1
-            WHERE id = @ParkingLotId;
+            WHERE id = @ParkinglotID;
         """;
-        conn.Execute(updateLotSql, new { reservation.ParkinglotID });
 
-        return newId;
+        var updateCmd = new CommandDefinition(updateLotQuery, new { reservation.ParkinglotID }, cancellationToken: ct, commandTimeout: 5);
+        await conn.ExecuteAsync(updateCmd);
+
+        return reservationId;
+
     }
 }
