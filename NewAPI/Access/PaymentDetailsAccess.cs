@@ -42,14 +42,14 @@ public static class PaymentDetailsAccess
 
     // GET alle payment details
     // Endpoint: /paymentdetails
-    public static async Task<PaymentDetailsModel?> GetAllPaymentDetailsAsync(CancellationToken ct = default)
+    public static async Task<List<PaymentDetailsModel?>> GetAllPaymentDetailsAsync(CancellationToken ct = default)
     {
         var sql = $"{SqlSelectBase};";
         await using var conn = new MySqlConnection(Cs);
         await conn.OpenAsync(ct);
 
         var cmd = new CommandDefinition(sql, cancellationToken: ct, commandTimeout: 5);
-        var result = await conn.QueryFirstOrDefaultAsync<PaymentDetailsModel>(cmd);
+        var result = await conn.QueryAsync<PaymentDetailsModel>(cmd);
         return result.ToList();
     }
 
