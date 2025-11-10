@@ -1,5 +1,5 @@
 using Dapper;
-using MySql.Data.MySqlClient;
+using MySqlConnector;
 
 public static class ParkingLotAccess
 {
@@ -207,12 +207,8 @@ public static class ParkingLotAccess
 
     // POST een nieuwe parking lot
     // Endpoint: /parking-lots
-    public static int CreateParkinglot(ParkingLotModel parkinglot)
+    public static async Task<int> CreateParkinglotAsync(ParkingLotModel parkinglot, CancellationToken ct = default)
     {
-        string cs = _config.GetConnectionString("DefaultConnection")!;
-        using MySqlConnection conn = new(cs);
-        conn.Open();
-
         const string query = """
         INSERT INTO parking_lots
             (name, location, address, capacity, reserved, tariff, daytariff)
@@ -220,20 +216,18 @@ public static class ParkingLotAccess
             (@Name, @Location, @Address, @Capacity, @Reserved, @Tariff, @DayTariff);
         SELECT LAST_INSERT_ID();
         """;
+        
+        await using var conn = new MySqlConnection(Cs);
+        await conn.OpenAsync(ct);
 
-        int newId = conn.ExecuteScalar<int>(query, parkinglot);
-
-        return newId;
+        var cmd = new CommandDefinition(query, parkinglot, cancellationToken: ct, commandTimeout: 5);
+        return await conn.ExecuteScalarAsync<int>(cmd);
     }
 
     // POST een nieuwe parking session
     // Endpoint: /parking-lots/{lid}/sessions/start
-    public static int CreateParkingsession(ParkingSessionModel session)
+    public static async Task<int> CreateParkingsessionAsync(ParkingSessionModel session, CancellationToken ct = default)
     {
-        string cs = _config.GetConnectionString("DefaultConnection")!;
-        using MySqlConnection conn = new(cs);
-        conn.Open();
-
         const string query = """
         INSERT INTO parking_sessions
             (parking_lot_id, licenseplate, started, user)
@@ -242,19 +236,17 @@ public static class ParkingLotAccess
         SELECT LAST_INSERT_ID();
         """;
 
-        int newId = conn.ExecuteScalar<int>(query, session);
+        await using var conn = new MySqlConnection(Cs);
+        await conn.OpenAsync(ct);
 
-        return newId;
+        var cmd = new CommandDefinition(query, session, cancellationToken: ct, commandTimeout: 5);
+        return await conn.ExecuteScalarAsync<int>(cmd);
     }
 
     // PUT een parking session
     // Endpoint: /parking-lots/{lid}/sessions/stop
-    public static bool UpdateParkingSession(ParkingSessionModel session)
+    public static async Task<bool> UpdateParkingSessionAsync(ParkingSessionModel session, CancellationToken ct = default)
     {
-        string cs = _config.GetConnectionString("DefaultConnection")!;
-        using MySqlConnection conn = new(cs);
-        conn.Open();
-
         const string sql = """
         UPDATE parking_sessions
         SET
@@ -265,18 +257,27 @@ public static class ParkingLotAccess
         WHERE id = @ID AND parking_lot_id = @ParkingLotID;
         """;
 
-        int affectedRows = conn.Execute(sql, session);
-        return affectedRows > 0;
+        await using var conn = new MySqlConnection(Cs);
+        await conn.OpenAsync(ct);
+
+        var cmd = new CommandDefinition(sql, new
+        {
+            session.ID,
+            session.ParkingLotID,
+            session.Stopped,
+            session.DurationMinutes,
+            session.Cost,
+            session.PaymentStatus,
+        }, cancellationToken: ct, commandTimeout: 5);
+
+        var rows = await conn.ExecuteAsync(cmd);
+        return rows > 0;
     }
 
     // GET een parking lot met licenseplate
     // Endpoint: /parking-lots/{lid}/sessions/start
-    public static List<ParkingSessionModel> FindParkingSessionsByLicenseplate(string licenseplate)
+    public static async Task<List<ParkingSessionModel>> FindParkingSessionsByLicenseplateAsync(string licenseplate, CancellationToken ct = default)
     {
-        string cs = _config.GetConnectionString("DefaultConnection")!;
-        using MySqlConnection conn = new(cs);
-        conn.Open();
-
         const string sql = """
         SELECT 
                 id                  AS ID,
@@ -291,8 +292,11 @@ public static class ParkingLotAccess
             FROM parking_sessions
             WHERE licenseplate = @licenseplate;
         """;
+        
+        await using MySqlConnection conn = new(Cs);
+        await conn.OpenAsync(ct);
 
-        List<ParkingSessionModel> sessions = conn.Query<ParkingSessionModel>(sql, new { licenseplate }).ToList();
-        return sessions;
+        var sessions = await conn.QueryAsync<ParkingSessionModel>(sql, new { licenseplate });
+        return sessions.AsList();
     }
 }

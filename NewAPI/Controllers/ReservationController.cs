@@ -62,7 +62,7 @@ namespace NewAPI.Controllers
             if (body is null || string.IsNullOrWhiteSpace(body.Licenseplate) || string.IsNullOrWhiteSpace(body.Startdate) || string.IsNullOrWhiteSpace(body.Enddate) || body.ParkingLot <= 0)
                 return BadRequest(new { error = "Bad request: Missing or invalid reservation details" });
 
-            List<ParkingLotModel> parkingLots = ParkingLotAccess.GetAllParkingLots();
+            List<ParkingLotModel> parkingLots = await ParkingLotAccess.GetAllParkingLotsAsync(ct);
 
             if (!parkingLots.Any(pl => pl.ID == body.ParkingLot))
             {
@@ -82,7 +82,7 @@ namespace NewAPI.Controllers
                 if (string.IsNullOrWhiteSpace(body.User))
                     return BadRequest(new { error = "Missing required field", field = "user" });
 
-                targetUser = UserAccess.GetUserByUsername(body.User);
+                targetUser = await UserAccess.GetUserByUsernameAsync(body.User, ct);
                 if (targetUser == null)
                     return BadRequest(new { error = $"User not found with username '{body.User}'", field = "user" });
             }
@@ -99,7 +99,7 @@ namespace NewAPI.Controllers
                 Cost = 0m
             };
 
-            int newId = ReservationAccess.CreateReservation(newReservation);
+            int newId = await ReservationAccess.CreateReservationAsync(newReservation, ct);
 
             return Ok(new { message = $"Reservation created successfully with ID {newId}" });
         }
