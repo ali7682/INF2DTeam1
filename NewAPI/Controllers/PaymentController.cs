@@ -129,7 +129,7 @@ namespace NewAPI.Controllers
                 return NotFound("NotFound: User not found");
             }
 
-            List<PaymentModel> payment = await PaymentAccess.GetAllPaymentsAsync();
+            List<PaymentModel> payment = await PaymentAccess.GetAllPaymentsAsync(ct);
             if (payment == null)
             {
                 return NotFound("NotFound: Payment not found");
