@@ -147,7 +147,7 @@ namespace NewAPI.Controllers
                 return NotFound("NotFound: Payment not found");
             }
 
-            List<PaymentModel> userPayments = await payment.Where(x => x.Initiator == requestUser.Username).ToList();
+            List<PaymentModel> userPayments = payment.Where(x => x.Initiator == requestUser.Username).ToList();
             
             return Ok(userPayments);
         }

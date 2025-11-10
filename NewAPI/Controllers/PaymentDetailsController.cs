@@ -16,7 +16,7 @@ namespace NewAPI.Controllers
 
         // GET /billings
         [HttpGet]
-        public async IActionResult GetBilling(CancellationToken ct)
+        public async Task<IActionResult> GetBilling(CancellationToken ct)
         {
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
             UserModel? user = SessionManager.GetSession(sessionToken);
@@ -33,7 +33,7 @@ namespace NewAPI.Controllers
                 return NotFound("NotFound: Billing not found");
             }
 
-            List<PaymentDetailsModel> userPaymentDetails = await paymentDetails.Where(x => x.Issuer == user.Username).ToList();
+            List<PaymentDetailsModel> userPaymentDetails = paymentDetails.Where(x => x.Issuer == user.Username).ToList();
 
             return Ok(userPaymentDetails);
         }
@@ -69,7 +69,7 @@ namespace NewAPI.Controllers
                 return NotFound("NotFound: Billing not found");
             }
 
-            List<PaymentDetailsModel> userPaymentDetails = await paymentDetails.Where(x => x.Issuer == requestUser.Username).ToList();
+            List<PaymentDetailsModel> userPaymentDetails = paymentDetails.Where(x => x.Issuer == requestUser.Username).ToList();
 
             return Ok(userPaymentDetails);
         }

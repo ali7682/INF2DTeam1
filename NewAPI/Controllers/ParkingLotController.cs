@@ -237,7 +237,7 @@ namespace NewAPI.Controllers
 
         // PUT /parking-lots/{lid}
         [HttpPut("{lid:int}")]
-        public async IActionResult UpdateParkingLotsById(int lid, [FromBody] ParkingLotModel updatedParkingLot, CancellationToken ct)
+        public async Task<IActionResult> UpdateParkingLotsById(int lid, [FromBody] ParkingLotModel updatedParkingLot, CancellationToken ct)
         {
             if (updatedParkingLot == null)
             {
