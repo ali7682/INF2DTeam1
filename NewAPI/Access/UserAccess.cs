@@ -30,7 +30,7 @@ public static class UserAccess
         return newId;
     }
 
-    public static UserModel GetUserById(int userId)
+    public static UserModel? GetUserById(int userId)
     {
         string cs = _config.GetConnectionString("DefaultConnection")!;
         using MySqlConnection conn = new(cs);
@@ -53,10 +53,17 @@ public static class UserAccess
             LIMIT 1;
         """;
 
-        return conn.Query<UserModel>(sql, new { userId }).First();
+        var user = conn.Query<UserModel>(sql, new { userId }).FirstOrDefault();
+        
+        if (user == null)
+        {
+            return null;
+        }
+
+        return user;
     }
 
-    public static UserModel GetUserByUsername(string userName)
+    public static UserModel? GetUserByUsername(string userName)
     {
         string cs = _config.GetConnectionString("DefaultConnection")!;
         using MySqlConnection conn = new(cs);
@@ -79,7 +86,14 @@ public static class UserAccess
             LIMIT 1;
         """;
 
-        return conn.Query<UserModel>(sql, new { userName }).First();
+        var user = conn.Query<UserModel>(sql, new { userName }).FirstOrDefault();
+
+        if (user == null)
+        {
+            return null;
+        }
+
+        return user;
     }
 
     public static bool UpdateUser(UserModel user)
