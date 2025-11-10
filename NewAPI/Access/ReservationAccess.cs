@@ -6,16 +6,14 @@ public static class ReservationAccess
     public static readonly string TableName = "reservations";
     private static IConfiguration _config;
 
-    public static void SetConfig(IConfiguration config)
-    {
-        _config = config;
-    }
+    public static void SetConfig(IConfiguration config) => _config = config;
 
-    public static ReservationModel GetReservationById(int reservationId)
+    private static string Cs => _config.GetConnectionString("DefaultConnection")!;
+
+    public static async Task<ReservationModel?> GetReservationByIdAsync(int reservationId, CancellationToken ct = default)
     {
-        string cs = _config.GetConnectionString("DefaultConnection")!;
-        using MySqlConnection conn = new(cs);
-        conn.Open();
+        await using var conn = new MySqlConnection(Cs);
+        await conn.OpenAsync(ct);
 
         const string sql = """
             SELECT 
@@ -32,7 +30,8 @@ public static class ReservationAccess
             WHERE id = @reservationId;
         """;
 
-        return conn.Query<ReservationModel>(sql, new { reservationId }).FirstOrDefault();
+        var cmd = new CommandDefinition(sql, new { reservationId }, cancellationToken: ct, commandTimeout: 5);
+        return await conn.QueryFirstOrDefaultAsync<ReservationModel>(cmd);
     }
 
     public static List<ReservationModel> GetReservationsByVehicleId(int vehicleId, string status = "")
@@ -118,11 +117,10 @@ public static class ReservationAccess
 
     // DELETE een reservation met reservation ID
     // Endpoint: /reservations/{rid}
-    public static bool DeleteReservationById(int reservationId)
+    public static async Task<bool> DeleteReservationByIdAsync(int reservationId, CancellationToken ct = default)
     {
-        string cs = _config.GetConnectionString("DefaultConnection")!;
-        using MySqlConnection conn = new(cs);
-        conn.Open();
+        await using var conn = new MySqlConnection(Cs);
+        await conn.OpenAsync(ct);
 
         // Eerst de bijbehorende parking lot ID (proberen) te krijgen
         const string getLotSql = """
@@ -132,7 +130,9 @@ public static class ReservationAccess
         """;
 
         // Als de er geen reservation gevonden is met de parking lot ID, dan bestaat het niet
-        int? parkingLotId = conn.QueryFirstOrDefault<int?>(getLotSql, new { reservationId });
+        var cmdGetLot = new CommandDefinition(getLotSql, new { reservationId }, cancellationToken: ct, commandTimeout: 5);
+        int? parkingLotId = await conn.QueryFirstOrDefaultAsync<int?>(cmdGetLot);
+
         if (parkingLotId == null)
             return false;
 
@@ -142,7 +142,8 @@ public static class ReservationAccess
             WHERE id = @reservationId;
         """;
 
-        int affectedRows = conn.Execute(deleteSql, new { reservationId });
+        var cmdDelete = new CommandDefinition(deleteSql, new { reservationId }, cancellationToken: ct, commandTimeout: 5);
+        int affectedRows = await conn.ExecuteAsync(cmdDelete);
 
         if (affectedRows > 0)
         {
@@ -152,9 +153,12 @@ public static class ReservationAccess
                 SET reserved = reserved - 1
                 WHERE id = @parkingLotId;
             """;
-            conn.Execute(updateLotSql, new { parkingLotId });
+
+            var cmdUpdate = new CommandDefinition(updateLotSql, new { parkingLotId }, cancellationToken: ct, commandTimeout: 5);
+            await conn.ExecuteAsync(cmdUpdate);
             return true;
         }
+
         return false;
     }
 
