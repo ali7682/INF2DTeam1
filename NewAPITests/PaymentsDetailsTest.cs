@@ -1,16 +1,15 @@
 using System.Reflection;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using NewAPI.Controllers;
 using NewAPI.Models;
 
 namespace NewAPITests
 {
     // Test GET: /billings
-    [TestClass]
     public class PaymentsDetailsControllerTests
     {
-        [TestMethod]
+        [Fact]
         public void TestGetBillings()
         {
             PaymentsDetailsController controller = new PaymentsDetailsController();
@@ -21,7 +20,7 @@ namespace NewAPITests
         }
 
         // Test GET: /billings/{username}
-        [TestMethod]
+        [Fact]
         public void TestValidGetBillingsByUserName()
         {
             PaymentsDetailsController controller = new PaymentsDetailsController();
@@ -31,7 +30,7 @@ namespace NewAPITests
             Assert.AreEqual(200, result.StatusCode, "Expected 200 OK response");
         }
 
-        [TestMethod]
+        [Fact]
         public void TestInvalidGetBillingsByUserName()
         {
             PaymentsDetailsController controller = new PaymentsDetailsController();
