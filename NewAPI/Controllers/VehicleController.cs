@@ -32,7 +32,7 @@ public class VehiclesController : ControllerBase
     }
 
     [HttpGet("{userName}/{vId:int}")]
-    public IActionResult GetVehicleByUserName(string userName, int vId)
+    public async Task<IActionResult> GetVehicleByUserName(string userName, int vId)
     {
         string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
         UserModel? user = SessionManager.GetSession(sessionToken);
@@ -48,7 +48,7 @@ public class VehiclesController : ControllerBase
             return StatusCode(403, new { message = "Forbidden: You do not have access to this vehicle" });
         }
 
-        UserModel? requestedUser = UserAccess.GetUserByUsername(userName);
+        UserModel? requestedUser = await UserAccess.GetUserByUsernameAsync(userName);
 
         if (requestedUser == null)
         {
@@ -93,7 +93,7 @@ public class VehiclesController : ControllerBase
     }
 
     [HttpGet("{userName}/{vId:int}/reservations")]
-    public IActionResult GetReservationsByUserName(string userName, int vId)
+    public async Task<IActionResult> GetReservationsByUserName(string userName, int vId)
     {
         string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
         UserModel? user = SessionManager.GetSession(sessionToken);
@@ -109,7 +109,7 @@ public class VehiclesController : ControllerBase
             return StatusCode(403, new { message = "Forbidden: You do not have access to this vehicle\'s reservations" });
         }
 
-        UserModel? requestedUser = UserAccess.GetUserByUsername(userName);
+        UserModel? requestedUser = await UserAccess.GetUserByUsernameAsync(userName);
 
         if (requestedUser == null)
         {
@@ -155,7 +155,7 @@ public class VehiclesController : ControllerBase
 
     [HttpGet("{userName}/{vId:int}/history")]
 
-    public IActionResult GetHistory(string userName, int vId)
+    public async Task<IActionResult> GetHistory(string userName, int vId)
     {
         string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
         UserModel? user = SessionManager.GetSession(sessionToken);
@@ -171,7 +171,7 @@ public class VehiclesController : ControllerBase
             return StatusCode(403, new { message = "Forbidden: You do not have access to this vehicle\'s history" });
         }
 
-        UserModel? requestedUser = UserAccess.GetUserByUsername(userName);
+        UserModel? requestedUser = await UserAccess.GetUserByUsernameAsync(userName);
 
         if (requestedUser == null)
         {

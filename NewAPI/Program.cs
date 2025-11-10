@@ -3,12 +3,15 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.AddControllers();
-builder.Services.AddSingleton<ISqlConnectionFactory, SqlConnectionFactory>();
 
 // Swagger
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Warmup
+
+builder.Services.AddHostedService<DbWarmupService>();
 
 var app = builder.Build();
 
@@ -18,7 +21,7 @@ ReservationAccess.SetConfig(builder.Configuration);
 PaymentAccess.SetConfig(builder.Configuration);
 
 // Configure the HTTP request pipeline.
-
+Console.WriteLine($"Environment: {app.Environment.EnvironmentName}");
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

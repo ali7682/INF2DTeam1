@@ -108,7 +108,7 @@ namespace NewAPI.Controllers
 
         // GET /payments/{username}
         [HttpGet("{username}")]
-        public IActionResult GetPaymentsByUserName(string userName)
+        public async Task<IActionResult> GetPaymentsByUserName(string userName)
         {
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
             UserModel? user = SessionManager.GetSession(sessionToken);
@@ -123,7 +123,7 @@ namespace NewAPI.Controllers
                 return StatusCode(403, new { message = "Forbidden: You do not have access to this payment" });
             }
 
-            UserModel? requestUser = UserAccess.GetUserByUsername(userName);
+            UserModel? requestUser = await UserAccess.GetUserByUsernameAsync(userName);
             if (requestUser == null)
             {
                 return NotFound("NotFound: User not found");
