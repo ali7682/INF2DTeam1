@@ -16,7 +16,7 @@ namespace NewAPI.Controllers
 
         // DELETE /reservations/{rid}
         [HttpDelete("{rid:int}")]
-        public IActionResult DeleteReservation(int rid)
+        public async Task<IActionResult> DeleteReservation(int rid)
         {
             string token = HttpContext.Request.Headers.Authorization.ToString();
             UserModel? sessionUser = SessionManager.GetSession(token);
@@ -24,7 +24,7 @@ namespace NewAPI.Controllers
             if (string.IsNullOrEmpty(token) || sessionUser == null)
                 return Unauthorized(new { message = "Unauthorized: Invalid or missing session token" });
 
-            ReservationModel? reservation = ReservationAccess.GetReservationById(rid);
+            ReservationModel? reservation = await ReservationAccess.GetReservationByIdAsync(rid);
 
             if (reservation == null)
                 return NotFound(new { message = "Reservation not found" });
@@ -32,7 +32,7 @@ namespace NewAPI.Controllers
             if (sessionUser.Role != "ADMIN" && sessionUser.Id != reservation.UserID)
                 return StatusCode(403, new { message = "Access denied" });
 
-            bool deleted = ReservationAccess.DeleteReservationById(rid);
+            bool deleted = await ReservationAccess.DeleteReservationByIdAsync(rid);
 
             if (!deleted)
                 return NotFound(new { message = "Reservation not found" });

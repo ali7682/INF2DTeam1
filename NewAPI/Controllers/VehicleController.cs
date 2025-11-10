@@ -190,7 +190,7 @@ public class VehiclesController : ControllerBase
 
     // DELETE /vehicles/{vid}
     [HttpDelete("{vid:int}")]
-    public IActionResult DeleteVehicle(int vid)
+    public async Task<IActionResult> DeleteVehicle(int vid)
     {
         string token = HttpContext.Request.Headers.Authorization.ToString();
         UserModel? sessionUser = SessionManager.GetSession(token);
@@ -198,7 +198,7 @@ public class VehiclesController : ControllerBase
         if (string.IsNullOrEmpty(token) || sessionUser == null)
             return Unauthorized(new { message = "Unauthorized: Invalid or missing session token" });
 
-        VehicleModel? vehicle = VehicleAccess.GetVehicleById(vid);
+        VehicleModel? vehicle = await VehicleAccess.GetVehicleByIdAsync(vid);
 
         if (vehicle == null)
             return NotFound(new { message = "Vehicle not found" });
@@ -206,7 +206,7 @@ public class VehiclesController : ControllerBase
         if (sessionUser.Role != "ADMIN" && sessionUser.Id != vehicle.UserID)
             return StatusCode(403, new { message = "Access denied" });
 
-        bool deleted = VehicleAccess.DeleteVehicleById(vid);
+        bool deleted = await VehicleAccess.DeleteVehicleByIdAsync(vid);
 
         if (!deleted)
             return NotFound(new { message = "Vehicle not found" });

@@ -6,10 +6,9 @@ public static class VehicleAccess
     public static readonly string TableName = "vehicles";
     private static IConfiguration _config;
 
-    public static void SetConfig(IConfiguration config)
-    {
-        _config = config;
-    }
+    public static void SetConfig(IConfiguration config) => _config = config;
+
+    private static string Cs => _config.GetConnectionString("DefaultConnection")!;
 
     public static int CreateVehicle(VehicleModel vehicle)
     {
@@ -30,11 +29,11 @@ public static class VehicleAccess
         return newId;
     }
 
-    public static VehicleModel GetVehicleById(int vehicleId)
+    public static async Task<VehicleModel?> GetVehicleByIdAsync(int vehicleId, CancellationToken ct = default)
     {
         string cs = _config.GetConnectionString("DefaultConnection")!;
-        using MySqlConnection conn = new(cs);
-        conn.Open();
+        await using var conn = new MySqlConnection(cs);
+        await conn.OpenAsync(ct);
 
         const string sql = """
         SELECT 
@@ -51,7 +50,8 @@ public static class VehicleAccess
             LIMIT 1;
         """;
 
-        return conn.Query<VehicleModel>(sql, new { vehicleId }).FirstOrDefault();
+        var cmd = new CommandDefinition(sql, new { vehicleId }, cancellationToken: ct, commandTimeout: 5);
+        return await conn.QueryFirstOrDefaultAsync<VehicleModel>(cmd);
     }
 
     public static VehicleModel GetVehicleByLicensePlate(string licensePlate)
@@ -112,18 +112,19 @@ public static class VehicleAccess
 
     // DELETE een vehicle met vehicle ID
     // Endpoint: /vehicles/{vid}
-    public static bool DeleteVehicleById(int vehicleId)
+    public static async Task<bool> DeleteVehicleByIdAsync(int vehicleId, CancellationToken ct = default)
     {
-        string cs = _config.GetConnectionString("DefaultConnection")!;
-        using MySqlConnection conn = new(cs);
-        conn.Open();
+        await using var conn = new MySqlConnection(Cs);
+        await conn.OpenAsync(ct);
 
         const string sql = """
             DELETE FROM vehicles
             WHERE id = @vehicleId;
         """;
 
-        int affectedRows = conn.Execute(sql, new { vehicleId });
+        var cmd = new CommandDefinition(sql, new { vehicleId }, cancellationToken: ct, commandTimeout: 5);
+        int affectedRows = await conn.ExecuteAsync(cmd);
+
         return affectedRows > 0;
     }
 }
