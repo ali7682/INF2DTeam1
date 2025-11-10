@@ -3,6 +3,7 @@ using Xunit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Mvc.Testing;
 using NewAPI.Controllers;
 
 namespace NewAPITests

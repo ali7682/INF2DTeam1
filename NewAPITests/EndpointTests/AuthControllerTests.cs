@@ -1,5 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestPlatform.TestHost;
 using Xunit;
+using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace NewAPITests.EndpointTests
 {
