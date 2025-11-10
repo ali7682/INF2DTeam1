@@ -40,7 +40,7 @@ namespace NewAPI.Controllers
 
         // GET /billings/{username}
         [HttpGet("{userName}")]
-        public IActionResult GetBillingByUser(string userName)
+        public async Task<IActionResult> GetBillingByUser(string userName)
         {
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
             UserModel? user = SessionManager.GetSession(sessionToken);
@@ -55,7 +55,7 @@ namespace NewAPI.Controllers
                 return StatusCode(403, new { message = "Forbidden: you do not have access to biling" });
             }
 
-            UserModel? requestUser = UserAccess.GetUserByUsername(userName);
+            UserModel? requestUser = await UserAccess.GetUserByUsernameAsync(userName);
 
             if (requestUser == null)
             {

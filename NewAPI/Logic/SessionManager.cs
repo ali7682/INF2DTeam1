@@ -1,15 +1,17 @@
-﻿public static class SessionManager
+﻿using System.Collections.Concurrent;
+
+public static class SessionManager
 {
-    public static Dictionary<string, UserModel> Sessions = new();
+    private static readonly ConcurrentDictionary<string, UserModel> Sessions = new();
 
     public static void AddSession(string token, UserModel User)
     {
-        Sessions.Add(token, User);
+        Sessions.TryAdd(token, User);
     }
 
     public static bool RemoveSession(string token)
     {
-        if (Sessions.Remove(token))
+        if (Sessions.TryRemove(token, out _))
             return true;
 
         return false;
