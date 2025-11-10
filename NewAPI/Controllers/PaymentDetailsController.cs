@@ -26,7 +26,7 @@ namespace NewAPI.Controllers
                 return Unauthorized("Unauthorized: Invalid or missing session token");
             }
 
-            List<PaymentDetailsModel> paymentDetails = await PaymentDetailsAccess.GetAllPaymentDetails(ct);
+            List<PaymentDetailsModel> paymentDetails = await PaymentDetailsAccess.GetAllPaymentDetailsAsync(ct);
 
             if (paymentDetails == null)
             {
@@ -62,7 +62,7 @@ namespace NewAPI.Controllers
                 return NotFound("NotFound: User not found");
             }
 
-            List<PaymentDetailsModel> paymentDetails = await PaymentDetailsAccess.GetAllPaymentDetails(ct);
+            List<PaymentDetailsModel> paymentDetails = await PaymentDetailsAccess.GetAllPaymentDetailsAsync(ct);
 
             if (paymentDetails == null)
             {

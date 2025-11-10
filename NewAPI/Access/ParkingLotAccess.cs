@@ -171,7 +171,7 @@ public static class ParkingLotAccess
 
     // UPDATE een parking lot met parking lot ID
     // Endpoint: /parking-lots/{lid}
-    public static async Task<bool> UpdateParkingLotById(int parkingLotId, ParkingLotModel model, CancellationToken ct = default)
+    public static async Task<bool> UpdateParkingLotByIdAsync(int parkingLotId, ParkingLotModel model, CancellationToken ct = default)
     {
         const string sql = """
             UPDATE parking_lots

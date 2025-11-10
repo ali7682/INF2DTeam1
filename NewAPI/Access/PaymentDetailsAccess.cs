@@ -42,7 +42,7 @@ public static class PaymentDetailsAccess
 
     // GET alle payment details
     // Endpoint: /paymentdetails
-    public static async Task<PaymentDetailsModel?> GetAllPaymentDetails(CancellationToken ct = default)
+    public static async Task<PaymentDetailsModel?> GetAllPaymentDetailsAsync(CancellationToken ct = default)
     {
         var sql = $"{SqlSelectBase};";
         await using var conn = new MySqlConnection(Cs);
