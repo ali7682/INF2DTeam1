@@ -42,7 +42,7 @@ namespace NewAPI.Controllers
 
         // PUT /reservations/{rid}
         [HttpPut("{rid:int}")]
-        public IActionResult UpdateReservationsById(int rid, [FromBody] ReservationModel updatedReservation)
+        public async Task<IActionResult> UpdateReservationsById(int rid, [FromBody] ReservationModel updatedReservation, CancellationToken ct)
         {
             if (updatedReservation == null)
             {
@@ -57,7 +57,7 @@ namespace NewAPI.Controllers
                 return Unauthorized("Unauthorized: Invalid or missing session token");
             }
 
-            ReservationModel? reservation = ReservationAccess.GetReservationById(rid);
+            ReservationModel? reservation = await ReservationAccess.GetReservationByIdAsync(rid, ct);
             if (!user.IsAdmin() && reservation.UserID != user.Id)
             {
                 return StatusCode(403, new { message = "Forbidden: You do not have access to this reservation" });
@@ -73,7 +73,7 @@ namespace NewAPI.Controllers
             reservation.Status = updatedReservation.Status;
             reservation.Cost = updatedReservation.Cost;
 
-            ReservationAccess.UpdateReservationById(rid, reservation);
+            ReservationAccess.UpdateReservationByIdAsync(rid, reservation, ct);
 
             return Ok(new { message = "Reservation updated successfully", reservation });
         }

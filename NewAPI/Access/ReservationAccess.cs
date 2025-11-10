@@ -176,7 +176,7 @@ public static class ReservationAccess
 
     // UPDATE een reservation met reservation ID
     // Endpoint: /reservations/{rid}
-    public static async Task<bool> UpdateReservationById(int reservationId, ReservationModel updatedReservation, CancellationToken ct = default)
+    public static async Task<bool> UpdateReservationByIdAsync(int reservationId, ReservationModel updatedReservation, CancellationToken ct = default)
     {
         const string sql = """
                     UPDATE reservations
