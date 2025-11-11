@@ -20,7 +20,7 @@ namespace NewAPI.Controllers
         [HttpGet("{id:int}")]
         public async Task<ActionResult<UserModel>> Get(int id, CancellationToken ct)
         {
-            UserModel? user = UserAccess.GetUserById(id);
+            UserModel user = await UserAccess.GetUserByIdAsync(id, ct);
 
             return user is null ? NotFound() : Ok(user);
         }

@@ -1,107 +1,69 @@
 ﻿using Dapper;
-using MySql.Data.MySqlClient;
+using MySqlConnector;
 
 public static class UserAccess
 {
     public static readonly string TableName = "users";
     private static IConfiguration _config;
 
-    public static void SetConfig(IConfiguration config)
-    {
-        _config = config;
-    }
+    public static void SetConfig(IConfiguration config) => _config = config;
 
-    public static int CreateUser(UserModel user)
-    {
-        string cs = _config.GetConnectionString("DefaultConnection")!;
-        using MySqlConnection conn = new(cs);
-        conn.Open();
+    private static string Cs => _config.GetConnectionString("DefaultConnection")!;
 
+    private const string SqlSelectBase = """
+        SELECT
+            id            AS Id,
+            username      AS Username,
+            password      AS Password,
+            name          AS Name,
+            email         AS Email,
+            phone         AS Phone,
+            CAST(role AS CHAR) AS Role,
+            created_at    AS CreatedAt,
+            birth_year    AS BirthYear,
+            active        AS Active
+        FROM users
+    """;
+
+    public static async Task<int> CreateUserAsync(UserModel user, CancellationToken ct = default)
+    {
         const string query = """
-        INSERT INTO users
-            (username, password, name, email, phone, role, created_at, birth_year, active)
-        VALUES
-            (@Username, @Password, @Name, @Email, @Phone, @Role, @CreatedAt, @BirthYear, @Active);
-        SELECT LAST_INSERT_ID();
+            INSERT INTO users
+                (username, password, name, email, phone, role, created_at, birth_year, active)
+            VALUES
+                (@Username, @Password, @Name, @Email, @Phone, @Role, @CreatedAt, @BirthYear, @Active);
+            SELECT LAST_INSERT_ID();
         """;
 
-        int newId = conn.ExecuteScalar<int>(query, user);
+        await using var conn = new MySqlConnection(Cs);
+        await conn.OpenAsync(ct);
 
-        return newId;
+        var cmd = new CommandDefinition(query, user, cancellationToken: ct, commandTimeout: 5);
+        return await conn.ExecuteScalarAsync<int>(cmd);
     }
 
-    public static UserModel? GetUserById(int userId)
+    public static async Task<UserModel?> GetUserByIdAsync(int userId, CancellationToken ct = default)
     {
-        string cs = _config.GetConnectionString("DefaultConnection")!;
-        using MySqlConnection conn = new(cs);
-        conn.Open();
+        var sql = $"{SqlSelectBase} WHERE id = @userId LIMIT 1;";
+        await using var conn = new MySqlConnection(Cs);
+        await conn.OpenAsync(ct);
 
-        const string sql = """
-        SELECT 
-                id           AS Id,
-                username     AS Username,
-                password     AS Password,
-                name         AS Name,
-                email        AS Email,
-                phone        AS Phone,
-                CAST(role AS CHAR) AS Role,
-                created_at   AS CreatedAt,
-                birth_year   AS BirthYear,
-                active       AS Active
-            FROM users
-            WHERE id = @userId
-            LIMIT 1;
-        """;
-
-        var user = conn.Query<UserModel>(sql, new { userId }).FirstOrDefault();
-        
-        if (user == null)
-        {
-            return null;
-        }
-
-        return user;
+        var cmd = new CommandDefinition(sql, new { userId }, cancellationToken: ct, commandTimeout: 5);
+        return await conn.QueryFirstOrDefaultAsync<UserModel>(cmd);
     }
 
-    public static UserModel? GetUserByUsername(string userName)
+    public static async Task<UserModel?> GetUserByUsernameAsync(string userName, CancellationToken ct = default)
     {
-        string cs = _config.GetConnectionString("DefaultConnection")!;
-        using MySqlConnection conn = new(cs);
-        conn.Open();
+        var sql = $"{SqlSelectBase} WHERE username = @userName LIMIT 1;";
+        await using var conn = new MySqlConnection(Cs);
+        await conn.OpenAsync(ct);
 
-        const string sql = """
-        SELECT 
-                id           AS Id,
-                username     AS Username,
-                password     AS Password,
-                name         AS Name,
-                email        AS Email,
-                phone        AS Phone,
-                CAST(role AS CHAR) AS Role,
-                created_at   AS CreatedAt,
-                birth_year   AS BirthYear,
-                active       AS Active
-            FROM users
-            WHERE username = @userName
-            LIMIT 1;
-        """;
-
-        var user = conn.Query<UserModel>(sql, new { userName }).FirstOrDefault();
-
-        if (user == null)
-        {
-            return null;
-        }
-
-        return user;
+        var cmd = new CommandDefinition(sql, new { userName }, cancellationToken: ct, commandTimeout: 5);
+        return await conn.QueryFirstOrDefaultAsync<UserModel>(cmd);
     }
 
-    public static bool UpdateUser(UserModel user)
+    public static async Task<bool> UpdateUserAsync(UserModel user, CancellationToken ct = default)
     {
-        string cs = _config.GetConnectionString("DefaultConnection")!;
-        using MySqlConnection conn = new(cs);
-        conn.Open();
-
         const string sql = """
             UPDATE users
             SET
@@ -116,7 +78,10 @@ public static class UserAccess
             WHERE id = @Id;
         """;
 
-        int affectedRows = conn.Execute(sql, new
+        await using var conn = new MySqlConnection(Cs);
+        await conn.OpenAsync(ct);
+
+        var cmd = new CommandDefinition(sql, new
         {
             user.Id,
             user.Username,
@@ -127,8 +92,9 @@ public static class UserAccess
             user.Role,
             user.BirthYear,
             user.Active
-        });
+        }, cancellationToken: ct, commandTimeout: 5);
 
-        return affectedRows > 0;
+        var rows = await conn.ExecuteAsync(cmd);
+        return rows > 0;
     }
 }
