@@ -46,31 +46,33 @@ public static class ReservationAccess
         return await conn.QueryFirstOrDefaultAsync<ReservationModel>(cmd);
     }
 
-    public static List<ReservationModel> GetReservationsByVehicleId(int vehicleId, string status = "")
+    public static async Task<List<ReservationModel>> GetReservationsByVehicleIdAsync(int vehicleId, string status = "", CancellationToken ct = default)
     {
         string cs = _config.GetConnectionString("DefaultConnection")!;
-        using MySqlConnection conn = new(cs);
-        conn.Open();
+        await using var conn = new MySqlConnection(cs);
+        await conn.OpenAsync(ct);
 
         string sql = """
-            SELECT 
-                id              AS Id,
-                user_id         AS UserId,
-                parking_lot_id  AS ParkingLotId,
-                vehicle_id      AS VehicleId,
-                start_time      AS StartTime,
-                end_time        AS EndTime,
-                status          AS Status,
-                created_at      AS CreatedAt,
-                cost            AS Cost
-            FROM reservations
-            WHERE vehicle_id = @vehicleId
-        """;
+        SELECT 
+            id              AS Id,
+            user_id         AS UserId,
+            parking_lot_id  AS ParkingLotId,
+            vehicle_id      AS VehicleId,
+            start_time      AS StartTime,
+            end_time        AS EndTime,
+            status          AS Status,
+            created_at      AS CreatedAt,
+            cost            AS Cost
+        FROM reservations
+        WHERE vehicle_id = @vehicleId
+    """;
 
-        if (status != null && status != "")
+        if (!string.IsNullOrEmpty(status))
             sql += " AND status = @status";
 
-        return conn.Query<ReservationModel>(sql, new { vehicleId, status }).ToList();
+        var cmd = new CommandDefinition(sql, new { vehicleId, status }, cancellationToken: ct);
+        var reservations = await conn.QueryAsync<ReservationModel>(cmd);
+        return reservations.ToList();
     }
 
     public static List<ReservationModel> GetReservationsByUserId(int userId, string status = "")

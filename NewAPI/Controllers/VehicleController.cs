@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
@@ -5,31 +6,31 @@ using Microsoft.AspNetCore.Mvc;
 public class VehiclesController : ControllerBase
 {
     [HttpGet("{vId:int}")]
-    public IActionResult GetVehicle(int vId)
+    public async Task<IActionResult> GetVehicle(int vId)
     {
-        string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
+        string? sessionToken = HttpContext.Request.Headers.Authorization.ToString();
         UserModel? user = SessionManager.GetSession(sessionToken);
 
-        if (sessionToken == null || user == null)
+        if (string.IsNullOrEmpty(sessionToken) || user == null)
         {
-            return Unauthorized("Unauthorized: Invalid or missing session token");
+            return Unauthorized(new { message = "Unauthorized: Invalid or missing session token" });
         }
 
-        VehicleModel? vehicle = VehicleAccess.GetVehicleById(vId);
+        VehicleModel? vehicle = await VehicleAccess.GetVehicleByIdAsync(vId);
 
         if (vehicle == null)
         {
-            return NotFound("NotFound: Vehicle not found");
+            return NotFound(new { message = "Vehicle not found" });
         }
 
-        if (!(user.Id == vehicle.UserID))
+        if (user.Id != vehicle.UserID)
         {
-            //return Forbid("Forbidden: You do not have access to this vehicle");
             return StatusCode(403, new { message = "Forbidden: You do not have access to this vehicle" });
         }
 
         return Ok(vehicle);
     }
+
 
     [HttpGet("{userName}/{vId:int}")]
     public async Task<IActionResult> GetVehicleByUserName(string userName, int vId)
@@ -55,7 +56,7 @@ public class VehiclesController : ControllerBase
             return NotFound("NotFound: User not found");
         }
 
-        VehicleModel? vehicle = VehicleAccess.GetVehicleById(vId);
+        VehicleModel? vehicle = await VehicleAccess.GetVehicleByIdAsync(vId);
 
         if (vehicle == null)
         {
@@ -66,30 +67,30 @@ public class VehiclesController : ControllerBase
     }
 
     [HttpGet("{vId:int}/reservations")]
-    public IActionResult GetReservations(int vId)
+    public async Task<IActionResult> GetReservations(int vId)
     {
-        string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
+        string? sessionToken = HttpContext.Request.Headers.Authorization.ToString();
         UserModel? user = SessionManager.GetSession(sessionToken);
 
-        if (sessionToken == null || user == null)
+        if (string.IsNullOrEmpty(sessionToken) || user == null)
         {
             return Unauthorized("Unauthorized: Invalid or missing session token");
         }
 
-        VehicleModel? vehicle = VehicleAccess.GetVehicleById(vId);
+        VehicleModel? vehicle = await VehicleAccess.GetVehicleByIdAsync(vId);
 
         if (vehicle == null)
         {
             return NotFound("NotFound: Vehicle not found");
         }
 
-        if (!(user.Id == vehicle.UserID))
+        if (user.Id != vehicle.UserID)
         {
-            //return Forbid("Forbidden: You do not have access to this vehicle\'s reservations");
-            return StatusCode(403, new { message = "Forbidden: You do not have access to this vehicle\'s reservations" });
+            return StatusCode(403, new { message = "Forbidden: You do not have access to this vehicle's reservations" });
         }
 
-        return Ok(ReservationAccess.GetReservationsByVehicleId(vId));
+        var reservations = await ReservationAccess.GetReservationsByVehicleIdAsync(vId);
+        return Ok(reservations);
     }
 
     [HttpGet("{userName}/{vId:int}/reservations")]
@@ -116,18 +117,18 @@ public class VehiclesController : ControllerBase
             return NotFound("NotFound: User not found");
         }
 
-        VehicleModel? vehicle = VehicleAccess.GetVehicleById(vId);
+        VehicleModel? vehicle = await VehicleAccess.GetVehicleByIdAsync(vId);
 
         if (vehicle == null)
         {
             return NotFound("NotFound: Vehicle not found");
         }
 
-        return Ok(ReservationAccess.GetReservationsByVehicleId(vId));
+        return Ok(await ReservationAccess.GetReservationsByVehicleIdAsync(vId));
     }
 
     [HttpGet("{vId:int}/history")]
-    public IActionResult GetHistory(int vId)
+    public async Task<IActionResult> GetHistory(int vId)
     {
         string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
         UserModel? user = SessionManager.GetSession(sessionToken);
@@ -137,7 +138,7 @@ public class VehiclesController : ControllerBase
             return Unauthorized("Unauthorized: Invalid or missing session token");
         }
 
-        VehicleModel? vehicle = VehicleAccess.GetVehicleById(vId);
+        VehicleModel? vehicle = await VehicleAccess.GetVehicleByIdAsync(vId);
 
         if (vehicle == null)
         {
@@ -150,7 +151,7 @@ public class VehiclesController : ControllerBase
             return StatusCode(403, new { message = "Forbidden: You do not have access to this vehicle\'s reservations" });
         }
 
-        return Ok(ReservationAccess.GetReservationsByVehicleId(vId, "confirmed"));
+        return Ok(await ReservationAccess.GetReservationsByVehicleIdAsync(vId, "confirmed"));
     }
 
     [HttpGet("{userName}/{vId:int}/history")]
@@ -178,14 +179,14 @@ public class VehiclesController : ControllerBase
             return NotFound("NotFound: User not found");
         }
 
-        VehicleModel? vehicle = VehicleAccess.GetVehicleById(vId);
+        VehicleModel? vehicle = await VehicleAccess.GetVehicleByIdAsync(vId);
 
         if (vehicle == null)
         {
             return NotFound("NotFound: Vehicle not found");
         }
 
-        return Ok(ReservationAccess.GetReservationsByVehicleId(vId, "confirmed"));
+        return Ok(await ReservationAccess.GetReservationsByVehicleIdAsync(vId, "confirmed"));
     }
 
     // DELETE /vehicles/{vid}
@@ -215,7 +216,7 @@ public class VehiclesController : ControllerBase
     }
 
     [HttpPut("{vId:int}")]
-    public IActionResult PutVehicle(int vId, [FromBody] VehicleModel updatedVehicle)
+    public async Task<IActionResult> PutVehicle(int vId, [FromBody] VehicleModel updatedVehicle)
     {
         if (updatedVehicle == null)
         {
@@ -239,7 +240,7 @@ public class VehiclesController : ControllerBase
             return StatusCode(403, new { message = "Forbidden: You do not have access to this vehicle" });
         }
 
-        VehicleModel? vehicle = VehicleAccess.GetVehicleById(vId);
+        VehicleModel? vehicle = await VehicleAccess.GetVehicleByIdAsync(vId);
         if (vehicle == null)
         {
             return NotFound($"Vehicle with ID {vId} not found");
@@ -256,7 +257,7 @@ public class VehiclesController : ControllerBase
         return Ok(new { message = "Vehicle updated successfully", vehicle });
     }
     [HttpPost]
-    public IActionResult PostVehicle([FromBody] VehicleModel newVehicle)
+    public async Task<IActionResult> PostVehicle([FromBody] VehicleModel newVehicle)
     {
         if (newVehicle == null)
         {
@@ -269,7 +270,7 @@ public class VehiclesController : ControllerBase
             return Unauthorized("Unauthorized: Missing session token");
         }
 
-        UserModel? user = SessionManager.GetSession(authHeader);
+        UserModel? user = SessionManager.GetSession(authHeader); // stays sync if memory-based
         if (user == null)
         {
             return Unauthorized("Unauthorized: Invalid session token");
@@ -298,53 +299,65 @@ public class VehiclesController : ControllerBase
             UserID = user.Id
         };
 
-        int newVehicleId = VehicleAccess.CreateVehicle(vehicleToCreate);
+        int newVehicleId = await VehicleAccess.CreateVehicleAsync(vehicleToCreate);
 
         if (newVehicleId <= 0)
         {
             return StatusCode(500, new { message = "Failed to create vehicle" });
         }
 
-        vehicleToCreate = new VehicleModel
+        var createdVehicle = new VehicleModel
         {
             ID = newVehicleId,
-            LicensePlate = newVehicle.LicensePlate,
-            Make = newVehicle.Make,
-            Model = newVehicle.Model,
-            Color = newVehicle.Color,
-            Year = newVehicle.Year,
-            CreatedAt = DateTime.Now,
-            UserID = user.Id
+            LicensePlate = vehicleToCreate.LicensePlate,
+            Make = vehicleToCreate.Make,
+            Model = vehicleToCreate.Model,
+            Color = vehicleToCreate.Color,
+            Year = vehicleToCreate.Year,
+            CreatedAt = vehicleToCreate.CreatedAt,
+            UserID = vehicleToCreate.UserID
         };
 
         return Ok(new
         {
             message = "Vehicle created successfully",
-            vehicle = vehicleToCreate
+            vehicle = createdVehicle
         });
     }
 
-    [HttpPost("{licensePlate}/entry")]
-    public IActionResult VehicleEntry(string licensePlate, [FromBody] Dictionary<string, string> data)
-    {
-        var authHeader = HttpContext.Request.Headers.Authorization.FirstOrDefault();
-        if (string.IsNullOrEmpty(authHeader))
-            return StatusCode(401, new { status = "error", message = "Missing session token" });
 
-        UserModel? user = SessionManager.GetSession(authHeader);
+    [HttpPost("{licensePlate}/entry")]
+    public async Task<IActionResult> VehicleEntry(string licensePlate, [FromBody] Dictionary<string, string> data)
+    {
+        string? authHeader = HttpContext.Request.Headers.Authorization.FirstOrDefault();
+        if (string.IsNullOrEmpty(authHeader))
+        {
+            return StatusCode(401, new { status = "error", message = "Missing session token" });
+        }
+
+        UserModel? user = SessionManager.GetSession(authHeader); // stays sync if in-memory
         if (user == null)
+        {
             return StatusCode(401, new { status = "error", message = "Invalid session token" });
+        }
 
         if (!data.ContainsKey("parkinglot") || string.IsNullOrWhiteSpace(data["parkinglot"]))
+        {
             return StatusCode(400, new { status = "error", message = "Required field missing", field = "parkinglot" });
+        }
 
-        VehicleModel? vehicle = VehicleAccess.GetVehicleByLicensePlate(licensePlate);
+
+        VehicleModel? vehicle = await VehicleAccess.GetVehicleByLicensePlateAsync(licensePlate);
 
         if (vehicle == null)
+        {
             return StatusCode(404, new { status = "error", message = "Vehicle not found", licensePlate });
+        }
 
         if (vehicle.UserID != user.Id)
+        {
             return StatusCode(403, new { status = "error", message = "Vehicle does not belong to this user", licensePlate });
+        }
 
         return StatusCode(200, new
         {

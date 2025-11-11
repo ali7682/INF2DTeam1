@@ -69,7 +69,7 @@ namespace NewAPI.Controllers
                 return BadRequest(new { error = "Bad request: Specified parking lot does not exist" });
             }
 
-            VehicleModel? vehicle = VehicleAccess.GetVehicleByLicensePlate(body.Licenseplate);
+            VehicleModel? vehicle = await VehicleAccess.GetVehicleByLicensePlateAsync(body.Licenseplate);
             if (vehicle == null)
             {
                 return BadRequest(new { error = $"No vehicle found with license plate '{body.Licenseplate}'", field = "licenseplate" });

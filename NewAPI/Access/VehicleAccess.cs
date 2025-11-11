@@ -10,11 +10,13 @@ public static class VehicleAccess
 
     private static string Cs => _config.GetConnectionString("DefaultConnection")!;
 
-    public static int CreateVehicle(VehicleModel vehicle)
+    public static async Task<int> CreateVehicleAsync(VehicleModel vehicle)
     {
         string cs = _config.GetConnectionString("DefaultConnection")!;
-        using MySqlConnection conn = new(cs);
-        conn.Open();
+
+        // Async using ensures proper disposal
+        await using var conn = new MySqlConnection(cs);
+        await conn.OpenAsync();
 
         const string query = """
         INSERT INTO vehicles
@@ -22,12 +24,14 @@ public static class VehicleAccess
         VALUES
             (@UserID, @LicensePlate, @Make, @Model, @Color, @Year, @CreatedAt);
         SELECT LAST_INSERT_ID();
-        """;
+    """;
 
-        int newId = conn.ExecuteScalar<int>(query, vehicle);
+        // Use ExecuteScalarAsync for async insertion
+        int newId = await conn.ExecuteScalarAsync<int>(query, vehicle);
 
         return newId;
     }
+
 
     public static async Task<VehicleModel?> GetVehicleByIdAsync(int vehicleId, CancellationToken ct = default)
     {
@@ -54,29 +58,31 @@ public static class VehicleAccess
         return await conn.QueryFirstOrDefaultAsync<VehicleModel>(cmd);
     }
 
-    public static VehicleModel GetVehicleByLicensePlate(string licensePlate)
+    public static async Task<VehicleModel?> GetVehicleByLicensePlateAsync(string licensePlate)
     {
         string cs = _config.GetConnectionString("DefaultConnection")!;
-        using MySqlConnection conn = new(cs);
-        conn.Open();
+        await using MySqlConnection conn = new(cs);
+        await conn.OpenAsync();
 
         const string sql = """
         SELECT 
-                id AS ID,
-                user_id AS UserID,
-                license_plate AS LicensePlate,
-                make AS Make,
-                model AS Model,
-                color AS Color,
-                year AS Year,
-                created_at AS CreatedAt
-            FROM vehicles
-            WHERE license_plate = @licensePlate
-            LIMIT 1;
-        """;
+            id AS ID,
+            user_id AS UserID,
+            license_plate AS LicensePlate,
+            make AS Make,
+            model AS Model,
+            color AS Color,
+            year AS Year,
+            created_at AS CreatedAt
+        FROM vehicles
+        WHERE license_plate = @licensePlate
+        LIMIT 1;
+    """;
 
-        return conn.Query<VehicleModel>(sql, new { licensePlate }).FirstOrDefault();
+        // Use Dapper's async version to fetch data
+        return await conn.QueryFirstOrDefaultAsync<VehicleModel>(sql, new { licensePlate });
     }
+
 
     public static bool UpdateVehicle(VehicleModel model)
     {
