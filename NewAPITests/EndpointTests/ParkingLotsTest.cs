@@ -1,15 +1,15 @@
-using System;
 using Xunit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
-using Microsoft.AspNetCore.Mvc.Testing;
 using NewAPI.Controllers;
 
 namespace NewAPITests
 {
     public class ParkingLotTests
     {
+        private readonly CancellationToken ct = CancellationToken.None;
+
         private readonly ParkingLotController controller;
 
         // Runt voor elke test
@@ -26,9 +26,9 @@ namespace NewAPITests
 
         // GET /parking-lots
         [Fact]
-        public void TestGetAllParkingLots_ReturnsOk()
+        public async Task TestGetAllParkingLots_ReturnsOk()
         {
-            OkObjectResult result = controller.GetAllParkingLots() as OkObjectResult;
+            OkObjectResult result = await controller.GetAllParkingLots(ct) as OkObjectResult;
 
             Assert.NotNull(result);
             Assert.Equal(200, result.StatusCode);
@@ -36,18 +36,18 @@ namespace NewAPITests
 
         // GET /parking-lots/{lid}
         [Fact]
-        public void TestGetParkingLot_ValidId_ReturnsOk()
+        public async Task TestGetParkingLot_ValidId_ReturnsOk()
         {
-            OkObjectResult result = controller.GetParkingLot(1) as OkObjectResult;
+            OkObjectResult result = await controller.GetParkingLot(1, ct) as OkObjectResult;
 
             Assert.NotNull(result);
             Assert.Equal(200, result.StatusCode);
         }
 
         [Fact]
-        public void TestGetParkingLot_InvalidId_ReturnsNotFound()
+        public async Task TestGetParkingLot_InvalidId_ReturnsNotFound()
         {
-            NotFoundObjectResult result = controller.GetParkingLot(99999) as NotFoundObjectResult;
+            NotFoundObjectResult result = await controller.GetParkingLot(99999, ct) as NotFoundObjectResult;
 
             Assert.NotNull(result);
             Assert.Equal(404, result.StatusCode);
@@ -55,7 +55,7 @@ namespace NewAPITests
 
         // GET /parking-lots/{lid}/sessions
         [Fact]
-        public void TestGetParkingSessions_NoAuthToken_ReturnsUnauthorized()
+        public async Task TestGetParkingSessions_NoAuthToken_ReturnsUnauthorized()
         {
             // Setup fake HTTP request zonder valid authentication
             controller.ControllerContext = new ControllerContext
@@ -64,14 +64,14 @@ namespace NewAPITests
             };
             controller.ControllerContext.HttpContext.Request.Headers.Authorization = "";
 
-            ObjectResult result = controller.GetParkingSessions(1) as ObjectResult;
+            ObjectResult result = await controller.GetParkingSessions(1, ct) as ObjectResult;
 
             Assert.NotNull(result);
             Assert.Equal(401, result.StatusCode);
         }
 
         [Fact]
-        public void TestGetParkingSessions_ValidAdminToken_ReturnsOk()
+        public async Task TestGetParkingSessions_ValidAdminToken_ReturnsOk()
         {
             // Setup mock authenticated session
             string token = Guid.NewGuid().ToString("N");
@@ -83,7 +83,7 @@ namespace NewAPITests
             };
             controller.ControllerContext.HttpContext.Request.Headers.Authorization = token;
 
-            ObjectResult result = controller.GetParkingSessions(1) as ObjectResult;
+            ObjectResult result = await controller.GetParkingSessions(1, ct) as ObjectResult;
 
             Assert.NotNull(result);
             Assert.Equal(200, result.StatusCode);
@@ -95,7 +95,7 @@ namespace NewAPITests
 
         // GET /parking-lots/{lid}/sessions/{sid}
         [Fact]
-        public void TestGetParkingSession_NoAuthToken_ReturnsUnauthorized()
+        public async Task TestGetParkingSession_NoAuthToken_ReturnsUnauthorized()
         {
             controller.ControllerContext = new ControllerContext
             {
@@ -103,14 +103,14 @@ namespace NewAPITests
             };
             controller.ControllerContext.HttpContext.Request.Headers.Authorization = "";
 
-            ObjectResult result = controller.GetParkingSession(1, 1) as ObjectResult;
+            ObjectResult result = await controller.GetParkingSession(1, 1, ct) as ObjectResult;
 
             Assert.NotNull(result);
             Assert.Equal(401, result.StatusCode);
         }
 
         [Fact]
-        public void TestGetParkingSession_ValidAdminToken_ReturnsOk()
+        public async Task TestGetParkingSession_ValidAdminToken_ReturnsOk()
         {
             string token = Guid.NewGuid().ToString("N");
             SessionManager.AddSession(token, new UserModel { Username = "AdminUser", Role = "ADMIN" });
@@ -121,7 +121,7 @@ namespace NewAPITests
             };
             controller.ControllerContext.HttpContext.Request.Headers.Authorization = token;
 
-            ObjectResult result = controller.GetParkingSession(1, 1) as ObjectResult;
+            ObjectResult result = await controller.GetParkingSession(1, 1, ct) as ObjectResult;
 
             Assert.NotNull(result);
             Assert.Equal(200, result.StatusCode);
