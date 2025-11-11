@@ -2,8 +2,16 @@ using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
 [Route("vehicles")]
-public class VehiclesController : ControllerBase
+public class VehicleController : ControllerBase
 {
+    private readonly IConfiguration _config;
+
+    public VehicleController(IConfiguration config)
+    {
+        _config = config;
+        VehicleAccess.SetConfig(_config); // Assuming you have a VehicleAccess class like ParkingLotAccess
+    }
+
     [HttpGet("{vId:int}")]
     public IActionResult GetVehicle(int vId)
     {
