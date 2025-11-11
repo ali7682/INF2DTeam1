@@ -97,4 +97,16 @@ public static class UserAccess
         var rows = await conn.ExecuteAsync(cmd);
         return rows > 0;
     }
+
+    public static async Task<bool> DeleteUserAsync(int userId, CancellationToken ct = default)
+    {
+        const string sql = "DELETE FROM users WHERE id = @userId;";
+
+        await using var conn = new MySqlConnection(Cs);
+        await conn.OpenAsync(ct);
+
+        var cmd = new CommandDefinition(sql, new { userId }, cancellationToken: ct, commandTimeout: 5);
+        var rows = await conn.ExecuteAsync(cmd);
+        return rows > 0;
+    }
 }
