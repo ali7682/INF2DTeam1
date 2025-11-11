@@ -8,7 +8,7 @@ public static class PaymentAccess
 
     public static void SetConfig(IConfiguration config) => _config = config;
 
-    private static string Cs = _config.GetConnectionString("DefaultConnection")!;
+    private static string Cs => _config.GetConnectionString("DefaultConnection")!;
 
     private const string SqlSelectBase = """
         SELECT
