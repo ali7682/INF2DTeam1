@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using NewAPI.Controllers;
 
-namespace NewAPITests
+namespace NewAPITests.ControllerTests
 {
     public class ParkingLotTests
     {
