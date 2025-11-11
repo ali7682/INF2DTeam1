@@ -8,7 +8,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace NewAPITests
+namespace NewAPITests.ControllerTests
 {
     public class ParkingLotTests
     {
