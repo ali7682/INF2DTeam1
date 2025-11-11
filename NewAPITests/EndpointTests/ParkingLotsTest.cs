@@ -304,6 +304,7 @@ namespace NewAPITests.ControllerTests
             Assert.Equal(401, unauthorizedResult.StatusCode);
         }
 
+        // PUT /parking-lots/{lid}
         [Fact]
         public async Task TestValidUpdateReservationById()
         {
