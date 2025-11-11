@@ -23,6 +23,27 @@ namespace NewAPI.Controllers
             ReservationAccess.SetConfig(_config);
         }
 
+        // GET /reservations/{rid}
+        [HttpGet("{rid:int}")]
+        public async Task<IActionResult> GetReservation(int rid)
+        {
+            string token = HttpContext.Request.Headers.Authorization.ToString();
+            UserModel? sessionUser = SessionManager.GetSession(token);
+
+            if (string.IsNullOrEmpty(token) || sessionUser == null)
+                return Unauthorized(new { message = "Unauthorized: Invalid or missing session token" });
+
+            ReservationModel? reservation = await ReservationAccess.GetReservationByIdAsync(rid);
+
+            if (reservation == null)
+                return NotFound(new { message = "Reservation not found" });
+
+            if (sessionUser.Role != "ADMIN" && sessionUser.Id != reservation.UserID)
+                return StatusCode(403, new { message = "Access denied" });
+
+            return Ok(reservation);
+        }
+
         // DELETE /reservations/{rid}
         [HttpDelete("{rid:int}")]
         public async Task<IActionResult> DeleteReservation(int rid)
