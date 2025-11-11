@@ -200,4 +200,95 @@ public static class ParkingLotAccess
         return affectedRows > 0;
 
     }
+
+    // POST een nieuwe parking lot
+    // Endpoint: /parking-lots
+    public static int CreateParkinglot(ParkingLotModel parkinglot)
+    {
+        string cs = _config.GetConnectionString("DefaultConnection")!;
+        using MySqlConnection conn = new(cs);
+        conn.Open();
+
+        const string query = """
+        INSERT INTO parking_lots
+            (name, location, address, capacity, reserved, tariff, daytariff)
+        VALUES
+            (@Name, @Location, @Address, @Capacity, @Reserved, @Tariff, @DayTariff);
+        SELECT LAST_INSERT_ID();
+        """;
+
+        int newId = conn.ExecuteScalar<int>(query, parkinglot);
+
+        return newId;
+    }
+
+    // POST een nieuwe parking session
+    // Endpoint: /parking-lots/{lid}/sessions/start
+    public static int CreateParkingsession(ParkingSessionModel session)
+    {
+        string cs = _config.GetConnectionString("DefaultConnection")!;
+        using MySqlConnection conn = new(cs);
+        conn.Open();
+
+        const string query = """
+        INSERT INTO parking_sessions
+            (parking_lot_id, licenseplate, started, user)
+        VALUES
+            (@ParkingLotID, @LicensePlate, @Started, @User);
+        SELECT LAST_INSERT_ID();
+        """;
+
+        int newId = conn.ExecuteScalar<int>(query, session);
+
+        return newId;
+    }
+
+    // PUT een parking session
+    // Endpoint: /parking-lots/{lid}/sessions/stop
+    public static bool UpdateParkingSession(ParkingSessionModel session)
+    {
+        string cs = _config.GetConnectionString("DefaultConnection")!;
+        using MySqlConnection conn = new(cs);
+        conn.Open();
+
+        const string sql = """
+        UPDATE parking_sessions
+        SET
+            stopped = @Stopped,
+            duration_minutes = @DurationMinutes,
+            cost = @Cost,
+            payment_status = @PaymentStatus
+        WHERE id = @ID AND parking_lot_id = @ParkingLotID;
+        """;
+
+        int affectedRows = conn.Execute(sql, session);
+        return affectedRows > 0;
+    }
+
+    // GET een parking lot met licenseplate
+    // Endpoint: /parking-lots/{lid}/sessions/start
+    public static List<ParkingSessionModel> FindParkingSessionsByLicenseplate(string licenseplate)
+    {
+        string cs = _config.GetConnectionString("DefaultConnection")!;
+        using MySqlConnection conn = new(cs);
+        conn.Open();
+
+        const string sql = """
+        SELECT 
+                id                  AS ID,
+                parking_lot_id      AS ParkingLotID,
+                licenseplate        AS LicensePlate,
+                started             AS Started,
+                stopped             AS Stopped,
+                user                AS User,
+                duration_minutes    AS DurationMinutes,
+                cost                AS Cost,
+                payment_status      AS PaymentStatus
+            FROM parking_sessions
+            WHERE licenseplate = @licenseplate;
+        """;
+
+        List<ParkingSessionModel> sessions = conn.Query<ParkingSessionModel>(sql, new { licenseplate }).ToList();
+        return sessions;
+    }
 }
