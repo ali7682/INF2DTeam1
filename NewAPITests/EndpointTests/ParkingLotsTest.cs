@@ -40,8 +40,8 @@ namespace NewAPITests.ControllerTests
                 Address = "123 Test St",
                 Capacity = 50,
                 Reserved = 0,
-                Tariff = 2.5m,
-                DayTariff = 20m,
+                Tariff = 2.5,
+                DayTariff = 20,
                 CreatedAt = DateTime.Now
             };
 
