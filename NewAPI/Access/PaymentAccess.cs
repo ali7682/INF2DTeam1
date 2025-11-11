@@ -1,57 +1,55 @@
 using Dapper;
-using MySql.Data.MySqlClient;
+using MySqlConnector;
 
 public static class PaymentAccess
 {
     public static readonly string TableName = "payments";
     private static IConfiguration _config;
 
-    public static void SetConfig(IConfiguration config)
-    {
-        _config = config;
-    }
+    public static void SetConfig(IConfiguration config) => _config = config;
 
-    public static int CreatePayment(PaymentModel payment)
-    {
-        string cs = _config.GetConnectionString("DefaultConnection")!;
-        using MySqlConnection conn = new(cs);
-        conn.Open();
+    private static string Cs => _config.GetConnectionString("DefaultConnection")!;
 
+    private const string SqlSelectBase = """
+        SELECT
+            transaction_id     AS TransactionId,
+            transaction        AS Transaction,
+            amount             AS Amount,
+            initiator          AS Initiator,
+            created_at         AS Created_at,
+            completed          AS Completed,
+            hash               AS Hash
+        FROM payments
+    """;
+
+    public static async Task<int> CreatePaymentAsync(PaymentModel payment, CancellationToken ct = default)
+    {
         const string query = """
         INSERT INTO payments
-            (amount, initiator, created_at, completed, hash)
+            (amount, transaction, initiator, created_at, completed, hash)
         VALUES
-            (@Amount, @Initiator, @Created_at, @Completed, @Hash);
+            (@Amount, @Transaction, @Initiator, @Created_at, @Completed, @Hash);
         SELECT LAST_INSERT_ID();
         """;
 
-        int newId = conn.ExecuteScalar<int>(query, payment);
+        await using var conn = new MySqlConnection(Cs);
+        await conn.OpenAsync(ct);
 
-        return newId;
+        var cmd = new CommandDefinition(query, payment, cancellationToken: ct, commandTimeout: 5);
+        return await conn.ExecuteScalarAsync<int>(cmd);
     }
 
     // GET alle payments
     // Endpoint: /payments
-    public static List<PaymentModel> GetAllPayments()
+    public static async Task<List<PaymentModel>> GetAllPaymentsAsync(CancellationToken ct = default)
     {
-        string cs = _config.GetConnectionString("DefaultConnection")!;
-        using MySqlConnection conn = new(cs);
-        conn.Open();
+        var sql = $"{SqlSelectBase};";
+        await using var conn = new MySqlConnection(Cs);
+        await conn.OpenAsync(ct);
 
-        const string sql = """
-        SELECT 
-            transaction_id     AS TransactionId,
-            transaction        AS Transaction
-            amount             AS Amount,
-            initiator          AS Initiator,
-            created_at         AS CreatedAt,
-            completed          AS Completed,
-            hash               AS Hash
-            FROM payments;
-        """;
-
-        List<PaymentModel> result = conn.Query<PaymentModel>(sql).ToList();
-        return result;
+        // var cmd = new CommandDefinition(sql, cancellationToken: ct, commandTimeout: 5);
+        var result = await conn.QueryAsync<PaymentModel>(sql);
+        return result.AsList();
     }
 
     public static PaymentModel GetPaymentByTransactionId(int transaction_Id)
@@ -98,14 +96,10 @@ public static class PaymentAccess
         return conn.Query<PaymentModel>(sql, new { initiator }).First();
     }
 
-    public static bool UpdatePayment(PaymentModel payment)
+    public static async Task<bool> UpdatePaymentAsync(PaymentModel payment, CancellationToken ct = default)
     {
-        string cs = _config.GetConnectionString("DefaultConnection")!;
-        using MySqlConnection conn = new(cs);
-        conn.Open();
-
         const string sql = """
-            UPDATE users
+            UPDATE payments
             SET
                 transaction_id   = @TransactionId,
                 amount   = @Amount,
@@ -116,7 +110,10 @@ public static class PaymentAccess
             WHERE transaction_id = @TransactionId;
         """;
 
-        int affectedRows = conn.Execute(sql, new
+        await using var conn = new MySqlConnection(Cs);
+        await conn.OpenAsync(ct);
+
+        var cmd = new CommandDefinition(sql, new
         {
             payment.TransactionId,
             payment.Amount,
@@ -124,8 +121,9 @@ public static class PaymentAccess
             payment.Created_at,
             payment.Completed,
             payment.Hash
-        });
+        }, cancellationToken: ct, commandTimeout: 5);
 
-        return affectedRows > 0;
+        var rows = await conn.ExecuteAsync(cmd);
+        return rows > 0;
     }
 }
