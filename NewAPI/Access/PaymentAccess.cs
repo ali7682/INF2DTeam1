@@ -41,15 +41,15 @@ public static class PaymentAccess
 
     // GET alle payments
     // Endpoint: /payments
-    public static async Task<List<PaymentModel?>> GetAllPaymentsAsync(CancellationToken ct = default)
+    public static async Task<List<PaymentModel>> GetAllPaymentsAsync(CancellationToken ct = default)
     {
         var sql = $"{SqlSelectBase};";
         await using var conn = new MySqlConnection(Cs);
         await conn.OpenAsync(ct);
 
-        var cmd = new CommandDefinition(sql, cancellationToken: ct, commandTimeout: 5);
-        var result = await conn.QueryAsync<PaymentModel>(cmd);
-        return result.ToList();
+        // var cmd = new CommandDefinition(sql, cancellationToken: ct, commandTimeout: 5);
+        var result = await conn.QueryAsync<PaymentModel>(sql);
+        return result.AsList();
     }
 
     public static PaymentModel GetPaymentByTransactionId(int transaction_Id)
