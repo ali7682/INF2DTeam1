@@ -1,0 +1,117 @@
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using Xunit;
+using System;
+using System.IO;
+using System.Threading.Tasks;
+using NewAPI.Controllers;
+
+public class ReservationDeleteTests
+{
+    // Helper to create a test reservation
+    private async Task<ReservationModel> CreateTestReservation(int userId, int vehicleId, int parkingLotId)
+    {
+        var reservationToCreate = new ReservationModel
+        {
+            UserID = userId,
+            VehicleID = vehicleId,
+            ParkinglotID = parkingLotId,
+            StartTime = DateTime.Now,
+            EndTime = DateTime.Now.AddHours(2),
+            Status = "ACTIVE",
+            CreatedAt = DateTime.Now,
+            Cost = 10.0m
+        };
+
+        int newReservationId = await ReservationAccess.CreateReservationAsync(reservationToCreate);
+
+        return new ReservationModel
+        {
+            ID = newReservationId,
+            UserID = reservationToCreate.UserID,
+            VehicleID = reservationToCreate.VehicleID,
+            ParkinglotID = reservationToCreate.ParkinglotID,
+            StartTime = reservationToCreate.StartTime,
+            EndTime = reservationToCreate.EndTime,
+            Status = reservationToCreate.Status,
+            CreatedAt = reservationToCreate.CreatedAt,
+            Cost = reservationToCreate.Cost
+        };
+    }
+
+    // Create controller using appsettings.json
+    private ReservationController CreateControllerWithToken(string token)
+    {
+        var config = new ConfigurationBuilder()
+            .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), @"..\..\..\..", "NewAPI")) // adjust path
+            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+            .Build();
+
+        var controller = new ReservationController(config)
+        {
+            ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            }
+        };
+
+        controller.HttpContext.Request.Headers["Authorization"] = token;
+        return controller;
+    }
+
+    [Fact]
+    public async Task DeleteReservation_InvalidToken_ReturnsUnauthorized()
+    {
+        var controller = CreateControllerWithToken("invalid-token");
+        var reservation = await CreateTestReservation(2, 1, 1);
+
+        var result = await controller.DeleteReservation(reservation.ID);
+
+        var objResult = Assert.IsType<UnauthorizedObjectResult>(result);
+        Assert.NotNull(objResult.Value);
+    }
+
+    [Fact]
+    public async Task DeleteReservation_ValidAdminToken_ReturnsOk()
+    {
+        string token = Guid.NewGuid().ToString("N");
+        SessionManager.AddSession(token, new UserModel { Username = "AdminUser", Role = "ADMIN" });
+        var controller = CreateControllerWithToken(token);
+        var reservation = await CreateTestReservation(2, 1, 1);
+
+        var result = await controller.DeleteReservation(reservation.ID);
+
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        Assert.NotNull(okResult.Value);
+    }
+
+    [Fact]
+    public async Task DeleteReservation_ReservationNotFound_ReturnsNotFound()
+    {
+        string token = Guid.NewGuid().ToString("N");
+        SessionManager.AddSession(token, new UserModel { Username = "AdminUser", Role = "ADMIN" });
+        var controller = CreateControllerWithToken(token);
+        int nonExistentReservationId = 999999;
+
+        var result = await controller.DeleteReservation(nonExistentReservationId);
+
+        var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+        Assert.NotNull(notFoundResult.Value);
+    }
+
+    [Fact]
+    public async Task DeleteReservation_NonAdminUserNotOwner_ReturnsForbidden()
+    {
+        string token = Guid.NewGuid().ToString("N");
+        SessionManager.AddSession(token, new UserModel { Username = "RegularUser", Role = "USER", Id = 1 });
+        var controller = CreateControllerWithToken(token);
+
+        var reservation = await CreateTestReservation(2, 1, 1);
+
+        var result = await controller.DeleteReservation(reservation.ID);
+
+        var statusCodeResult = Assert.IsType<ObjectResult>(result);
+        Assert.Equal(403, statusCodeResult.StatusCode);
+    }
+}

@@ -3,25 +3,63 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using NewAPI.Controllers;
+using System;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace NewAPITests
 {
     public class ParkingLotTests
     {
         private readonly CancellationToken ct = CancellationToken.None;
-
         private readonly ParkingLotController controller;
 
-        // Runt voor elke test
         public ParkingLotTests()
         {
-            // Load appsettings.json (gebruikt nu nog de echte db en niet MobyParkTest) van de NewAPI project
             IConfigurationRoot config = new ConfigurationBuilder()
                 .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), @"..\..\..\..", "NewAPI"))
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .Build();
 
             controller = new ParkingLotController(config);
+        }
+
+        // Helper to create a temporary parking lot for tests
+        private async Task<ParkingLotModel> CreateTestParkingLot()
+        {
+            int newId;
+
+            // First insert the parking lot and get the new ID
+            var tempLot = new ParkingLotModel
+            {
+                Name = "TestLot_" + Guid.NewGuid().ToString("N").Substring(0, 6),
+                Location = "TestLocation",
+                Address = "123 Test St",
+                Capacity = 50,
+                Reserved = 0,
+                Tariff = 2.5m,
+                DayTariff = 20m,
+                CreatedAt = DateTime.Now
+            };
+
+            newId = await ParkingLotAccess.CreateParkinglotAsync(tempLot);
+
+            // Now create a new object with ID in the initializer
+            var lot = new ParkingLotModel
+            {
+                ID = newId,
+                Name = tempLot.Name,
+                Location = tempLot.Location,
+                Address = tempLot.Address,
+                Capacity = tempLot.Capacity,
+                Reserved = tempLot.Reserved,
+                Tariff = tempLot.Tariff,
+                DayTariff = tempLot.DayTariff,
+                CreatedAt = tempLot.CreatedAt
+            };
+
+            return lot;
         }
 
         // GET /parking-lots
@@ -57,7 +95,6 @@ namespace NewAPITests
         [Fact]
         public async Task TestGetParkingSessions_NoAuthToken_ReturnsUnauthorized()
         {
-            // Setup fake HTTP request zonder valid authentication
             controller.ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext()
@@ -73,7 +110,6 @@ namespace NewAPITests
         [Fact]
         public async Task TestGetParkingSessions_ValidAdminToken_ReturnsOk()
         {
-            // Setup mock authenticated session
             string token = Guid.NewGuid().ToString("N");
             SessionManager.AddSession(token, new UserModel { Username = "AdminUser", Role = "ADMIN" });
 
@@ -87,8 +123,6 @@ namespace NewAPITests
 
             Assert.NotNull(result);
             Assert.Equal(200, result.StatusCode);
-
-            // Clean up, zodat het geen effect heeft op andere tests
 
             SessionManager.RemoveSession(token);
         }
@@ -115,18 +149,157 @@ namespace NewAPITests
             string token = Guid.NewGuid().ToString("N");
             SessionManager.AddSession(token, new UserModel { Username = "AdminUser", Role = "ADMIN" });
 
+            var tempLot = await CreateTestParkingLot();
+
+            var tempSessionModel = new ParkingSessionModel
+            {
+                ParkingLotID = tempLot.ID,
+                LicensePlate = "TEST" + Guid.NewGuid().ToString("N").Substring(0, 6),
+                Started = DateTime.Now,
+                User = "TestUser"
+            };
+            int tempSessionId = await ParkingLotAccess.CreateParkingsessionAsync(tempSessionModel, ct);
+
             controller.ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext()
             };
             controller.ControllerContext.HttpContext.Request.Headers.Authorization = token;
 
-            ObjectResult result = await controller.GetParkingSession(1, 1, ct) as ObjectResult;
+            var result = await controller.GetParkingSession(tempLot.ID, tempSessionId, ct) as ObjectResult;
 
             Assert.NotNull(result);
             Assert.Equal(200, result.StatusCode);
 
             SessionManager.RemoveSession(token);
+        }
+
+        // DELETE ParkingLots
+        [Fact]
+        public async Task DeleteParkingLot_Existing_ReturnsOk()
+        {
+            var testLot = await CreateTestParkingLot();
+
+            string token = Guid.NewGuid().ToString("N");
+            SessionManager.AddSession(token, new UserModel { Username = "AdminUser", Role = "ADMIN" });
+
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+            controller.ControllerContext.HttpContext.Request.Headers.Authorization = token;
+
+            var result = await controller.DeleteParkingLot(testLot.ID, CancellationToken.None);
+
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            Assert.NotNull(okResult.Value);
+
+            SessionManager.RemoveSession(token);
+        }
+
+        [Fact]
+        public async Task DeleteParkingLot_NotFound_ReturnsNotFound()
+        {
+            string token = Guid.NewGuid().ToString("N");
+            SessionManager.AddSession(token, new UserModel { Username = "AdminUser", Role = "ADMIN" });
+
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+            controller.ControllerContext.HttpContext.Request.Headers.Authorization = token;
+
+            int nonExistentId = 999999;
+            var result = await controller.DeleteParkingLot(nonExistentId, CancellationToken.None);
+
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+            Assert.NotNull(notFoundResult.Value);
+
+            SessionManager.RemoveSession(token);
+        }
+
+
+        // DELETE /parking-lots/{lid}/sessions/{sid}
+        [Fact]
+        public async Task DeleteParkingSession_Existing_ReturnsOk()
+        {
+            var testLot = await CreateTestParkingLot();
+            var tempSession = new ParkingSessionModel
+            {
+                ParkingLotID = testLot.ID,
+                LicensePlate = "TEST" + Guid.NewGuid().ToString("N").Substring(0, 6),
+                Started = DateTime.Now,
+                User = "TestUser"
+            };
+            int sessionId = await ParkingLotAccess.CreateParkingsessionAsync(tempSession, ct);
+
+            string token = Guid.NewGuid().ToString("N");
+            SessionManager.AddSession(token, new UserModel { Username = "AdminUser", Role = "ADMIN" });
+
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+            controller.ControllerContext.HttpContext.Request.Headers.Authorization = token;
+
+            var result = await controller.DeleteParkingSession(testLot.ID, sessionId, ct);
+
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            Assert.NotNull(okResult.Value);
+
+            var deletedSession = await ParkingLotAccess.GetParkingSessionByIdAsync(testLot.ID, sessionId);
+            Assert.Null(deletedSession);
+
+            SessionManager.RemoveSession(token);
+        }
+
+        [Fact]
+        public async Task DeleteParkingSession_NotFound_ReturnsNotFound()
+        {
+            var testLot = await CreateTestParkingLot();
+
+            string token = Guid.NewGuid().ToString("N");
+            SessionManager.AddSession(token, new UserModel { Username = "AdminUser", Role = "ADMIN" });
+
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+            controller.ControllerContext.HttpContext.Request.Headers.Authorization = token;
+
+            int nonExistentSessionId = 999999;
+
+            var result = await controller.DeleteParkingSession(testLot.ID, nonExistentSessionId, ct);
+
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+            Assert.NotNull(notFoundResult.Value);
+
+            SessionManager.RemoveSession(token);
+        }
+
+        [Fact]
+        public async Task DeleteParkingSession_NoAuthToken_ReturnsUnauthorized()
+        {
+            var testLot = await CreateTestParkingLot();
+            var tempSession = new ParkingSessionModel
+            {
+                ParkingLotID = testLot.ID,
+                LicensePlate = "TEST" + Guid.NewGuid().ToString("N").Substring(0, 6),
+                Started = DateTime.Now,
+                User = "TestUser"
+            };
+            int sessionId = await ParkingLotAccess.CreateParkingsessionAsync(tempSession, ct);
+
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+            controller.ControllerContext.HttpContext.Request.Headers.Authorization = "";
+
+            var result = await controller.DeleteParkingSession(testLot.ID, sessionId, ct);
+
+            var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result);
+            Assert.Equal(401, unauthorizedResult.StatusCode);
         }
     }
 }
