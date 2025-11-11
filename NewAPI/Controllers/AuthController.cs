@@ -80,7 +80,7 @@ namespace NewAPI.Controllers
             return Ok(new { message = $"User created successfully with ID {newUserId}" });
         }
 
-        [HttpGet("Logout")]
+        [HttpPost("Logout")]
         public IActionResult Logout([FromBody] RegisterRequest body)
         {
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();

@@ -28,6 +28,8 @@ public static class SessionManager
     // AuthController gebruikte 'DoesSessionExist', maar hij bestond niet (gaf een error)
     public static bool DoesSessionExist(string token)
     {
-        return Sessions.ContainsKey(token);
+        bool? exists = Sessions.ContainsKey(token);
+
+        return exists != null && exists == true;
     }
 }
