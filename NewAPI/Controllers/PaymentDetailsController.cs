@@ -16,7 +16,7 @@ namespace NewAPI.Controllers
 
         // GET /billings
         [HttpGet]
-        public IActionResult GetBilling()
+        public async Task<IActionResult> GetBilling(CancellationToken ct)
         {
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
             UserModel? user = SessionManager.GetSession(sessionToken);
@@ -26,7 +26,7 @@ namespace NewAPI.Controllers
                 return Unauthorized("Unauthorized: Invalid or missing session token");
             }
 
-            List<PaymentDetailsModel> paymentDetails = PaymentDetailsAccess.GetAllPaymentDetails();
+            List<PaymentDetailsModel> paymentDetails = await PaymentDetailsAccess.GetAllPaymentDetailsAsync(ct);
 
             if (paymentDetails == null)
             {
@@ -40,7 +40,7 @@ namespace NewAPI.Controllers
 
         // GET /billings/{username}
         [HttpGet("{userName}")]
-        public IActionResult GetBillingByUser(string userName)
+        public async Task<IActionResult> GetBillingByUser(string userName, CancellationToken ct)
         {
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
             UserModel? user = SessionManager.GetSession(sessionToken);
@@ -55,14 +55,14 @@ namespace NewAPI.Controllers
                 return StatusCode(403, new { message = "Forbidden: you do not have access to biling" });
             }
 
-            UserModel? requestUser = UserAccess.GetUserByUsername(userName);
+            UserModel? requestUser = await UserAccess.GetUserByUsernameAsync(userName);
 
             if (requestUser == null)
             {
                 return NotFound("NotFound: User not found");
             }
 
-            List<PaymentDetailsModel> paymentDetails = PaymentDetailsAccess.GetAllPaymentDetails();
+            List<PaymentDetailsModel> paymentDetails = await PaymentDetailsAccess.GetAllPaymentDetailsAsync(ct);
 
             if (paymentDetails == null)
             {

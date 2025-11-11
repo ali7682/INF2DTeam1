@@ -14,9 +14,9 @@ public sealed class UserModel
     {
         return Role == "ADMIN";
     }
-    public bool Update()
+    public async Task<bool> Update()
     {
-        return UserAccess.UpdateUser(this);
+        return await UserAccess.UpdateUserAsync(this);
     }
 
     public UserModel()
