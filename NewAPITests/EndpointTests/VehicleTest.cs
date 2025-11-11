@@ -8,7 +8,7 @@ using System.IO;
 public class VehicleDeleteTests
 {
     // Helper to create a test vehicle in the DB
-    private VehicleModel CreateTestVehicle(int userId)
+    private async Task<VehicleModel> CreateTestVehicle(int userId)
     {
         var vehicleToCreate = new VehicleModel
         {
@@ -21,7 +21,7 @@ public class VehicleDeleteTests
             UserID = userId
         };
 
-        int newVehicleId = VehicleAccess.CreateVehicle(vehicleToCreate);
+        int newVehicleId = await VehicleAccess.CreateVehicleAsync(vehicleToCreate);
 
         return new VehicleModel
         {
@@ -57,10 +57,10 @@ public class VehicleDeleteTests
     }
 
     [Fact]
-    public void DeleteVehicle_InvalidToken_ReturnsUnauthorized()
+    public async Task DeleteVehicle_InvalidToken_ReturnsUnauthorized()
     {
         var controller = CreateControllerWithToken("invalid-token");
-        var vehicle = CreateTestVehicle(2);
+        var vehicle = await CreateTestVehicle(2);
 
         var result = controller.DeleteVehicle(vehicle.ID);
 
@@ -69,12 +69,12 @@ public class VehicleDeleteTests
     }
 
     [Fact]
-    public void DeleteVehicle_ValidAdminToken_ReturnsOk()
+    public async Task DeleteVehicle_ValidAdminToken_ReturnsOk()
     {
         string token = Guid.NewGuid().ToString("N");
         SessionManager.AddSession(token, new UserModel { Username = "AdminUser", Role = "ADMIN" });
         var controller = CreateControllerWithToken(token);
-        var vehicle = CreateTestVehicle(2);
+        var vehicle = await CreateTestVehicle(2);
 
         var result = controller.DeleteVehicle(vehicle.ID);
 
