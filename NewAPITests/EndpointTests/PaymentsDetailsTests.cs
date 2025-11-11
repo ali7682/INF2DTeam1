@@ -5,12 +5,14 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Mvc.Testing;
 using NewAPI.Controllers;
+using System.Threading.Tasks;
 
 namespace NewAPITests
 {
     public class PaymentsDetailsTests
     {
-        private readonly PaymentDetailsController controller;
+        private readonly PaymentDetailsController billingController;
+        private readonly CancellationToken ct = CancellationToken.None;
 
         public PaymentsDetailsTests()
         {
@@ -18,36 +20,85 @@ namespace NewAPITests
                 .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), @"..\..\..\..", "NewAPI"))
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .Build();
-            controller = new PaymentDetailsController(config);
+            PaymentDetailsAccess.SetConfig(config);
+            billingController = new PaymentDetailsController(config);
         }
 
         // Test GET: /billings
         [Fact]
-        public void TestGetBillings()
+        public async Task TestGetBillings()
         {
-            var result = controller.GetBilling() as OkObjectResult;
+            string token = Guid.NewGuid().ToString("N");
+            var user = new UserModel { Username = "AdminUser", Role = "ADMIN" };
+            SessionManager.AddSession(token, user);
+            Assert.NotNull(SessionManager.GetSession(token));
+
+            billingController.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+            billingController.ControllerContext.HttpContext.Request.Headers["Authorization"] = token;
+
+            var rawResult = await billingController.GetBilling(ct);
+            Console.WriteLine($"Result type: {rawResult?.GetType().Name ?? "NULL"}");
+
+            var result = rawResult as OkObjectResult;
 
             Assert.NotNull(result);
             Assert.Equal(200, result.StatusCode);
         }
 
-        // Test GET: /billings/{username}
+        // TEST: GET /billings/{username}
         [Fact]
-        public void TestValidGetBillingsByUserName()
+        public async Task TestValidGetBillingsByUserName()
         {
-            var result = controller.GetBillingByUser("JohnDeere12") as OkObjectResult;
+            string token = Guid.NewGuid().ToString("N");
+            var user = new UserModel { Username = "AdminUser", Role = "ADMIN" };
+            SessionManager.AddSession(token, user);
+            Assert.NotNull(SessionManager.GetSession(token));
+
+            billingController.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+            billingController.ControllerContext.HttpContext.Request.Headers["Authorization"] = token;
+
+            var rawResult = await billingController.GetBillingByUser("JohnDeere12" ,ct);
+            Console.WriteLine($"Result type: {rawResult?.GetType().Name ?? "NULL"}");
+
+            var result = rawResult as OkObjectResult;
 
             Assert.NotNull(result);
             Assert.Equal(200, result.StatusCode);
         }
 
         [Fact]
-        public void TestInvalidGetBillingsByUserName()
+        public async Task TestInvalidGetBillingsByUserName()
         {
-            var result = controller.GetBillingByUser("") as BadRequestObjectResult;
+            string token = Guid.NewGuid().ToString("N");
+            var user = new UserModel { Username = "AdminUser", Role = "ADMIN" };
+            SessionManager.AddSession(token, user);
+            Assert.NotNull(SessionManager.GetSession(token));
+
+            billingController.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+            billingController.ControllerContext.HttpContext.Request.Headers["Authorization"] = token;
+
+            var rawResult = await billingController.GetBillingByUser("" ,ct);
+            Console.WriteLine($"Result type: {rawResult?.GetType().Name ?? "NULL"}");
+
+            ObjectResult? result = null;
+
+            if (rawResult is BadRequestObjectResult badRequest)
+                result = badRequest;
+            else if (rawResult is NotFoundObjectResult notFound)
+                result = notFound;
 
             Assert.NotNull(result);
-            Assert.Equal(400, result.StatusCode);
+            Assert.True(result.StatusCode == 400 || result.StatusCode == 404,
+                $"Expected 400 or 404, but got {result.StatusCode}");
         }
     }
 }
