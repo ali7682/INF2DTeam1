@@ -34,10 +34,16 @@ namespace NewAPI.Controllers
     [ApiController]
     public class AuthController : Controller
     {
-        public AuthController(IConfiguration config) { }
+        private readonly IConfiguration _config;
+
+        public AuthController(IConfiguration config)
+        {
+            _config = config;
+            UserAccess.SetConfig(_config);
+        }
 
         [HttpPost("Login")]
-        public async Task<ActionResult<UserModel>> Login([FromBody] LoginRequest body, CancellationToken ct)
+        public async Task<IActionResult> Login([FromBody] LoginRequest body, CancellationToken ct)
         {
             if (body is null || string.IsNullOrWhiteSpace(body.Username) || string.IsNullOrWhiteSpace(body.Password))
                 return BadRequest(new { error = "Bad request: Missing credentials" });
@@ -57,7 +63,7 @@ namespace NewAPI.Controllers
         }
 
         [HttpPost("Register")]
-        public async Task<ActionResult<bool>> Register([FromBody] UserModel body, CancellationToken ct)
+        public async Task<IActionResult> Register([FromBody] UserModel body, CancellationToken ct)
         {
             if (body is null || string.IsNullOrWhiteSpace(body.Username) || string.IsNullOrWhiteSpace(body.Password))
                 return BadRequest(new { error = "Missing user data" });
