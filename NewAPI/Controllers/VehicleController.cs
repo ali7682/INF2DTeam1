@@ -200,26 +200,39 @@ public class VehicleController : ControllerBase
     [HttpDelete("{vid:int}")]
     public IActionResult DeleteVehicle(int vid)
     {
-        string token = HttpContext.Request.Headers.Authorization.ToString();
-        UserModel? sessionUser = SessionManager.GetSession(token);
+        try
+        {
+            string token = HttpContext.Request.Headers["Authorization"].ToString();
+            Console.WriteLine($"[DEBUG] Token: {token}");
 
-        if (string.IsNullOrEmpty(token) || sessionUser == null)
-            return Unauthorized(new { message = "Unauthorized: Invalid or missing session token" });
+            UserModel? sessionUser = SessionManager.GetSession(token);
+            Console.WriteLine($"[DEBUG] Session user: {(sessionUser == null ? "null" : sessionUser.Role)}");
 
-        VehicleModel? vehicle = VehicleAccess.GetVehicleById(vid);
+            if (string.IsNullOrEmpty(token) || sessionUser == null)
+                return Unauthorized(new { message = "Unauthorized: Invalid or missing session token" });
 
-        if (vehicle == null)
-            return NotFound(new { message = "Vehicle not found" });
+            VehicleModel? vehicle = VehicleAccess.GetVehicleById(vid);
+            Console.WriteLine($"[DEBUG] Vehicle found: {(vehicle == null ? "no" : "yes")}");
 
-        if (sessionUser.Role != "ADMIN" && sessionUser.Id != vehicle.UserID)
-            return StatusCode(403, new { message = "Access denied" });
+            if (vehicle == null)
+                return NotFound(new { message = "Vehicle not found" });
 
-        bool deleted = VehicleAccess.DeleteVehicleById(vid);
+            if (sessionUser.Role != "ADMIN" && sessionUser.Id != vehicle.UserID)
+                return StatusCode(403, new { message = "Access denied" });
 
-        if (!deleted)
-            return NotFound(new { message = "Vehicle not found" });
+            bool deleted = VehicleAccess.DeleteVehicleById(vid);
+            Console.WriteLine($"[DEBUG] Deleted: {deleted}");
 
-        return Ok(new { message = "Vehicle deleted" });
+            if (!deleted)
+                return NotFound(new { message = "Vehicle not found" });
+
+            return Ok(new { message = "Vehicle deleted" });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ERROR] Exception in DeleteVehicle: {ex.Message}");
+            return Problem("Exception: " + ex.Message);
+        }
     }
 
     [HttpPut("{vId:int}")]
