@@ -84,7 +84,7 @@ public class VehiclesController : ControllerBase
             return NotFound("NotFound: Vehicle not found");
         }
 
-        if (user.Id != vehicle.UserID)
+        if (user.Role != "ADMIN" && user.Id != vehicle.UserID)
         {
             return StatusCode(403, new { message = "Forbidden: You do not have access to this vehicle's reservations" });
         }
