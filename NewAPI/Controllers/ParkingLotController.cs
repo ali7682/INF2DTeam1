@@ -33,18 +33,17 @@ namespace NewAPI.Controllers
         
         // GET /parking-lots
         [HttpGet]
-        public IActionResult GetAllParkingLots()
+        public async Task<IActionResult> GetAllParkingLots(CancellationToken ct)
         {
-            List<ParkingLotModel> parkingLots = ParkingLotAccess.GetAllParkingLots();
-
+            List<ParkingLotModel> parkingLots = await ParkingLotAccess.GetAllParkingLotsAsync(ct);
             return Ok(parkingLots);
         }
 
         // GET /parking-lots/{lid}
         [HttpGet("{lid:int}")]
-        public IActionResult GetParkingLot(int lid)
+        public async Task<IActionResult> GetParkingLot(int lid, CancellationToken ct)
         {
-            ParkingLotModel? parkingLot = ParkingLotAccess.GetParkingLotById(lid);
+            ParkingLotModel? parkingLot = await ParkingLotAccess.GetParkingLotByIdAsync(lid, ct);
 
             if (parkingLot == null)
                 return NotFound(new { message = "Parking lot not found" });
@@ -54,7 +53,7 @@ namespace NewAPI.Controllers
 
         // GET /parking-lots/{lid}/sessions
         [HttpGet("{lid:int}/sessions")]
-        public IActionResult GetParkingSessions(int lid)
+        public async Task<IActionResult> GetParkingSessions(int lid, CancellationToken ct)
         {
             string token = HttpContext.Request.Headers.Authorization.ToString();
             UserModel? sessionUser = SessionManager.GetSession(token);
@@ -62,17 +61,16 @@ namespace NewAPI.Controllers
             if (string.IsNullOrEmpty(token) || sessionUser == null)
                 return Unauthorized(new { message = "Unauthorized: Invalid or missing session token" });
 
-            ParkingLotModel? parkingLot = ParkingLotAccess.GetParkingLotById(lid);
+            ParkingLotModel? parkingLot = await ParkingLotAccess.GetParkingLotByIdAsync(lid, ct);
 
             if (parkingLot == null)
                 return NotFound(new { message = "Parking lot not found" });
 
-            List<ParkingSessionModel> sessions = ParkingLotAccess.GetParkingSessionsByLotId(lid);
+            List<ParkingSessionModel> sessions = await ParkingLotAccess.GetParkingSessionsByLotIdAsync(lid, ct);
 
             if (sessionUser.Role != "ADMIN")
                 sessions = sessions.Where(session => session.User == sessionUser.Username).ToList();
 
-            // Python code zou normaal '[]' returnen in dit geval, maar ik heb een message toegevoegd
             if (sessions.Count == 0)
                 return Ok(new { message = "No parking sessions found for this user in this lot" });
 
@@ -81,7 +79,7 @@ namespace NewAPI.Controllers
 
         // GET /parking-lots/{lid}/sessions/{sid}
         [HttpGet("{lid:int}/sessions/{sid:int}")]
-        public IActionResult GetParkingSession(int lid, int sid)
+        public async Task<IActionResult> GetParkingSession(int lid, int sid, CancellationToken ct)
         {
             string token = HttpContext.Request.Headers.Authorization.ToString();
             UserModel? sessionUser = SessionManager.GetSession(token);
@@ -89,7 +87,7 @@ namespace NewAPI.Controllers
             if (string.IsNullOrEmpty(token) || sessionUser == null)
                 return Unauthorized(new { message = "Unauthorized: Invalid or missing session token" });
 
-            ParkingSessionModel? session = ParkingLotAccess.GetParkingSessionById(lid, sid);
+            ParkingSessionModel? session = await ParkingLotAccess.GetParkingSessionByIdAsync(lid, sid, ct);
 
             if (session == null)
                 return NotFound(new { message = "Parking session not found" });
@@ -102,7 +100,7 @@ namespace NewAPI.Controllers
 
         // DELETE /parking-lots/{lid}
         [HttpDelete("{lid:int}")]
-        public IActionResult DeleteParkingLot(int lid)
+        public async Task<IActionResult> DeleteParkingLot(int lid, CancellationToken ct)
         {
             string token = HttpContext.Request.Headers.Authorization.ToString();
             UserModel? sessionUser = SessionManager.GetSession(token);
@@ -112,9 +110,8 @@ namespace NewAPI.Controllers
 
             if (sessionUser.Role != "ADMIN")
                 return StatusCode(403, new { message = "Access denied" });
-                // return Forbid("Access denied");
 
-            bool deleted = ParkingLotAccess.DeleteParkingLotById(lid);
+            bool deleted = await ParkingLotAccess.DeleteParkingLotByIdAsync(lid, ct);
 
             if (!deleted)
                 return NotFound("Parking lot not found");
@@ -124,7 +121,7 @@ namespace NewAPI.Controllers
 
         // DELETE /parking-lots/{lid}/sessions/{sid}
         [HttpDelete("{lid:int}/sessions/{sid:int}")]
-        public IActionResult DeleteParkingSession(int lid, int sid)
+        public async Task<IActionResult> DeleteParkingSession(int lid, int sid, CancellationToken ct)
         {
             string token = HttpContext.Request.Headers.Authorization.ToString();
             UserModel? sessionUser = SessionManager.GetSession(token);
@@ -134,9 +131,8 @@ namespace NewAPI.Controllers
 
             if (sessionUser.Role != "ADMIN")
                 return StatusCode(403, new { message = "Access denied" });
-            // return Forbid("Access denied");
 
-            bool deleted = ParkingLotAccess.DeleteParkingSessionById(lid, sid);
+            bool deleted = await ParkingLotAccess.DeleteParkingSessionByIdAsync(lid, sid, ct);
 
             if (!deleted)
                 return NotFound("Parking session not found");
@@ -172,7 +168,7 @@ namespace NewAPI.Controllers
                 DayTariff = body.DayTariff
             };
 
-            int newId = ParkingLotAccess.CreateParkinglot(newParkinglot);
+            int newId = await ParkingLotAccess.CreateParkinglotAsync(newParkinglot, ct);
 
             return Ok(new { message = $"Parking lot created successfully with ID {newId}" });
 
@@ -191,7 +187,7 @@ namespace NewAPI.Controllers
             if (body is null || string.IsNullOrWhiteSpace(body.Licenseplate))
                 return BadRequest(new { error = "Bad request: Missing or invalid licenseplate details" });
 
-            if (ParkingLotAccess.GetParkingSessionsByLotId(lid).Any())
+            if ((await ParkingLotAccess.GetParkingSessionsByLotIdAsync(lid, ct)).Any())
                 return StatusCode(401, new { message = "Cannot start a session when another sessions for this licesenplate is already started." });
 
             ParkingSessionModel newSession = new()
@@ -206,7 +202,7 @@ namespace NewAPI.Controllers
                 PaymentStatus = "pending"
             };
 
-            int newId = ParkingLotAccess.CreateParkingsession(newSession);
+            int newId = await ParkingLotAccess.CreateParkingsessionAsync(newSession, ct);
 
             return Ok(new { message = $"Parking session started successfully for licenseplate {body.Licenseplate} with ID {newId}" });
         }
@@ -224,7 +220,7 @@ namespace NewAPI.Controllers
             if (body is null || string.IsNullOrWhiteSpace(body.Licenseplate))
                 return BadRequest(new { error = "Bad request: Missing or invalid licenseplate details" });
 
-            List<ParkingSessionModel> sessions = ParkingLotAccess.FindParkingSessionsByLicenseplate(body.Licenseplate);
+            List<ParkingSessionModel> sessions = await ParkingLotAccess.FindParkingSessionsByLicenseplateAsync(body.Licenseplate, ct);
 
             if (!sessions.Any())
                 return StatusCode(401, new { message = "Cannot stop a session when there is no session for this licesenplate." });
@@ -234,14 +230,14 @@ namespace NewAPI.Controllers
             sessionToUpdate.Stopped = DateTime.Now;
             sessionToUpdate.DurationMinutes = (int?)(sessionToUpdate.Stopped - sessionToUpdate.Started)?.TotalMinutes;
 
-            ParkingLotAccess.UpdateParkingSession(sessionToUpdate);
+            await ParkingLotAccess.UpdateParkingSessionAsync(sessionToUpdate, ct);
 
             return Ok(new { message = $"Parking session stopped successfully for licenseplate {body.Licenseplate}" });
         }
 
         // PUT /parking-lots/{lid}
         [HttpPut("{lid:int}")]
-        public IActionResult UpdateParkingLotsById(int lid, [FromBody] ParkingLotModel updatedParkingLot)
+        public async Task<IActionResult> UpdateParkingLotsById(int lid, [FromBody] ParkingLotModel updatedParkingLot, CancellationToken ct)
         {
             if (updatedParkingLot == null)
             {
@@ -261,7 +257,7 @@ namespace NewAPI.Controllers
                 return StatusCode(403, new { message = "Forbidden: You do not have access to this parking lot" });
             }
 
-            ParkingLotModel? parkingLot = ParkingLotAccess.GetParkingLotById(lid);
+            ParkingLotModel? parkingLot = await ParkingLotAccess.GetParkingLotByIdAsync(lid, ct);
             if (parkingLot == null)
             {
                 return NotFound("NotFound: Parking lot not found");
@@ -275,7 +271,7 @@ namespace NewAPI.Controllers
             parkingLot.Tariff = updatedParkingLot.Tariff;
             parkingLot.DayTariff = updatedParkingLot.DayTariff;
 
-            ParkingLotAccess.UpdateParkingLotById(lid, parkingLot);
+            ParkingLotAccess.UpdateParkingLotByIdAsync(lid, parkingLot, ct);
 
             return Ok(new { message = "Parking lot updated succesfully", parkingLot });
         }
