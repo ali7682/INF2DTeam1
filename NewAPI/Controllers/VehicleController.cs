@@ -3,8 +3,16 @@ using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
 [Route("vehicles")]
-public class VehiclesController : ControllerBase
+public class VehicleController : ControllerBase
 {
+    private readonly IConfiguration _config;
+
+    public VehicleController(IConfiguration config)
+    {
+        _config = config;
+        VehicleAccess.SetConfig(_config); // Assuming you have a VehicleAccess class like ParkingLotAccess
+    }
+
     [HttpGet("{vId:int}")]
     public async Task<IActionResult> GetVehicle(int vId)
     {
@@ -193,26 +201,39 @@ public class VehiclesController : ControllerBase
     [HttpDelete("{vid:int}")]
     public async Task<IActionResult> DeleteVehicle(int vid)
     {
-        string token = HttpContext.Request.Headers.Authorization.ToString();
-        UserModel? sessionUser = SessionManager.GetSession(token);
+        try
+        {
+            string token = HttpContext.Request.Headers["Authorization"].ToString();
+            Console.WriteLine($"[DEBUG] Token: {token}");
 
-        if (string.IsNullOrEmpty(token) || sessionUser == null)
-            return Unauthorized(new { message = "Unauthorized: Invalid or missing session token" });
+            UserModel? sessionUser = SessionManager.GetSession(token);
+            Console.WriteLine($"[DEBUG] Session user: {(sessionUser == null ? "null" : sessionUser.Role)}");
 
-        VehicleModel? vehicle = await VehicleAccess.GetVehicleByIdAsync(vid);
+            if (string.IsNullOrEmpty(token) || sessionUser == null)
+                return Unauthorized(new { message = "Unauthorized: Invalid or missing session token" });
+                
+            VehicleModel? vehicle = await VehicleAccess.GetVehicleByIdAsync(vid);
+            Console.WriteLine($"[DEBUG] Vehicle found: {(vehicle == null ? "no" : "yes")}");
 
-        if (vehicle == null)
-            return NotFound(new { message = "Vehicle not found" });
+            if (vehicle == null)
+                return NotFound(new { message = "Vehicle not found" });
 
-        if (sessionUser.Role != "ADMIN" && sessionUser.Id != vehicle.UserID)
-            return StatusCode(403, new { message = "Access denied" });
+            if (sessionUser.Role != "ADMIN" && sessionUser.Id != vehicle.UserID)
+                return StatusCode(403, new { message = "Access denied" });
+                
+            bool deleted = await VehicleAccess.DeleteVehicleByIdAsync(vid);
+            Console.WriteLine($"[DEBUG] Deleted: {deleted}");
 
-        bool deleted = await VehicleAccess.DeleteVehicleByIdAsync(vid);
+            if (!deleted)
+                return NotFound(new { message = "Vehicle not found" });
 
-        if (!deleted)
-            return NotFound(new { message = "Vehicle not found" });
-
-        return Ok(new { message = "Vehicle deleted" });
+            return Ok(new { message = "Vehicle deleted" });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ERROR] Exception in DeleteVehicle: {ex.Message}");
+            return Problem("Exception: " + ex.Message);
+        }
     }
 
     [HttpPut("{vId:int}")]

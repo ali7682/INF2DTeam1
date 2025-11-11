@@ -8,8 +8,8 @@ public class ParkinglotRequest
     public string Address { get; set; }
     public int Capacity { get; set; }
     public int Reserved { get; set; }
-    public decimal Tariff { get; set; }
-    public decimal DayTariff { get; set; }
+    public double Tariff { get; set; }
+    public double DayTariff { get; set; }
 }
 
 public class LicenseplateRequest
@@ -30,7 +30,7 @@ namespace NewAPI.Controllers
             _config = config;
             ParkingLotAccess.SetConfig(_config);
         }
-        
+
         // GET /parking-lots
         [HttpGet]
         public async Task<IActionResult> GetAllParkingLots(CancellationToken ct)
@@ -118,12 +118,12 @@ namespace NewAPI.Controllers
 
             return Ok(new { message = "Parking lot deleted" });
         }
-
+        
         // DELETE /parking-lots/{lid}/sessions/{sid}
         [HttpDelete("{lid:int}/sessions/{sid:int}")]
         public async Task<IActionResult> DeleteParkingSession(int lid, int sid, CancellationToken ct)
         {
-            string token = HttpContext.Request.Headers.Authorization.ToString();
+            string token = HttpContext.Request.Headers["Authorization"].ToString();
             UserModel? sessionUser = SessionManager.GetSession(token);
 
             if (string.IsNullOrEmpty(token) || sessionUser == null)
