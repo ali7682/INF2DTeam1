@@ -34,17 +34,23 @@ namespace NewAPI.Controllers
     [ApiController]
     public class AuthController : Controller
     {
-        public AuthController(IConfiguration config) { }
+        private readonly IConfiguration _config;
+
+        public AuthController(IConfiguration config)
+        {
+            _config = config;
+            UserAccess.SetConfig(_config);
+        }
 
         [HttpPost("Login")]
-        public async Task<ActionResult<UserModel>> Login([FromBody] LoginRequest body, CancellationToken ct)
+        public async Task<IActionResult> Login([FromBody] LoginRequest body, CancellationToken ct)
         {
             if (body is null || string.IsNullOrWhiteSpace(body.Username) || string.IsNullOrWhiteSpace(body.Password))
                 return BadRequest(new { error = "Bad request: Missing credentials" });
 
-            UserModel user = UserAccess.GetUserByUsername(body.Username);
+            UserModel? user = await UserAccess.GetUserByUsernameAsync(body.Username, ct);
 
-            if (body.Password != user.Password)
+            if (user is null || body.Password != user.Password)
                 return Unauthorized(new { message = "Unauthorized: Invalid credentials" });
 
             string sessionToken = Guid.NewGuid().ToString("N");
@@ -57,7 +63,7 @@ namespace NewAPI.Controllers
         }
 
         [HttpPost("Register")]
-        public async Task<ActionResult<bool>> Register([FromBody] UserModel body, CancellationToken ct)
+        public async Task<IActionResult> Register([FromBody] UserModel body, CancellationToken ct)
         {
             if (body is null || string.IsNullOrWhiteSpace(body.Username) || string.IsNullOrWhiteSpace(body.Password))
                 return BadRequest(new { error = "Missing user data" });
@@ -75,12 +81,12 @@ namespace NewAPI.Controllers
                 Active = true,
             };
 
-            int newUserId = UserAccess.CreateUser(newUser);
+            int newUserId = await UserAccess.CreateUserAsync(newUser, ct);
 
             return Ok(new { message = $"User created successfully with ID {newUserId}" });
         }
 
-        [HttpGet("Logout")]
+        [HttpPost("Logout")]
         public IActionResult Logout([FromBody] RegisterRequest body)
         {
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
@@ -97,7 +103,7 @@ namespace NewAPI.Controllers
         }
 
         [HttpPut("Profile")]
-        public IActionResult Profile([FromBody] ChangeProfileRequest body)
+        public async Task<IActionResult> Profile([FromBody] ChangeProfileRequest body)
         {
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
             UserModel? user = SessionManager.GetSession(sessionToken);
@@ -109,9 +115,9 @@ namespace NewAPI.Controllers
 
             user.Username = body.Username;
 
-            user.Update();
+            bool success = await user.Update();
 
-            return user.Update() ? Ok("Ok: Changed username") : NotFound("NotFound: No rows were changed");
+            return success ? Ok("Ok: Changed username") : NotFound("NotFound: No rows were changed");
         }
 
         [HttpGet("Profile")]
