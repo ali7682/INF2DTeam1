@@ -48,7 +48,7 @@ namespace NewAPI.Controllers
                 Hash = Guid.NewGuid().ToString("N")
             };
 
-            int newId = PaymentAccess.CreatePayment(newPayment);
+            int newId = await PaymentAccess.CreatePaymentAsync(newPayment, ct);
 
             return Ok(new { message = $"Payment created successfully with ID {newId}" });        }
 
@@ -91,14 +91,14 @@ namespace NewAPI.Controllers
                 Hash = Guid.NewGuid().ToString("N")
             };
 
-            int newId = PaymentAccess.CreatePayment(newPayment);
+            int newId = await PaymentAccess.CreatePaymentAsync(newPayment, ct);
 
             return Ok(new { message = $"Payment created successfully with ID {newId}" });
         }
 
         // GET /payments
         [HttpGet]
-        public IActionResult GetPayments()
+        public async Task<IActionResult> GetPayments(CancellationToken ct)
         {
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
             UserModel? user = SessionManager.GetSession(sessionToken);
@@ -108,7 +108,7 @@ namespace NewAPI.Controllers
                 return Unauthorized("Unauthorized: Invalid or missing session token");
             }
 
-            List<PaymentModel> payment = PaymentAccess.GetAllPayments();
+            List<PaymentModel> payment = await PaymentAccess.GetAllPaymentsAsync(ct);
             if (payment == null)
             {
                 return NotFound("NotFound: Payment not found");
@@ -120,7 +120,7 @@ namespace NewAPI.Controllers
 
         // GET /payments/{username}
         [HttpGet("{username}")]
-        public IActionResult GetPaymentsByUserName(string userName)
+        public async Task<IActionResult> GetPaymentsByUserName(string userName, CancellationToken ct)
         {
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
             UserModel? user = SessionManager.GetSession(sessionToken);
@@ -135,13 +135,13 @@ namespace NewAPI.Controllers
                 return StatusCode(403, new { message = "Forbidden: You do not have access to this payment" });
             }
 
-            UserModel? requestUser = UserAccess.GetUserByUsername(userName);
+            UserModel? requestUser = await UserAccess.GetUserByUsernameAsync(userName);
             if (requestUser == null)
             {
                 return NotFound("NotFound: User not found");
             }
 
-            List<PaymentModel> payment = PaymentAccess.GetAllPayments();
+            List<PaymentModel> payment = await PaymentAccess.GetAllPaymentsAsync(ct);
             if (payment == null)
             {
                 return NotFound("NotFound: Payment not found");

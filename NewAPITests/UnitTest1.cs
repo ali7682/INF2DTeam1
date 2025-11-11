@@ -1,5 +1,7 @@
 namespace MyFirstUnitTests;
 
+using Xunit;
+
 public class UnitTest1
 {
     [Fact]

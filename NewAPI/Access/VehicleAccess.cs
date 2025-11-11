@@ -6,16 +6,17 @@ public static class VehicleAccess
     public static readonly string TableName = "vehicles";
     private static IConfiguration _config;
 
-    public static void SetConfig(IConfiguration config)
-    {
-        _config = config;
-    }
+    public static void SetConfig(IConfiguration config) => _config = config;
 
-    public static int CreateVehicle(VehicleModel vehicle)
+    private static string Cs => _config.GetConnectionString("DefaultConnection")!;
+
+    public static async Task<int> CreateVehicleAsync(VehicleModel vehicle)
     {
         string cs = _config.GetConnectionString("DefaultConnection")!;
-        using MySqlConnection conn = new(cs);
-        conn.Open();
+
+        // Async using ensures proper disposal
+        await using var conn = new MySqlConnection(cs);
+        await conn.OpenAsync();
 
         const string query = """
         INSERT INTO vehicles
@@ -23,18 +24,20 @@ public static class VehicleAccess
         VALUES
             (@UserID, @LicensePlate, @Make, @Model, @Color, @Year, @CreatedAt);
         SELECT LAST_INSERT_ID();
-        """;
+    """;
 
-        int newId = conn.ExecuteScalar<int>(query, vehicle);
+        // Use ExecuteScalarAsync for async insertion
+        int newId = await conn.ExecuteScalarAsync<int>(query, vehicle);
 
         return newId;
     }
 
-    public static VehicleModel GetVehicleById(int vehicleId)
+
+    public static async Task<VehicleModel?> GetVehicleByIdAsync(int vehicleId, CancellationToken ct = default)
     {
         string cs = _config.GetConnectionString("DefaultConnection")!;
-        using MySqlConnection conn = new(cs);
-        conn.Open();
+        await using var conn = new MySqlConnection(cs);
+        await conn.OpenAsync(ct);
 
         const string sql = """
         SELECT 
@@ -51,32 +54,35 @@ public static class VehicleAccess
             LIMIT 1;
         """;
 
-        return conn.Query<VehicleModel>(sql, new { vehicleId }).FirstOrDefault();
+        var cmd = new CommandDefinition(sql, new { vehicleId }, cancellationToken: ct, commandTimeout: 5);
+        return await conn.QueryFirstOrDefaultAsync<VehicleModel>(cmd);
     }
 
-    public static VehicleModel GetVehicleByLicensePlate(string licensePlate)
+    public static async Task<VehicleModel?> GetVehicleByLicensePlateAsync(string licensePlate)
     {
         string cs = _config.GetConnectionString("DefaultConnection")!;
-        using MySqlConnection conn = new(cs);
-        conn.Open();
+        await using MySqlConnection conn = new(cs);
+        await conn.OpenAsync();
 
         const string sql = """
         SELECT 
-                id AS ID,
-                user_id AS UserID,
-                license_plate AS LicensePlate,
-                make AS Make,
-                model AS Model,
-                color AS Color,
-                year AS Year,
-                created_at AS CreatedAt
-            FROM vehicles
-            WHERE license_plate = @licensePlate
-            LIMIT 1;
-        """;
+            id AS ID,
+            user_id AS UserID,
+            license_plate AS LicensePlate,
+            make AS Make,
+            model AS Model,
+            color AS Color,
+            year AS Year,
+            created_at AS CreatedAt
+        FROM vehicles
+        WHERE license_plate = @licensePlate
+        LIMIT 1;
+    """;
 
-        return conn.Query<VehicleModel>(sql, new { licensePlate }).FirstOrDefault();
+        // Use Dapper's async version to fetch data
+        return await conn.QueryFirstOrDefaultAsync<VehicleModel>(sql, new { licensePlate });
     }
+
 
     public static bool UpdateVehicle(VehicleModel model)
     {
@@ -112,18 +118,19 @@ public static class VehicleAccess
 
     // DELETE een vehicle met vehicle ID
     // Endpoint: /vehicles/{vid}
-    public static bool DeleteVehicleById(int vehicleId)
+    public static async Task<bool> DeleteVehicleByIdAsync(int vehicleId, CancellationToken ct = default)
     {
-        string cs = _config.GetConnectionString("DefaultConnection")!;
-        using MySqlConnection conn = new(cs);
-        conn.Open();
+        await using var conn = new MySqlConnection(Cs);
+        await conn.OpenAsync(ct);
 
         const string sql = """
             DELETE FROM vehicles
             WHERE id = @vehicleId;
         """;
 
-        int affectedRows = conn.Execute(sql, new { vehicleId });
+        var cmd = new CommandDefinition(sql, new { vehicleId }, cancellationToken: ct, commandTimeout: 5);
+        int affectedRows = await conn.ExecuteAsync(cmd);
+
         return affectedRows > 0;
     }
 }
