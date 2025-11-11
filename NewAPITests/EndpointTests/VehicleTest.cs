@@ -2,13 +2,14 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Xunit;
+using System;
+using System.IO;
 
 public class VehicleDeleteTests
 {
-    // Helper to create a test vehicle in DB
+    // Helper to create a test vehicle in the DB
     private VehicleModel CreateTestVehicle(int userId)
     {
-        // Vehicle object without ID
         var vehicleToCreate = new VehicleModel
         {
             LicensePlate = "TEST" + Guid.NewGuid().ToString("N").Substring(0, 8),
@@ -20,11 +21,9 @@ public class VehicleDeleteTests
             UserID = userId
         };
 
-        // Insert into DB and get ID
         int newVehicleId = VehicleAccess.CreateVehicle(vehicleToCreate);
 
-        // Assign ID to a new VehicleModel
-        var createdVehicle = new VehicleModel
+        return new VehicleModel
         {
             ID = newVehicleId,
             LicensePlate = vehicleToCreate.LicensePlate,
@@ -35,26 +34,22 @@ public class VehicleDeleteTests
             CreatedAt = vehicleToCreate.CreatedAt,
             UserID = vehicleToCreate.UserID
         };
-
-        return createdVehicle;
     }
 
+    // Create controller using appsettings.json like ParkingLotController
     private VehicleController CreateControllerWithToken(string token)
     {
-        // Provide the real connection string from your appsettings.json
-        var inMemorySettings = new Dictionary<string, string> {
-        {"ConnectionStrings:DefaultConnection", "Server=127.0.0.1;Port=3307;Database=MobyPark;User ID=api;Password=S3cure!ApiPW;SslMode=None;"}
-    };
-
         var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(inMemorySettings)
+            .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), @"..\..\..\..", "NewAPI")) // adjust path to your API project
+            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
             .Build();
 
-        var controller = new VehicleController(config);
-
-        controller.ControllerContext = new ControllerContext
+        var controller = new VehicleController(config)
         {
-            HttpContext = new DefaultHttpContext()
+            ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            }
         };
 
         controller.HttpContext.Request.Headers["Authorization"] = token;
@@ -76,7 +71,7 @@ public class VehicleDeleteTests
     [Fact]
     public void DeleteVehicle_ValidAdminToken_ReturnsOk()
     {
-        var adminToken = "VALID_ADMIN_TOKEN"; // Replace with real admin token
+        var adminToken = "VALID_ADMIN_TOKEN"; // Replace with a real admin token
         var controller = CreateControllerWithToken(adminToken);
         var vehicle = CreateTestVehicle(2);
 
@@ -91,7 +86,7 @@ public class VehicleDeleteTests
     {
         var adminToken = "VALID_ADMIN_TOKEN";
         var controller = CreateControllerWithToken(adminToken);
-        int nonExistentVehicleId = 999999; // ID that doesn't exist
+        int nonExistentVehicleId = 999999;
 
         var result = controller.DeleteVehicle(nonExistentVehicleId);
 
@@ -102,9 +97,9 @@ public class VehicleDeleteTests
     [Fact]
     public void DeleteVehicle_NotOwnerOrAdmin_ReturnsForbidden()
     {
-        var userToken = "VALID_USER_TOKEN"; // Token for a non-admin user
+        var userToken = "VALID_USER_TOKEN"; // Replace with a token for a non-admin user
         var controller = CreateControllerWithToken(userToken);
-        var vehicle = CreateTestVehicle(2); // vehicle owned by another user
+        var vehicle = CreateTestVehicle(2); // Owned by another user
 
         var result = controller.DeleteVehicle(vehicle.ID);
 
