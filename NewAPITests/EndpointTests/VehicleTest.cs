@@ -62,7 +62,7 @@ public class VehicleDeleteTests
         var controller = CreateControllerWithToken("invalid-token");
         var vehicle = await CreateTestVehicle(2);
 
-        var result = controller.DeleteVehicle(vehicle.ID);
+        var result = await controller.DeleteVehicle(vehicle.ID);
 
         var objResult = Assert.IsType<UnauthorizedObjectResult>(result);
         Assert.NotNull(objResult.Value);
@@ -76,21 +76,21 @@ public class VehicleDeleteTests
         var controller = CreateControllerWithToken(token);
         var vehicle = await CreateTestVehicle(2);
 
-        var result = controller.DeleteVehicle(vehicle.ID);
+        var result = await controller.DeleteVehicle(vehicle.ID);
 
         var okResult = Assert.IsType<OkObjectResult>(result);
         Assert.NotNull(okResult.Value);
     }
 
     [Fact]
-    public void DeleteVehicle_VehicleNotFound_ReturnsNotFound()
+    public async Task DeleteVehicle_VehicleNotFound_ReturnsNotFound()
     {
         string token = Guid.NewGuid().ToString("N");
         SessionManager.AddSession(token, new UserModel { Username = "AdminUser", Role = "ADMIN" });
         var controller = CreateControllerWithToken(token);
         int nonExistentVehicleId = 999999;
 
-        var result = controller.DeleteVehicle(nonExistentVehicleId);
+        var result = await controller.DeleteVehicle(nonExistentVehicleId);
 
         var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
         Assert.NotNull(notFoundResult.Value);
