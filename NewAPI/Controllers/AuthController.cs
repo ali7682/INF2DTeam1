@@ -42,7 +42,7 @@ namespace NewAPI.Controllers
             if (body is null || string.IsNullOrWhiteSpace(body.Username) || string.IsNullOrWhiteSpace(body.Password))
                 return BadRequest(new { error = "Bad request: Missing credentials" });
 
-            UserModel? user = await UserAccess.GetUserByUsernameAsync(body.Username);
+            UserModel? user = await UserAccess.GetUserByUsernameAsync(body.Username, ct);
 
             if (user is null || body.Password != user.Password)
                 return Unauthorized(new { message = "Unauthorized: Invalid credentials" });
@@ -75,7 +75,7 @@ namespace NewAPI.Controllers
                 Active = true,
             };
 
-            int newUserId = await UserAccess.CreateUserAsync(newUser);
+            int newUserId = await UserAccess.CreateUserAsync(newUser, ct);
 
             return Ok(new { message = $"User created successfully with ID {newUserId}" });
         }
