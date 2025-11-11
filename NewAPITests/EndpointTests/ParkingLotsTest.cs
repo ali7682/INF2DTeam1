@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using NewAPI.Controllers;
+using System.Reflection.Metadata.Ecma335;
+using System.Reflection.Metadata;
 
 namespace NewAPITests.ControllerTests
 {
@@ -127,6 +129,92 @@ namespace NewAPITests.ControllerTests
             Assert.Equal(200, result.StatusCode);
 
             SessionManager.RemoveSession(token);
+        }
+
+        [Fact]
+        public async Task TestValidUpdateReservationById()
+        {
+            string token = Guid.NewGuid().ToString("N");
+            var user = new UserModel { Id = 1, Username = "AdminUser", Role = "ADMIN" };
+            SessionManager.AddSession(token, user);
+            Assert.NotNull(SessionManager.GetSession(token));
+
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+            controller.ControllerContext.HttpContext.Request.Headers["Authorization"] = token;
+
+            // Mock updated reservation data
+            var updatedParkingLot = new ParkingLotModel
+            {
+                Name = "Ali's Winkelcentrum World Trade Center",
+                Location = "World Trade Center",
+                Address = "Beursplein 37, 3011 AM Rotterdam",
+                Capacity = 768,
+                Reserved = 243,
+                Tariff = 3,
+                DayTariff = 16
+            };
+
+            var rawResult = await controller.UpdateParkingLotsById(5, updatedParkingLot, ct);
+            Console.WriteLine($"Result type: {rawResult?.GetType().Name ?? "NULL"}");
+
+            var result = rawResult as OkObjectResult;
+
+            Assert.NotNull(result);
+            Assert.Equal(200, result.StatusCode);
+        }
+
+        [Fact]
+        public async Task TestInvalidUpdateReservationModel()
+        {
+            string token = Guid.NewGuid().ToString("N");
+            var user = new UserModel { Id = 1, Username = "AdminUser", Role = "ADMIN" };
+            SessionManager.AddSession(token, user);
+            Assert.NotNull(SessionManager.GetSession(token));
+
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+            controller.ControllerContext.HttpContext.Request.Headers["Authorization"] = token;
+
+            var rawResult = await controller.UpdateParkingLotsById(5, null!, ct);
+            Console.WriteLine($"Result type: {rawResult?.GetType().Name ?? "NULL"}");
+
+            var result = rawResult as BadRequestObjectResult;
+
+            Assert.NotNull(result);
+            Assert.Equal(400, result.StatusCode);
+        }
+
+        [Fact]
+        public async Task TestUnauthorizedUpdateReservation()
+        {
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+
+            var updatedParkingLot = new ParkingLotModel
+            {
+                Name = "Ali's Winkelcentrum World Trade Center",
+                Location = "World Trade Center",
+                Address = "Beursplein 37, 3011 AM Rotterdam",
+                Capacity = 768,
+                Reserved = 243,
+                Tariff = 3,
+                DayTariff = 16
+            };
+
+            var rawResult = await controller.UpdateParkingLotsById(5, updatedParkingLot, ct);
+            Console.WriteLine($"Result type: {rawResult?.GetType().Name ?? "NULL"}");
+
+            var result = rawResult as UnauthorizedObjectResult;
+
+            Assert.NotNull(result);
+            Assert.Equal(401, result.StatusCode);
         }
     }
 }
