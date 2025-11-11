@@ -10,25 +10,25 @@ namespace NewAPITests
 {
     public class PaymentsDetailsTests
     {
-        private readonly PaymentsDetailsController controller;
+        private readonly PaymentDetailsController controller;
 
         public PaymentsDetailsTests()
         {
             IConfigurationRoot config = new ConfigurationBuilder()
                 .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), @"..\..\..\..", "NewAPI"))
-                .AddJsonFile("appsetting.json", optional: false, reloadOnChange: true)
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .Build();
-            controller = new PaymentController(config);
+            controller = new PaymentDetailsController(config);
         }
 
         // Test GET: /billings
         [Fact]
         public void TestGetBillings()
         {
-            var result = controller.GetBillings() as OkObjectResult;
+            var result = controller.GetBilling() as OkObjectResult;
 
-            Assert.NotNull(result, "Expected a OkObject response but got null");
-            Assert.Equal(200, result.StatusCode, "Expected 200 OK response");
+            Assert.NotNull(result);
+            Assert.Equal(200, result.StatusCode);
         }
 
         // Test GET: /billings/{username}
@@ -37,17 +37,17 @@ namespace NewAPITests
         {
             var result = controller.GetBillingByUser("JohnDeere12") as OkObjectResult;
 
-            Assert.NotNull(result, "Expected a OkObject response but got null");
-            Assert.Equal(200, result.StatusCode, "Expected 200 OK response");
+            Assert.NotNull(result);
+            Assert.Equal(200, result.StatusCode);
         }
 
         [Fact]
         public void TestInvalidGetBillingsByUserName()
         {
-            var result = controller.GetBillingsByUser("") as BadRequestObjectResult;
+            var result = controller.GetBillingByUser("") as BadRequestObjectResult;
 
-            Assert.NotNull(result, "Expected as Bad Request response but got null");
-            Assert.Equal(400, result.StatusCode, "Expected 400 Bad request response");
+            Assert.NotNull(result);
+            Assert.Equal(400, result.StatusCode);
         }
     }
 }
