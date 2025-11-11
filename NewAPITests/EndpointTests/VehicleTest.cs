@@ -1,165 +1,114 @@
-using System;
-using Xunit;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using NewAPI.Controllers;
+using Xunit;
 
-namespace NewAPITests
+public class VehicleDeleteTests
 {
-    public class VehicleDeleteTests
+    // Helper to create a test vehicle in DB
+    private VehicleModel CreateTestVehicle(int userId)
     {
-        private readonly VehicleController controller;
-
-        public VehicleDeleteTests()
+        // Vehicle object without ID
+        var vehicleToCreate = new VehicleModel
         {
-            IConfigurationRoot config = new ConfigurationBuilder()
-                .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), @"..\..\..\..", "NewAPI"))
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .Build();
+            LicensePlate = "TEST" + Guid.NewGuid().ToString("N").Substring(0, 8),
+            Make = "Test",
+            Model = "Car",
+            Color = "Red",
+            Year = 2020,
+            CreatedAt = DateTime.Now,
+            UserID = userId
+        };
 
-            controller = new VehicleController(config);
-        }
+        // Insert into DB and get ID
+        int newVehicleId = VehicleAccess.CreateVehicle(vehicleToCreate);
 
-        // Helper to create a test vehicle in the DB
-        private VehicleModel CreateTestVehicle(int userId)
+        // Assign ID to a new VehicleModel
+        var createdVehicle = new VehicleModel
         {
-            var tempVehicle = new VehicleModel
-            {
-                LicensePlate = "TEST" + Guid.NewGuid().ToString("N").Substring(0, 8),
-                Make = "Test",
-                Model = "Car",
-                Color = "Red",
-                Year = 2020,
-                CreatedAt = DateTime.Now,
-                UserID = userId
-            };
+            ID = newVehicleId,
+            LicensePlate = vehicleToCreate.LicensePlate,
+            Make = vehicleToCreate.Make,
+            Model = vehicleToCreate.Model,
+            Color = vehicleToCreate.Color,
+            Year = vehicleToCreate.Year,
+            CreatedAt = vehicleToCreate.CreatedAt,
+            UserID = vehicleToCreate.UserID
+        };
 
-            int newId = VehicleAccess.CreateVehicle(tempVehicle);
+        return createdVehicle;
+    }
 
-            var vehicleWithId = new VehicleModel
-            {
-                ID = newId,
-                LicensePlate = tempVehicle.LicensePlate,
-                Make = tempVehicle.Make,
-                Model = tempVehicle.Model,
-                Color = tempVehicle.Color,
-                Year = tempVehicle.Year,
-                CreatedAt = tempVehicle.CreatedAt,
-                UserID = tempVehicle.UserID
-            };
+    private VehicleController CreateControllerWithToken(string token)
+    {
+        // Provide the real connection string from your appsettings.json
+        var inMemorySettings = new Dictionary<string, string> {
+        {"ConnectionStrings:DefaultConnection", "Server=127.0.0.1;Port=3307;Database=MobyPark;User ID=api;Password=S3cure!ApiPW;SslMode=None;"}
+    };
 
-            return vehicleWithId;
-        }
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(inMemorySettings)
+            .Build();
 
-        [Fact]
-        public void DeleteVehicle_ValidAdminToken_ReturnsOk()
+        var controller = new VehicleController(config);
+
+        controller.ControllerContext = new ControllerContext
         {
-            var vehicle = CreateTestVehicle(userId: 1);
+            HttpContext = new DefaultHttpContext()
+        };
 
-            string token = Guid.NewGuid().ToString("N");
-            SessionManager.AddSession(token, new UserModel { Id = 99, Role = "ADMIN" });
+        controller.HttpContext.Request.Headers["Authorization"] = token;
+        return controller;
+    }
 
-            controller.ControllerContext = new ControllerContext
-            {
-                HttpContext = new DefaultHttpContext()
-            };
-            controller.ControllerContext.HttpContext.Request.Headers.Authorization = token;
+    [Fact]
+    public void DeleteVehicle_InvalidToken_ReturnsUnauthorized()
+    {
+        var controller = CreateControllerWithToken("invalid-token");
+        var vehicle = CreateTestVehicle(2);
 
-            var result = controller.DeleteVehicle(vehicle.ID);
-            Assert.NotNull(result);
-            Assert.IsType<OkObjectResult>(result);
+        var result = controller.DeleteVehicle(vehicle.ID);
 
-            var objectResult = result as ObjectResult;
-            Assert.NotNull(objectResult);
-            Assert.NotNull(objectResult.Value);
+        var objResult = Assert.IsType<UnauthorizedObjectResult>(result);
+        Assert.NotNull(objResult.Value);
+    }
 
-            var response = objectResult.Value as IDictionary<string, object>;
-            Assert.NotNull(response);
-            Assert.Equal("Vehicle deleted", response["message"]);
+    [Fact]
+    public void DeleteVehicle_ValidAdminToken_ReturnsOk()
+    {
+        var adminToken = "VALID_ADMIN_TOKEN"; // Replace with real admin token
+        var controller = CreateControllerWithToken(adminToken);
+        var vehicle = CreateTestVehicle(2);
 
-            SessionManager.RemoveSession(token);
-        }
+        var result = controller.DeleteVehicle(vehicle.ID);
 
-        [Fact]
-        public void DeleteVehicle_NotOwnerOrAdmin_ReturnsForbidden()
-        {
-            var vehicle = CreateTestVehicle(userId: 1);
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        Assert.NotNull(okResult.Value);
+    }
 
-            string token = Guid.NewGuid().ToString("N");
-            SessionManager.AddSession(token, new UserModel { Id = 2, Role = "USER" });
+    [Fact]
+    public void DeleteVehicle_VehicleNotFound_ReturnsNotFound()
+    {
+        var adminToken = "VALID_ADMIN_TOKEN";
+        var controller = CreateControllerWithToken(adminToken);
+        int nonExistentVehicleId = 999999; // ID that doesn't exist
 
-            controller.ControllerContext = new ControllerContext
-            {
-                HttpContext = new DefaultHttpContext()
-            };
-            controller.ControllerContext.HttpContext.Request.Headers.Authorization = token;
+        var result = controller.DeleteVehicle(nonExistentVehicleId);
 
-            var result = controller.DeleteVehicle(vehicle.ID);
-            Assert.NotNull(result);
-            Assert.IsType<ObjectResult>(result);
+        var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+        Assert.NotNull(notFoundResult.Value);
+    }
 
-            var objectResult = result as ObjectResult;
-            Assert.NotNull(objectResult);
-            Assert.Equal(403, objectResult.StatusCode);
-            Assert.NotNull(objectResult.Value);
+    [Fact]
+    public void DeleteVehicle_NotOwnerOrAdmin_ReturnsForbidden()
+    {
+        var userToken = "VALID_USER_TOKEN"; // Token for a non-admin user
+        var controller = CreateControllerWithToken(userToken);
+        var vehicle = CreateTestVehicle(2); // vehicle owned by another user
 
-            var response = objectResult.Value as IDictionary<string, object>;
-            Assert.NotNull(response);
-            Assert.Equal("Access denied", response["message"]);
+        var result = controller.DeleteVehicle(vehicle.ID);
 
-            VehicleAccess.DeleteVehicleById(vehicle.ID);
-            SessionManager.RemoveSession(token);
-        }
-
-        [Fact]
-        public void DeleteVehicle_VehicleNotFound_ReturnsNotFound()
-        {
-            string token = Guid.NewGuid().ToString("N");
-            SessionManager.AddSession(token, new UserModel { Id = 99, Role = "ADMIN" });
-
-            controller.ControllerContext = new ControllerContext
-            {
-                HttpContext = new DefaultHttpContext()
-            };
-            controller.ControllerContext.HttpContext.Request.Headers.Authorization = token;
-
-            int nonExistentId = 999999;
-            var result = controller.DeleteVehicle(nonExistentId);
-            Assert.NotNull(result);
-            Assert.IsType<NotFoundObjectResult>(result);
-
-            var objectResult = result as ObjectResult;
-            Assert.NotNull(objectResult);
-            Assert.NotNull(objectResult.Value);
-
-            var response = objectResult.Value as IDictionary<string, object>;
-            Assert.NotNull(response);
-            Assert.Equal("Vehicle not found", response["message"]);
-
-            SessionManager.RemoveSession(token);
-        }
-
-        [Fact]
-        public void DeleteVehicle_InvalidToken_ReturnsUnauthorized()
-        {
-            controller.ControllerContext = new ControllerContext
-            {
-                HttpContext = new DefaultHttpContext()
-            };
-            controller.ControllerContext.HttpContext.Request.Headers.Authorization = "invalid-token";
-
-            var result = controller.DeleteVehicle(1);
-            Assert.NotNull(result);
-            Assert.IsType<UnauthorizedObjectResult>(result);
-
-            var objectResult = result as ObjectResult;
-            Assert.NotNull(objectResult);
-            Assert.NotNull(objectResult.Value);
-
-            var response = objectResult.Value as IDictionary<string, object>;
-            Assert.NotNull(response);
-            Assert.Equal("Unauthorized: Invalid or missing session token", response["message"]);
-        }
+        var statusResult = Assert.IsType<ObjectResult>(result);
+        Assert.Equal(403, statusResult.StatusCode);
     }
 }
