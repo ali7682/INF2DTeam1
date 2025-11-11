@@ -34,7 +34,13 @@ namespace NewAPI.Controllers
     [ApiController]
     public class AuthController : Controller
     {
-        public AuthController(IConfiguration config) { }
+        private readonly IConfiguration _config;
+
+        public AuthController(IConfiguration config)
+        {
+            _config = config;
+            UserAccess.SetConfig(_config);
+        }
 
         [HttpPost("Login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest body, CancellationToken ct)
