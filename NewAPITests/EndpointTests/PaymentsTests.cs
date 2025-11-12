@@ -1,105 +1,151 @@
-using System;
-using Xunit;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using Microsoft.AspNetCore.Mvc.Testing;
-using NewAPI.Controllers;
-using System.Runtime.InteropServices;
+using Xunit;
+using System;
+using System.IO;
 using System.Threading.Tasks;
+using NewAPI.Controllers;
 
-namespace NewAPITests
+public class PaymentsTests
 {
-    public class PaymentsTests
+    // Create controller using appsettings.json
+    private PaymentController CreateControllerWithToken(string token)
     {
-        private readonly CancellationToken ct = CancellationToken.None;
-        private readonly PaymentController controller;
+        var config = new ConfigurationBuilder()
+            .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), @"..\..\..\..", "NewAPI")) // adjust path
+            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+            .Build();
 
-        public PaymentsTests()
+        var controller = new PaymentController(config)
         {
-            IConfigurationRoot config = new ConfigurationBuilder()
-                .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), @"..\..\..\..", "NewAPI"))
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .Build();
-            PaymentAccess.SetConfig(config);
-            controller = new PaymentController(config);
-        }
-
-        // Test GET: /payments
-        [Fact]
-        public async Task TestGetPayments()
-        {
-            string token = Guid.NewGuid().ToString("N");
-            var user = new UserModel { Username = "AdminUser", Role = "ADMIN" };
-            SessionManager.AddSession(token, user);
-            Assert.NotNull(SessionManager.GetSession(token));
-
-            controller.ControllerContext = new ControllerContext
+            ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext()
-            };
-            controller.ControllerContext.HttpContext.Request.Headers["Authorization"] = token;
+            }
+        };
 
-            var rawResult = await controller.GetPayments(ct);
-            Console.WriteLine($"Result type: {rawResult?.GetType().Name ?? "NULL"}");
+        controller.HttpContext.Request.Headers["Authorization"] = token;
+        return controller;
+    }
 
-            var result = rawResult as OkObjectResult;
+    // Post /payments
+    [Fact]
+    public async Task PostPayments_ValidBody_ReturnsOk()
+    {
+        string token = Guid.NewGuid().ToString("N");
+        SessionManager.AddSession(token, new UserModel { Username = "AdminUser", Role = "ADMIN" });
 
-            Assert.NotNull(result);
-            Assert.Equal(200, result.StatusCode);
-        }
+        var controller = CreateControllerWithToken(token);
 
-        // Test GET: //payments/{userName}
-        [Fact]
-        public async Task TestValidGetPaymentsByUserName()
+        var body = new PaymentRequest
         {
-            string token = Guid.NewGuid().ToString("N");
-            var user = new UserModel { Username = "AdminUser", Role = "ADMIN" };
-            SessionManager.AddSession(token, user);
-            Assert.NotNull(SessionManager.GetSession(token));
+            Transaction = "TXN123456",
+            Amount = 49.99m
+        };
 
-            controller.ControllerContext = new ControllerContext
-            {
-                HttpContext = new DefaultHttpContext()
-            };
-            controller.ControllerContext.HttpContext.Request.Headers["Authorization"] = token;
+        var result = await controller.PostPayments(body, CancellationToken.None);
 
-            var rawResult = await controller.GetPayments(ct);
-            Console.WriteLine($"Result type: {rawResult?.GetType().Name ?? "NULL"}");
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        Assert.NotNull(okResult.Value);
+    }
+    
+    [Fact]
+    public async Task PostPayments_InvalidToken_ReturnsUnauthorized()
+    {
+        var controller = CreateControllerWithToken("invalid-token");
 
-            var result = rawResult as OkObjectResult;
-
-            Assert.NotNull(result);
-            Assert.Equal(200, result.StatusCode);
-        }
-
-        [Fact]
-        public async Task TestInvalidGetPaymentsByUserName()
+        var body = new PaymentRequest
         {
-            string token = Guid.NewGuid().ToString("N");
-            var user = new UserModel { Username = "AdminUser", Role = "ADMIN" };
-            SessionManager.AddSession(token, user);
-            Assert.NotNull(SessionManager.GetSession(token));
+            Transaction = "TXN123456",
+            Amount = 49.99m
+        };
 
-            controller.ControllerContext = new ControllerContext
-            {
-                HttpContext = new DefaultHttpContext()
-            };
-            controller.ControllerContext.HttpContext.Request.Headers["Authorization"] = token;
+        var result = await controller.PostPayments(body, CancellationToken.None);
 
-            var rawResult = await controller.GetPaymentsByUserName("", ct);
-            Console.WriteLine($"Result type: {rawResult?.GetType().Name ?? "NULL"}");
+        var objResult = Assert.IsType<UnauthorizedObjectResult>(result);
+        Assert.NotNull(objResult.Value);
+    }
 
-            ObjectResult? result = null;
+    [Fact]
+    public async Task PostPayments_InvalidBody_ReturnsBadRequest()
+    {
+        string token = Guid.NewGuid().ToString("N");
+        SessionManager.AddSession(token, new UserModel { Username = "AdminUser", Role = "ADMIN" });
 
-            if (rawResult is BadRequestObjectResult badRequest)
-                result = badRequest;
-            else if (rawResult is NotFoundObjectResult notFound)
-                result = notFound;
+        var controller = CreateControllerWithToken(token);
 
-            Assert.NotNull(result);
-            Assert.True(result.StatusCode == 400 || result.StatusCode == 404,
-                $"Expected 400 or 404, but got {result?.StatusCode}");
-        }
+        var body = new PaymentRequest
+        {
+            Transaction = null,
+            Amount = -5m
+        };
+
+        var result = await controller.PostPayments(body, CancellationToken.None);
+
+        var badResult = Assert.IsType<BadRequestObjectResult>(result);
+        Assert.NotNull(badResult.Value);
+    }
+
+    // Post /payments/refund
+    [Fact]
+    public async Task PostPaymentsRefunds_ValidAdminBody_ReturnsOk()
+    {
+        string token = Guid.NewGuid().ToString("N");
+        SessionManager.AddSession(token, new UserModel { Username = "AdminUser", Role = "ADMIN" });
+
+        var controller = CreateControllerWithToken(token);
+
+        var body = new PaymentRequest
+        {
+            Transaction = "TXN654321",
+            Amount = 20.00m
+        };
+
+        var result = await controller.PostPaymentsRefunds(body, CancellationToken.None);
+
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        Assert.NotNull(okResult.Value);
+    }
+
+    [Fact]
+    public async Task PostPaymentsRefunds_NonAdminUser_ReturnsForbidden()
+    {
+        string token = Guid.NewGuid().ToString("N");
+        SessionManager.AddSession(token, new UserModel { Username = "RegularUser", Role = "USER" });
+
+        var controller = CreateControllerWithToken(token);
+
+        var body = new PaymentRequest
+        {
+            Transaction = "TXN654321",
+            Amount = 20.00m
+        };
+
+        var result = await controller.PostPaymentsRefunds(body, CancellationToken.None);
+
+        var forbiddenResult = Assert.IsType<ObjectResult>(result);
+        Assert.Equal(403, forbiddenResult.StatusCode);
+        Assert.NotNull(forbiddenResult.Value);
+    }
+
+    [Fact]
+    public async Task PostPaymentsRefunds_InvalidBody_ReturnsBadRequest()
+    {
+        string token = Guid.NewGuid().ToString("N");
+        SessionManager.AddSession(token, new UserModel { Username = "AdminUser", Role = "ADMIN" });
+
+        var controller = CreateControllerWithToken(token);
+
+        var body = new PaymentRequest
+        {
+            Transaction = null,
+            Amount = -10.00m
+        };
+
+        var result = await controller.PostPaymentsRefunds(body, CancellationToken.None);
+
+        var badResult = Assert.IsType<BadRequestObjectResult>(result);
+        Assert.NotNull(badResult.Value);
     }
 }

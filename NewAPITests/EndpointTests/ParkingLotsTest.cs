@@ -390,5 +390,366 @@ namespace NewAPITests.ControllerTests
             Assert.NotNull(result);
             Assert.Equal(401, result.StatusCode);
         }
+
+        // post /parking-lots
+        [Fact]
+        public async Task TestCreateParkingLot_ValidBody_ReturnsOk()
+        {
+            string token = Guid.NewGuid().ToString("N");
+            var user = new UserModel { Id = 1, Username = "AdminUser", Role = "ADMIN" };
+            SessionManager.AddSession(token, user);
+            Assert.NotNull(SessionManager.GetSession(token));
+
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+            controller.ControllerContext.HttpContext.Request.Headers["Authorization"] = token;
+
+            var parkingLot = new ParkinglotRequest
+            {
+                Name = "Central Parking",
+                Location = "Downtown",
+                Address = "123 Main Street",
+                Capacity = 200,
+                Reserved = 50,
+                Tariff = 2.5,
+                DayTariff = 20.0
+            };
+
+            var rawResult = await controller.PostParkinglot(parkingLot, ct);
+            Console.WriteLine($"Result type: {rawResult?.GetType().Name ?? "NULL"}");
+
+            var result = rawResult as OkObjectResult;
+
+            Assert.NotNull(result);
+            Assert.Equal(200, result.StatusCode);
+        }
+
+        [Fact]
+        public async Task TestCreateParkingLot_InvalidBody_ReturnsBadRequest()
+        {
+            string token = Guid.NewGuid().ToString("N");
+            var user = new UserModel { Id = 1, Username = "AdminUser", Role = "ADMIN" };
+            SessionManager.AddSession(token, user);
+            Assert.NotNull(SessionManager.GetSession(token));
+
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+            controller.ControllerContext.HttpContext.Request.Headers["Authorization"] = token;
+
+            var parkingLot = new ParkinglotRequest
+            {
+                Name = "",
+                Location = "Downtown",
+                Address = "123 Main Street",
+                Capacity = -10,
+                Reserved = 50,
+                Tariff = 2.5,
+                DayTariff = 20.0
+            };
+
+            var rawResult = await controller.PostParkinglot(parkingLot, ct);
+            Console.WriteLine($"Result type: {rawResult?.GetType().Name ?? "NULL"}");
+
+            var result = rawResult as BadRequestObjectResult;
+
+            Assert.NotNull(result);
+            Assert.Equal(400, result.StatusCode);
+        }
+
+        [Fact]
+        public async Task TestCreateParkingLot_Unauthorized_ReturnsUnauthorized()
+        {
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+
+            var parkingLot = new ParkinglotRequest
+            {
+                Name = "Central Parking",
+                Location = "Downtown",
+                Address = "123 Main Street",
+                Capacity = 200,
+                Reserved = 50,
+                Tariff = 2.5,
+                DayTariff = 20.0
+            };
+
+            var rawResult = await controller.PostParkinglot(parkingLot, ct);
+            Console.WriteLine($"Result type: {rawResult?.GetType().Name ?? "NULL"}");
+
+            var result = rawResult as UnauthorizedObjectResult;
+
+            Assert.NotNull(result);
+            Assert.Equal(401, result.StatusCode);
+        }
+
+        [Fact]
+        public async Task TestCreateParkingLot_NonAdmin_ReturnsForbidden()
+        {
+            string token = Guid.NewGuid().ToString("N");
+            var user = new UserModel { Id = 1, Username = "RegularUser", Role = "USER" };
+            SessionManager.AddSession(token, user);
+            Assert.NotNull(SessionManager.GetSession(token));
+
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+            controller.ControllerContext.HttpContext.Request.Headers["Authorization"] = token;
+
+            var parkingLot = new ParkinglotRequest
+            {
+                Name = "Central Parking",
+                Location = "Downtown",
+                Address = "123 Main Street",
+                Capacity = 200,
+                Reserved = 50,
+                Tariff = 2.5,
+                DayTariff = 20.0
+            };
+
+            var rawResult = await controller.PostParkinglot(parkingLot, ct);
+            Console.WriteLine($"Result type: {rawResult?.GetType().Name ?? "NULL"}");
+
+            var result = rawResult as ObjectResult;
+
+            Assert.NotNull(result);
+            Assert.Equal(403, result.StatusCode);
+        }
+
+        // Post /parking-lots/{lid}/sessions/start
+        [Fact]
+        public async Task TestStartParkingSession_ValidBody_ReturnsOk()
+        {
+            var testLot = await CreateTestParkingLot();
+
+            string token = Guid.NewGuid().ToString("N");
+            var user = new UserModel { Id = 1, Username = "RegularUser", Role = "USER" };
+            SessionManager.AddSession(token, user);
+            Assert.NotNull(SessionManager.GetSession(token));
+
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+            controller.ControllerContext.HttpContext.Request.Headers["Authorization"] = token;
+
+            var body = new LicenseplateRequest
+            {
+                Licenseplate = "XYZ-123"
+            };
+
+            var rawResult = await controller.PostParkinglotStart(body, ct, testLot.ID);
+            Console.WriteLine($"Result type: {rawResult?.GetType().Name ?? "NULL"}");
+
+            var result = rawResult as OkObjectResult;
+
+            Assert.NotNull(result);
+            Assert.Equal(200, result.StatusCode);
+        }
+
+        [Fact]
+        public async Task TestStartParkingSession_InvalidBody_ReturnsBadRequest()
+        {
+            var testLot = await CreateTestParkingLot();
+
+            string token = Guid.NewGuid().ToString("N");
+            var user = new UserModel { Id = 1, Username = "RegularUser", Role = "USER" };
+            SessionManager.AddSession(token, user);
+            Assert.NotNull(SessionManager.GetSession(token));
+
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+            controller.ControllerContext.HttpContext.Request.Headers["Authorization"] = token;
+
+            var body = new LicenseplateRequest
+            {
+                Licenseplate = ""
+            };
+
+            var rawResult = await controller.PostParkinglotStart(body, ct, testLot.ID);
+            Console.WriteLine($"Result type: {rawResult?.GetType().Name ?? "NULL"}");
+
+            var result = rawResult as BadRequestObjectResult;
+
+            Assert.NotNull(result);
+            Assert.Equal(400, result.StatusCode);
+        }
+
+        [Fact]
+        public async Task TestStartParkingSession_Unauthorized_ReturnsUnauthorized()
+        {
+            var testLot = await CreateTestParkingLot();
+
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+
+            var body = new LicenseplateRequest
+            {
+                Licenseplate = "XYZ-123"
+            };
+
+            var rawResult = await controller.PostParkinglotStart(body, ct, testLot.ID);
+            Console.WriteLine($"Result type: {rawResult?.GetType().Name ?? "NULL"}");
+
+            var result = rawResult as UnauthorizedObjectResult;
+
+            Assert.NotNull(result);
+            Assert.Equal(401, result.StatusCode);
+        }
+
+        [Fact]
+        public async Task TestStartParkingSession_NonUser_ReturnsForbidden()
+        {
+            var testLot = await CreateTestParkingLot();
+
+            string token = Guid.NewGuid().ToString("N");
+            var user = new UserModel { Id = 1, Username = "AdminUser", Role = "ADMIN" };
+            SessionManager.AddSession(token, user);
+            Assert.NotNull(SessionManager.GetSession(token));
+
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+            controller.ControllerContext.HttpContext.Request.Headers["Authorization"] = token;
+
+            var body = new LicenseplateRequest
+            {
+                Licenseplate = "ABC-123" // license plate already has a session
+            };
+
+            var rawResult = await controller.PostParkinglotStart(body, ct, testLot.ID);
+            Console.WriteLine($"Result type: {rawResult?.GetType().Name ?? "NULL"}");
+
+            var result = rawResult as ObjectResult;
+
+            Assert.NotNull(result);
+            Assert.Equal(401, result.StatusCode);
+        }
+
+        // Post /parking-lots/{lid}/sessions/stop
+        [Fact]
+        public async Task TestStopParkingSession_ValidBody_ReturnsOk()
+        {
+            var testLot = await CreateTestParkingLot();
+
+            string token = Guid.NewGuid().ToString("N");
+            var user = new UserModel { Id = 1, Username = "RegularUser", Role = "USER" };
+            SessionManager.AddSession(token, user);
+            Assert.NotNull(SessionManager.GetSession(token));
+
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+            controller.ControllerContext.HttpContext.Request.Headers["Authorization"] = token;
+
+            var body = new LicenseplateRequest
+            {
+                Licenseplate = "XYZ-123"
+            };
+
+            var rawResult = await controller.PostParkinglotStop(body, ct, testLot.ID);
+            Console.WriteLine($"Result type: {rawResult?.GetType().Name ?? "NULL"}");
+
+            var result = rawResult as OkObjectResult;
+
+            Assert.NotNull(result);
+            Assert.Equal(200, result.StatusCode);
+        }
+
+        [Fact]
+        public async Task TestStopParkingSession_InvalidBody_ReturnsBadRequest()
+        {
+            var testLot = await CreateTestParkingLot();
+
+            string token = Guid.NewGuid().ToString("N");
+            var user = new UserModel { Id = 1, Username = "RegularUser", Role = "USER" };
+            SessionManager.AddSession(token, user);
+            Assert.NotNull(SessionManager.GetSession(token));
+
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+            controller.ControllerContext.HttpContext.Request.Headers["Authorization"] = token;
+
+            var body = new LicenseplateRequest
+            {
+                Licenseplate = ""
+            };
+
+            var rawResult = await controller.PostParkinglotStop(body, ct, testLot.ID);
+            Console.WriteLine($"Result type: {rawResult?.GetType().Name ?? "NULL"}");
+
+            var result = rawResult as BadRequestObjectResult;
+
+            Assert.NotNull(result);
+            Assert.Equal(400, result.StatusCode);
+        }
+
+        [Fact]
+        public async Task TestStopParkingSession_Unauthorized_ReturnsUnauthorized()
+        {
+            var testLot = await CreateTestParkingLot();
+
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+
+            var body = new LicenseplateRequest
+            {
+                Licenseplate = "XYZ-123"
+            };
+
+            var rawResult = await controller.PostParkinglotStop(body, ct, testLot.ID);
+            Console.WriteLine($"Result type: {rawResult?.GetType().Name ?? "NULL"}");
+
+            var result = rawResult as UnauthorizedObjectResult;
+
+            Assert.NotNull(result);
+            Assert.Equal(401, result.StatusCode);
+        }
+
+        [Fact]
+        public async Task TestStopParkingSession_NoSessionLicenseplate_ReturnsForbidden()
+        {
+            var testLot = await CreateTestParkingLot();
+
+            string token = Guid.NewGuid().ToString("N");
+            var user = new UserModel { Id = 1, Username = "AdminUser", Role = "ADMIN" };
+            SessionManager.AddSession(token, user);
+            Assert.NotNull(SessionManager.GetSession(token));
+
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+            controller.ControllerContext.HttpContext.Request.Headers["Authorization"] = token;
+
+            var body = new LicenseplateRequest
+            {
+                Licenseplate = "000-000" // license plate does not have an active session
+            };
+
+            var rawResult = await controller.PostParkinglotStop(body, ct, testLot.ID);
+            Console.WriteLine($"Result type: {rawResult?.GetType().Name ?? "NULL"}");
+
+            var result = rawResult as ObjectResult;
+
+            Assert.NotNull(result);
+            Assert.Equal(401, result.StatusCode);
+        }
     }
 }
