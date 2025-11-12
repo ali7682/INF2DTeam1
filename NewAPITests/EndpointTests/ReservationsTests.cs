@@ -106,5 +106,121 @@ namespace NewAPITests
             Assert.NotNull(result);
             Assert.Equal(401, result.StatusCode);
         }
+
+        // POST /reservations
+        [Fact]
+        public async Task TestValidPostReservation()
+        {
+            var vehicleToCreate = new VehicleModel
+            {
+                LicensePlate = "TEST" + Guid.NewGuid().ToString("N").Substring(0, 8),
+                Make = "Test",
+                Model = "Car",
+                Color = "Red",
+                Year = 2020,
+                CreatedAt = DateTime.Now,
+                UserID = 1
+            };
+
+            int newVehicleId = await VehicleAccess.CreateVehicleAsync(vehicleToCreate);
+
+            var newVehicle = new VehicleModel
+            {
+                ID = newVehicleId,
+                LicensePlate = vehicleToCreate.LicensePlate,
+                Make = vehicleToCreate.Make,
+                Model = vehicleToCreate.Model,
+                Color = vehicleToCreate.Color,
+                Year = vehicleToCreate.Year,
+                CreatedAt = vehicleToCreate.CreatedAt,
+                UserID = vehicleToCreate.UserID
+            };
+            
+            string token = Guid.NewGuid().ToString("N");
+            var user = new UserModel { Id = 1, Username = "User", Role = "USER" };
+            SessionManager.AddSession(token, user);
+            Assert.NotNull(SessionManager.GetSession(token));
+
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+            controller.ControllerContext.HttpContext.Request.Headers["Authorization"] = token;
+
+            var body = new ReservationRequest
+            {
+                Licenseplate = newVehicle.LicensePlate,
+                Startdate = "2025-10-29 10:00:00",
+                Enddate = "2025-10-29 12:00:00",
+                ParkingLot = 5,
+                User = "TestUser"
+            };
+
+
+            var rawResult = await controller.PostReservation(body, ct);
+            Console.WriteLine($"Result type: {rawResult?.GetType().Name ?? "NULL"}");
+
+            var result = rawResult as OkObjectResult;
+
+            Assert.NotNull(result);
+            Assert.Equal(200, result.StatusCode);
+        }
+            
+        [Fact]
+        public async Task TestValidAdminPostReservation()
+        {
+            var vehicleToCreate = new VehicleModel
+            {
+                LicensePlate = "TEST" + Guid.NewGuid().ToString("N").Substring(0, 8),
+                Make = "Test",
+                Model = "Car",
+                Color = "Red",
+                Year = 2020,
+                CreatedAt = DateTime.Now,
+                UserID = 1
+            };
+
+            int newVehicleId = await VehicleAccess.CreateVehicleAsync(vehicleToCreate);
+
+            var newVehicle = new VehicleModel
+            {
+                ID = newVehicleId,
+                LicensePlate = vehicleToCreate.LicensePlate,
+                Make = vehicleToCreate.Make,
+                Model = vehicleToCreate.Model,
+                Color = vehicleToCreate.Color,
+                Year = vehicleToCreate.Year,
+                CreatedAt = vehicleToCreate.CreatedAt,
+                UserID = vehicleToCreate.UserID
+            };
+
+            string token = Guid.NewGuid().ToString("N");
+            var user = new UserModel { Id = 1, Username = "User", Role = "USER" };
+            SessionManager.AddSession(token, user);
+            Assert.NotNull(SessionManager.GetSession(token));
+
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+            controller.ControllerContext.HttpContext.Request.Headers["Authorization"] = token;
+
+            var body = new ReservationRequest
+            {
+                Licenseplate = newVehicle.LicensePlate,
+                Startdate = "2025-10-29 10:00:00",
+                Enddate = "2025-10-29 12:00:00",
+                ParkingLot = 5,
+                User = "TestUser"
+            };
+
+            var rawResult = await controller.PostReservation(body, ct);
+            Console.WriteLine($"Result type: {rawResult?.GetType().Name ?? "NULL"}");
+
+            var result = rawResult as OkObjectResult;
+
+            Assert.NotNull(result);
+            Assert.Equal(200, result.StatusCode);
+        }
     }
 }

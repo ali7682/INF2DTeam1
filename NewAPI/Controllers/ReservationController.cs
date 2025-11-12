@@ -70,9 +70,9 @@ namespace NewAPI.Controllers
             return Ok(new { message = "Reservation deleted" });
         }
 
-        // POST /reservations
+        // POST /reservations 
         [HttpPost]
-        public async Task<ActionResult<ReservationModel>> PostReservation([FromBody] ReservationRequest body, CancellationToken ct, int lid)
+        public async Task<IActionResult> PostReservation([FromBody] ReservationRequest body, CancellationToken ct)
         {
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
             UserModel? user = SessionManager.GetSession(sessionToken);
