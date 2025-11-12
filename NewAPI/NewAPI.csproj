@@ -12,6 +12,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.4">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="Dapper" Version="2.1.66" />
 	<PackageReference Include="MySql.Data" Version="9.4.0" />
     <PackageReference Include="MySqlConnector" Version="2.4.0" />
