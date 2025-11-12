@@ -151,7 +151,7 @@ namespace NewAPITests
             {
                 Licenseplate = newVehicle.LicensePlate,
                 Startdate = "2025-10-29 10:00:00",
-                Enddate = "22025-10-29 12:00:00",
+                Enddate = "2025-10-29 12:00:00",
                 ParkingLot = 5,
                 User = "TestUser"
             };
@@ -209,7 +209,7 @@ namespace NewAPITests
             {
                 Licenseplate = newVehicle.LicensePlate,
                 Startdate = "2025-10-29 10:00:00",
-                Enddate = "22025-10-29 12:00:00",
+                Enddate = "2025-10-29 12:00:00",
                 ParkingLot = 5,
                 User = "TestUser"
             };

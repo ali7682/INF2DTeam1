@@ -50,6 +50,7 @@ public class PaymentsTests
         Assert.NotNull(okResult.Value);
     }
     
+    [Fact]
     public async Task PostPayments_InvalidToken_ReturnsUnauthorized()
     {
         var controller = CreateControllerWithToken("invalid-token");
@@ -66,6 +67,7 @@ public class PaymentsTests
         Assert.NotNull(objResult.Value);
     }
 
+    [Fact]
     public async Task PostPayments_InvalidBody_ReturnsBadRequest()
     {
         string token = Guid.NewGuid().ToString("N");
@@ -106,6 +108,7 @@ public class PaymentsTests
         Assert.NotNull(okResult.Value);
     }
 
+    [Fact]
     public async Task PostPaymentsRefunds_NonAdminUser_ReturnsForbidden()
     {
         string token = Guid.NewGuid().ToString("N");
@@ -126,6 +129,7 @@ public class PaymentsTests
         Assert.NotNull(forbiddenResult.Value);
     }
 
+    [Fact]
     public async Task PostPaymentsRefunds_InvalidBody_ReturnsBadRequest()
     {
         string token = Guid.NewGuid().ToString("N");
