@@ -23,10 +23,10 @@ namespace NewAPI.Controllers
             ParkingLotAccess.SetConfig(_config);
         }
 
+        // POST /payments
         [HttpPost]
-        public async Task<ActionResult<PaymentModel>> PostPayments([FromBody] PaymentRequest body, CancellationToken ct)
+        public async Task<IActionResult> PostPayments([FromBody] PaymentRequest body, CancellationToken ct)
         {
-
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
             UserModel? user = SessionManager.GetSession(sessionToken);
 
@@ -50,10 +50,12 @@ namespace NewAPI.Controllers
 
             int newId = await PaymentAccess.CreatePaymentAsync(newPayment, ct);
 
-            return Ok(new { message = $"Payment created successfully with ID {newId}" });        }
+            return Ok(new { message = $"Payment created successfully with ID {newId}" });
+        }
 
+        // POST /payments/refund
         [HttpPost("refund")]
-        public async Task<ActionResult<PaymentModel>> PostPaymentsRefunds([FromBody] PaymentRequest body, CancellationToken ct)
+        public async Task<IActionResult> PostPaymentsRefunds([FromBody] PaymentRequest body, CancellationToken ct)
         {
 
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();

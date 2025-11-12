@@ -142,7 +142,7 @@ namespace NewAPI.Controllers
 
         //POST /parking-lots
         [HttpPost]
-        public async Task<ActionResult<ParkingLotModel>> PostParkinglot([FromBody] ParkinglotRequest body, CancellationToken ct)
+        public async Task<IActionResult> PostParkinglot([FromBody] ParkinglotRequest body, CancellationToken ct)
         {
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
             UserModel? user = SessionManager.GetSession(sessionToken);
@@ -171,12 +171,11 @@ namespace NewAPI.Controllers
             int newId = await ParkingLotAccess.CreateParkinglotAsync(newParkinglot, ct);
 
             return Ok(new { message = $"Parking lot created successfully with ID {newId}" });
-
         }
 
         //POST /parking-lots/{lid}/sessions/start
         [HttpPost("/parking-lots/{lid}/sessions/start")]
-        public async Task<ActionResult<ParkingLotModel>> PostParkinglotStart([FromBody] LicenseplateRequest body, CancellationToken ct, int lid)
+        public async Task<IActionResult> PostParkinglotStart([FromBody] LicenseplateRequest body, CancellationToken ct, int lid)
         {
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
             UserModel? user = SessionManager.GetSession(sessionToken);
@@ -209,7 +208,7 @@ namespace NewAPI.Controllers
 
         //POST /parking-lots/{lid}/sessions/stop
         [HttpPost("/parking-lots/{lid}/sessions/stop")]
-        public async Task<ActionResult<ParkingLotModel>> PostParkinglotStop([FromBody] LicenseplateRequest body, CancellationToken ct, int lid)
+        public async Task<IActionResult> PostParkinglotStop([FromBody] LicenseplateRequest body, CancellationToken ct, int lid)
         {
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
             UserModel? user = SessionManager.GetSession(sessionToken);
