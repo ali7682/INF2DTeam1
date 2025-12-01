@@ -1,0 +1,69 @@
+name: CI - development
+
+on:
+  push:
+    branches: [ development ]
+  pull_request:
+    branches: [ development ]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+
+    env:
+      DOTNET_VERSION: "8.0.x"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore NewAPI/NewAPI.sln
+
+      - name: Build
+        run: dotnet build NewAPI/NewAPI.sln --configuration Release --no-restore
+
+      - name: Test with coverage
+        run: |
+          dotnet test NewAPI/NewAPI.sln \
+            --configuration Release \
+            --no-build \
+            --logger "trx;LogFileName=test_results.trx" \
+            --collect "XPlat Code Coverage"
+
+      - name: Verzamel testresultaten en coverage
+        run: |
+          mkdir -p artifacts/testresults
+          mkdir -p artifacts/coverage
+          find . -type f -name "test_results.trx" -exec cp {} artifacts/testresults/ \;
+          find . -type f -name "coverage.cobertura.xml" -exec cp {} artifacts/coverage/ \; || true
+          find . -type f -name "coverage.json" -exec cp {} artifacts/coverage/ \; || true
+
+      - name: Upload testresultaten artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: testresults
+          path: artifacts/testresults
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: artifacts/coverage
+
+      - name: Publish API
+        run: |
+          dotnet publish NewAPI/NewAPI.csproj \
+            --configuration Release \
+            --output ./artifacts/publish
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-publish
+          path: artifacts/publish
