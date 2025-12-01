@@ -1,0 +1,51 @@
+name: Release - main
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+
+    env:
+      DOTNET_VERSION: "8.0.x"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore NewAPI/NewAPI.sln
+
+      - name: Build
+        run: dotnet build NewAPI/NewAPI.sln --configuration Release --no-restore
+
+      - name: Publish API
+        run: |
+          dotnet publish NewAPI/NewAPI.csproj \
+            --configuration Release \
+            --output ./artifacts/publish
+
+      - name: Generate version
+        run: |
+          MINOR=$((GITHUB_RUN_NUMBER % 100))
+          VERSION="1.${MINOR}.${GITHUB_RUN_NUMBER}"
+          FILE="MobyPark_API_version_${VERSION}.zip"
+          echo "PACKAGE_NAME=$FILE" >> $GITHUB_ENV
+
+      - name: Create zip
+        run: |
+          cd artifacts/publish
+          zip -r "../${PACKAGE_NAME}" .
+
+      - name: Upload release
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PACKAGE_NAME }}
+          path: artifacts/${{ env.PACKAGE_NAME }}
