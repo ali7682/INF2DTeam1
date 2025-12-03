@@ -279,7 +279,7 @@ namespace NewAPITests.ControllerTests
             };
             controller.ControllerContext.HttpContext.Request.Headers.Authorization = "";
 
-            var result = controller.Logout(new RegisterRequest()) as ObjectResult;
+            var result = controller.Logout() as ObjectResult;
 
             Assert.NotNull(result);
             Assert.Equal(401, result!.StatusCode);
@@ -290,7 +290,7 @@ namespace NewAPITests.ControllerTests
         {
             SetAuthHeader("wdadwadwiadwaiewajenwaeaj");
 
-            var result = controller.Logout(new RegisterRequest()) as ObjectResult;
+            var result = controller.Logout() as ObjectResult;
 
             Assert.NotNull(result);
             Assert.Equal(401, result!.StatusCode);
@@ -305,7 +305,7 @@ namespace NewAPITests.ControllerTests
 
             SetAuthHeader(payload.SessionToken);
 
-            var bye = controller.Logout(new RegisterRequest()) as ObjectResult;
+            var bye = controller.Logout() as ObjectResult;
             Assert.NotNull(bye);
             Assert.Equal(200, bye!.StatusCode);
 
