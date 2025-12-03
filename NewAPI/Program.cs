@@ -19,6 +19,8 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddHostedService<DbWarmupService>();
 
+builder.WebHost.UseUrls("http://0.0.0.0:8000");
+
 var app = builder.Build();
 
 UserAccess.SetConfig(builder.Configuration);
@@ -31,7 +33,6 @@ ParkingLotAccess.SetConfig(builder.Configuration);
 app.UseMiddleware<AccessLogs>();
 
 // Configure the HTTP request pipeline.
-Console.WriteLine($"Environment: {app.Environment.EnvironmentName}");
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
