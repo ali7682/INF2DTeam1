@@ -1,0 +1,33 @@
+name: CD - deploy
+
+# CD should start when another workflow successfully finishes
+on:
+  workflow_run: 
+    workflows: ["Release - main"] # triggers when CI pipeline (ci-main.yaml) finishes
+    types: [completed] # only runs after it successfully finishes
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # CI builds a .zip file, this step downloads it so CD can send it to the server
+      - name: Download API build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.PACKAGE_NAME }}
+          path: api.zip
+
+      # Upload build to ubuntu server using SSH
+      - name: Copy build to server
+        run: |
+          scp -o StrictHostKeyChecking=no api.zip Ali@145.24.222.68:/var/www/newapi/
+
+      # Extracts new files on the server and restarts service
+      - name: Deploy on server
+        run: |
+          ssh -o StrictHostKeyChecking=no Ali@145.24.222.68 << 'EOF'
+          cd /var/www/newapi
+          unzip -o api.zip
+          systemctl restart newapi.service
+          EOF
