@@ -19,6 +19,9 @@ public static class SessionManager
 
     public static UserModel? GetSession(string token)
     {
+        if (string.IsNullOrWhiteSpace(token))
+            return null;
+
         if (Sessions.ContainsKey(token))
             return Sessions[token];
 

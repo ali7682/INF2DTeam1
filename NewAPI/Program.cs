@@ -1,5 +1,11 @@
 var builder = WebApplication.CreateBuilder(args);
 
+// Logs
+
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+
 // Add services to the container.
 
 builder.Services.AddControllers();
@@ -13,6 +19,8 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddHostedService<DbWarmupService>();
 
+builder.WebHost.UseUrls("http://0.0.0.0:8000");
+
 var app = builder.Build();
 
 UserAccess.SetConfig(builder.Configuration);
@@ -22,8 +30,9 @@ PaymentAccess.SetConfig(builder.Configuration);
 PaymentDetailsAccess.SetConfig(builder.Configuration);
 ParkingLotAccess.SetConfig(builder.Configuration);
 
+app.UseMiddleware<AccessLogs>();
+
 // Configure the HTTP request pipeline.
-Console.WriteLine($"Environment: {app.Environment.EnvironmentName}");
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
