@@ -87,7 +87,7 @@ namespace NewAPI.Controllers
         }
 
         [HttpPost("Logout")]
-        public IActionResult Logout([FromBody] RegisterRequest body)
+        public IActionResult Logout()
         {
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
 
