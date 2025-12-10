@@ -50,6 +50,21 @@ namespace NewAPITests
         [Fact]
         public async Task TestValidGetBillingsByUserName()
         {
+            UserModel newUser = new()
+            {
+                Username = "JohnDeere12",
+                Password = "Example",
+                Name = "John Deere",
+                Email = "john.deere@davidihh.pl",
+                Phone = "+480798623268",
+                Role = "USER",
+                CreatedAt = DateTime.UtcNow,
+                BirthYear = 1942,
+                Active = true,
+            };
+
+            await UserAccess.CreateUserAsync(newUser, ct);
+
             string token = Guid.NewGuid().ToString("N");
             var user = new UserModel { Username = "AdminUser", Role = "ADMIN" };
             SessionManager.AddSession(token, user);
