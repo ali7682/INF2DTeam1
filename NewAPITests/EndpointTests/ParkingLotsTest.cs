@@ -657,7 +657,8 @@ namespace NewAPITests.ControllerTests
                 Licenseplate = "XYZ-123"
             };
 
-            var rawResult = await controller.PostParkinglotStop(body, ct, testLot.ID);
+            var rawResult = await controller.PostParkinglotStart(body, ct, testLot.ID); // first start a session
+            rawResult = await controller.PostParkinglotStop(body, ct, testLot.ID);
             Console.WriteLine($"Result type: {rawResult?.GetType().Name ?? "NULL"}");
 
             var result = rawResult as OkObjectResult;
