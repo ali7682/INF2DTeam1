@@ -115,7 +115,14 @@ namespace NewAPI.Controllers
                 return StatusCode(403, new { message = "Acces denied" });
             }
 
+            ParkingLotModel? parkingLot = await ParkingLotAccess.GetOccupancyParkingLots(ct);
 
+            if (parkingLot is null)
+            {
+                return NotFound(new { message = "NotFound: Parking lots do not exist" });
+            }
+
+            return Ok(parkingLot);
         }
 
         // GET /parking-lots/profit/{lid}
@@ -134,6 +141,15 @@ namespace NewAPI.Controllers
             {
                 return StatusCode(403, new { message = "Acces denied" });
             }
+
+            ParkingLotModel? parkingLot = ParkingLotAccess.GetProfitParkingLots(lid, ct);
+
+            if (parkingLot is null)
+            {
+                return NotFound(new { message = "NotFound: Parking lot does not exist" });
+            }
+
+            return Ok(parkingLot);
         }
 
 
