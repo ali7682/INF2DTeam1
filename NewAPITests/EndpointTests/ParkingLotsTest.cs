@@ -21,6 +21,7 @@ namespace NewAPITests.ControllerTests
         {
             var config = TestConfig.CreateConfig();
             controller = new ParkingLotController(config);
+            TestAccessBootstrap.Configure(config);
         }
 
         // Helper to create a temporary parking lot for tests
@@ -625,6 +626,7 @@ namespace NewAPITests.ControllerTests
             };
 
             var rawResult = await controller.PostParkinglotStart(body, ct, testLot.ID);
+            rawResult = await controller.PostParkinglotStart(body, ct, testLot.ID); // try to start again
             Console.WriteLine($"Result type: {rawResult?.GetType().Name ?? "NULL"}");
 
             var result = rawResult as ObjectResult;
@@ -655,7 +657,8 @@ namespace NewAPITests.ControllerTests
                 Licenseplate = "XYZ-123"
             };
 
-            var rawResult = await controller.PostParkinglotStop(body, ct, testLot.ID);
+            var rawResult = await controller.PostParkinglotStart(body, ct, testLot.ID); // first start a session
+            rawResult = await controller.PostParkinglotStop(body, ct, testLot.ID);
             Console.WriteLine($"Result type: {rawResult?.GetType().Name ?? "NULL"}");
 
             var result = rawResult as OkObjectResult;
