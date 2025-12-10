@@ -130,7 +130,7 @@ public static class ParkingLotAccess
 
     // GET gereserveerde parking lots
     // Endpoint: /parking-lots/occupancy
-    public static async Task<bool> GetOccupancyParkingLots(CancellationToken ct)
+    public static async Task<ParkingLotModel?> GetOccupancyParkingLots(CancellationToken ct)
     {
         await using MySqlConnection conn = new(Cs);
         await conn.OpenAsync(ct);
@@ -150,32 +150,29 @@ public static class ParkingLotAccess
             FROM parking_lots
             WHERE reserved > 0;
         """;
+
+        return await conn.QueryFirstOrDefaultAsync<ParkingLotModel?>(sql);
     }
 
     // GET tariff en daytariff om profit te berekenen van een parking-lot
     // Endpoint: /parking-lots/profit/{lid}
-
-    public static async Task<bool> GetProfitParkingLots(int parkingLotId, CancellationToken ct)
+    public static async Task<ParkingLotModel?> GetProfitParkingLots(int parkingLotId, CancellationToken ct)
     {
         await using MySqlConnection conn = new(Cs);
         await conn.OpenAsync(ct);
 
         const string sql = """
-            SELECT 
                 SELECT 
                 id              AS ID,
                 name            AS Name,
-                location        AS Location,
-                address         AS Address,
-                capacity        AS Capacity,
-                reserved        AS Reserved,
                 tariff          AS Tariff,
                 daytariff       AS DayTariff,
-                (COALESCE(Tariff, 0) + COALESCE(DayTariff, 0)) AS TotalProfit
-                created_at      AS CreatedAt
+                (COALESCE(tariff, 0) + COALESCE(daytariff, 0)) AS TotalProfit
             FROM parking_lots
-            WHERE parking_lot_id = @parkingLotId;
+            WHERE id = @parkingLotId;
         """;
+
+        return await conn.QueryFirstOrDefaultAsync<ParkingLotModel?>(sql, new { parkingLotId });
     }
 
     // DELETE een parking lot met bijbehorende parking sessions met parking lot ID
