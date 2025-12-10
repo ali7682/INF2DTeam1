@@ -30,6 +30,7 @@ PaymentAccess.SetConfig(builder.Configuration);
 PaymentDetailsAccess.SetConfig(builder.Configuration);
 ParkingLotAccess.SetConfig(builder.Configuration);
 
+app.UseMiddleware<TraceLogs>();
 app.UseMiddleware<AccessLogs>();
 
 // Configure the HTTP request pipeline.
