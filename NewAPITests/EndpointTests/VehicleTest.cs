@@ -4,9 +4,20 @@ using Microsoft.Extensions.Configuration;
 using Xunit;
 using System;
 using System.IO;
+using NewAPI.Controllers;
 
 public class VehicleDeleteTests
 {
+    private VehicleController _vehicleController;
+
+    public VehicleDeleteTests()
+    {
+        var config = TestConfig.CreateConfig();
+        _vehicleController = new VehicleController(config);
+
+        TestAccessBootstrap.Configure(config);
+    }
+
     // Helper to create a test vehicle in the DB
     private async Task<VehicleModel> CreateTestVehicle(int userId)
     {

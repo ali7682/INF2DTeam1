@@ -12,6 +12,7 @@ jobs:
 
         env:
             DOTNET_VERSION: "8.0.x"
+            ConnectionStrings__DefaultConnection: "Server=127.0.0.1;Port=3307;Database=MobyPark;User ID=api;Password=S3cure!ApiPW;Pooling=True;MaximumPoolSize=200;DefaultCommandTimeout=5;"
 
         steps:
             - name: Checkout
@@ -64,6 +65,9 @@ jobs:
 
             - name: Build
               run: dotnet build NewAPI/NewAPI.sln --configuration Release --no-restore
+
+            - name: Debug env vars
+              run: printenv | sort
 
             - name: Test with coverage
               run: |

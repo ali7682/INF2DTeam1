@@ -9,6 +9,16 @@ using NewAPI.Controllers;
 
 public class ReservationDeleteTests
 {
+    private ReservationController _reservationController;
+    public ReservationDeleteTests()
+    {
+        var config = TestConfig.CreateConfig();
+
+        ReservationAccess.SetConfig(config);
+        _reservationController = new ReservationController(config);
+        TestAccessBootstrap.Configure(config);
+    }
+
     // Helper to create a test reservation
     private async Task<ReservationModel> CreateTestReservation(int userId, int vehicleId, int parkingLotId)
     {

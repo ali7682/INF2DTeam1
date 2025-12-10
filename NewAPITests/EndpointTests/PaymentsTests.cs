@@ -9,6 +9,15 @@ using NewAPI.Controllers;
 
 public class PaymentsTests
 {
+    private readonly PaymentController _paymentsController;
+    public PaymentsTests()
+    {
+        var config = TestConfig.CreateConfig();
+        PaymentDetailsAccess.SetConfig(config);
+        _paymentsController = new PaymentController(config);
+        TestAccessBootstrap.Configure(config);
+    }
+
     // Create controller using appsettings.json
     private PaymentController CreateControllerWithToken(string token)
     {
