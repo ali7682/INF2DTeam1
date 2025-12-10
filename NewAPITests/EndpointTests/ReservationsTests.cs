@@ -17,6 +17,7 @@ namespace NewAPITests
 
             ReservationAccess.SetConfig(config);
             controller = new ReservationController(config);
+            TestAccessBootstrap.Configure(config);
         }
 
         [Fact]

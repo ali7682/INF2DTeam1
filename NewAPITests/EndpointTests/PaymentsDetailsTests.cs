@@ -19,6 +19,7 @@ namespace NewAPITests
             var config = TestConfig.CreateConfig();
             PaymentDetailsAccess.SetConfig(config);
             billingController = new PaymentDetailsController(config);
+            TestAccessBootstrap.Configure(config);
         }
 
         // Test GET: /billings
