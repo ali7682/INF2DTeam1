@@ -36,13 +36,9 @@ public class VehicleDeleteTests
         };
     }
 
-    // Create controller using appsettings.json like ParkingLotController
     private VehicleController CreateControllerWithToken(string token)
     {
-        var config = new ConfigurationBuilder()
-            .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), @"..\..\..\..", "NewAPI")) // adjust path to your API project
-            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-            .Build();
+        var config = TestConfig.CreateConfig();
 
         var controller = new VehicleController(config)
         {
@@ -53,6 +49,7 @@ public class VehicleDeleteTests
         };
 
         controller.HttpContext.Request.Headers["Authorization"] = token;
+
         return controller;
     }
 

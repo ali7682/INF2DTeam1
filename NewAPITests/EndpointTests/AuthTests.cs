@@ -14,11 +14,7 @@ namespace NewAPITests.ControllerTests
 
         public AuthTests()
         {
-            IConfigurationRoot config = new ConfigurationBuilder()
-                .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), @"..\..\..\..", "NewAPI"))
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .Build();
-
+            var config = TestConfig.CreateConfig();
             controller = new AuthController(config);
         }
 
