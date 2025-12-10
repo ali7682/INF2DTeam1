@@ -16,6 +16,7 @@ public static class TestConfig
         return new ConfigurationBuilder()
             .SetBasePath(basePath)
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+            .AddEnvironmentVariables()
             .Build();
     }
 }

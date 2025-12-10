@@ -16,6 +16,8 @@ namespace NewAPITests.ControllerTests
         {
             var config = TestConfig.CreateConfig();
             controller = new AuthController(config);
+
+            Console.WriteLine("CONFIG: " + config.GetConnectionString("DefaultConnection"));
         }
 
         private async Task<UserModel> CreateTestUser(string? username = null, string role = "USER")
