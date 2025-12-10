@@ -16,10 +16,7 @@ namespace NewAPITests
 
         public PaymentsDetailsTests()
         {
-            IConfigurationRoot config = new ConfigurationBuilder()
-                .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), @"..\..\..\..", "NewAPI"))
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .Build();
+            var config = TestConfig.CreateConfig();
             PaymentDetailsAccess.SetConfig(config);
             billingController = new PaymentDetailsController(config);
         }

@@ -12,10 +12,7 @@ public class PaymentsTests
     // Create controller using appsettings.json
     private PaymentController CreateControllerWithToken(string token)
     {
-        var config = new ConfigurationBuilder()
-            .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), @"..\..\..\..", "NewAPI")) // adjust path
-            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-            .Build();
+        var config = TestConfig.CreateConfig();
 
         var controller = new PaymentController(config)
         {
@@ -26,6 +23,7 @@ public class PaymentsTests
         };
 
         controller.HttpContext.Request.Headers["Authorization"] = token;
+
         return controller;
     }
 

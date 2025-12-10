@@ -40,13 +40,9 @@ public class ReservationDeleteTests
         };
     }
 
-    // Create controller using appsettings.json
     private ReservationController CreateControllerWithToken(string token)
     {
-        var config = new ConfigurationBuilder()
-            .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), @"..\..\..\..", "NewAPI")) // adjust path
-            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-            .Build();
+        var config = TestConfig.CreateConfig();
 
         var controller = new ReservationController(config)
         {
@@ -57,6 +53,7 @@ public class ReservationDeleteTests
         };
 
         controller.HttpContext.Request.Headers["Authorization"] = token;
+
         return controller;
     }
 

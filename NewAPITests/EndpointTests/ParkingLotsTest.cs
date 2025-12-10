@@ -19,11 +19,7 @@ namespace NewAPITests.ControllerTests
 
         public ParkingLotTests()
         {
-            IConfigurationRoot config = new ConfigurationBuilder()
-                .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), @"..\..\..\..", "NewAPI"))
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .Build();
-
+            var config = TestConfig.CreateConfig();
             controller = new ParkingLotController(config);
         }
 

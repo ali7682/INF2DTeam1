@@ -13,11 +13,7 @@ namespace NewAPITests
 
         public ReservationControllerTests()
         {
-            // Load appsettings.json from NewAPI project folder
-            IConfigurationRoot config = new ConfigurationBuilder()
-                .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), @"..\..\..\..", "NewAPI"))
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .Build();
+            var config = TestConfig.CreateConfig();
 
             ReservationAccess.SetConfig(config);
             controller = new ReservationController(config);
