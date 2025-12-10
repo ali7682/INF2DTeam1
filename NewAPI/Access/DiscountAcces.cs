@@ -27,4 +27,28 @@ public static class DiscountAcces
             is_active         AS IsActive
         FROM discount_codes
     """;
+
+
+
+// delete discount
+    public static async Task<bool> DeleteDiscountCodeAsync(int discountId, CancellationToken ct = default)
+    {
+        await using MySqlConnection conn = new(Cs);
+        await conn.OpenAsync(ct);
+
+        const string sql = """
+        DELETE FROM discount_codes
+        WHERE id = @discountId;
+        """;
+
+        int affectedRows = await conn.ExecuteAsync(sql, new { discountId });
+        return affectedRows > 0;
+    }
+
+    // get all discount
+
+    public static async Task<bool> GetAllDiscount(CancellationToken ct = default)
+    {
+        
+    }
 }
