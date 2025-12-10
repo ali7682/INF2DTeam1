@@ -128,6 +128,56 @@ public static class ParkingLotAccess
         return session;
     }
 
+    // GET gereserveerde parking lots
+    // Endpoint: /parking-lots/occupancy
+    public static async Task<bool> GetOccupancyParkingLots(CancellationToken ct)
+    {
+        await using MySqlConnection conn = new(Cs);
+        await conn.OpenAsync(ct);
+
+        const string sql = """
+            SELECT 
+                SELECT 
+                id              AS ID,
+                name            AS Name,
+                location        AS Location,
+                address         AS Address,
+                capacity        AS Capacity,
+                reserved        AS Reserved,
+                tariff          AS Tariff,
+                daytariff       AS DayTariff,
+                created_at      AS CreatedAt
+            FROM parking_lots
+            WHERE reserved > 0;
+        """;
+    }
+
+    // GET tariff en daytariff om profit te berekenen van een parking-lot
+    // Endpoint: /parking-lots/profit/{lid}
+
+    public static async Task<bool> GetProfitParkingLots(int parkingLotId, CancellationToken ct)
+    {
+        await using MySqlConnection conn = new(Cs);
+        await conn.OpenAsync(ct);
+
+        const string sql = """
+            SELECT 
+                SELECT 
+                id              AS ID,
+                name            AS Name,
+                location        AS Location,
+                address         AS Address,
+                capacity        AS Capacity,
+                reserved        AS Reserved,
+                tariff          AS Tariff,
+                daytariff       AS DayTariff,
+                (COALESCE(Tariff, 0) + COALESCE(DayTariff, 0)) AS TotalProfit
+                created_at      AS CreatedAt
+            FROM parking_lots
+            WHERE parking_lot_id = @parkingLotId;
+        """;
+    }
+
     // DELETE een parking lot met bijbehorende parking sessions met parking lot ID
     // Endpoint: /parking-lots/{lid}
     public static async Task<bool> DeleteParkingLotByIdAsync(int parkingLotId, CancellationToken ct = default)
