@@ -626,6 +626,7 @@ namespace NewAPITests.ControllerTests
             };
 
             var rawResult = await controller.PostParkinglotStart(body, ct, testLot.ID);
+            rawResult = await controller.PostParkinglotStart(body, ct, testLot.ID); // try to start again
             Console.WriteLine($"Result type: {rawResult?.GetType().Name ?? "NULL"}");
 
             var result = rawResult as ObjectResult;
