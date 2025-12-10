@@ -30,7 +30,7 @@ public static class DiscountAcces
 
 
 
-// delete discount
+    // delete discount
     public static async Task<bool> DeleteDiscountCodeAsync(int discountId, CancellationToken ct = default)
     {
         await using MySqlConnection conn = new(Cs);
@@ -46,9 +46,14 @@ public static class DiscountAcces
     }
 
     // get all discount
-
-    public static async Task<bool> GetAllDiscount(CancellationToken ct = default)
+    public static async Task<IEnumerable<DiscountModel>> GetAllDiscountCodesAsync(CancellationToken ct = default)
     {
-        
+        await using MySqlConnection conn = new(Cs);
+        await conn.OpenAsync(ct);
+
+        string sql = $"{SqlSelectBase};";
+
+        var discounts = await conn.QueryAsync<DiscountModel>(sql);
+        return discounts;
     }
 }
