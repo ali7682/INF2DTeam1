@@ -98,6 +98,45 @@ namespace NewAPI.Controllers
             return Ok(session);
         }
 
+        // GET /parking-lots/capacity
+        [HttpGet("/occupancy")]
+        public async Task<IActionResult> GetParkingOccupancy(CancellationToken ct)
+        {
+            string token = HttpContext.Request.Headers.Authorization.ToString();
+            UserModel? sessnionUser = SessionManager.GetSession(token);
+
+            if (string.IsNullOrEmpty(token) || sessnionUser == null)
+            {
+                return Unauthorized(new { message = "Unauthorized: Invalid or missing session token" });
+            }
+
+            if (sessnionUser.Role != "ADMIN")
+            {
+                return StatusCode(403, new { message = "Acces denied" });
+            }
+
+
+        }
+
+        // GET /parking-lots/profit/{lid}
+        [HttpGet("/profit/{lid}")]
+        public async Task<IActionResult> GetProfitPerParkingLot(int lid, CancellationToken ct)
+        {
+            string token = HttpContext.Request.Headers.Authorization.ToString();
+            UserModel? sessionUser = SessionManager.GetSession(token);
+
+            if (string.IsNullOrEmpty(token) || sessionUser == null)
+            {
+                return Unauthorized(new { message = "Unauthorized: Invalid or missing session token" });
+            }
+
+            if (sessionUser.Role != "ADMIN")
+            {
+                return StatusCode(403, new { message = "Acces denied" });
+            }
+        }
+
+
         // DELETE /parking-lots/{lid}
         [HttpDelete("{lid:int}")]
         public async Task<IActionResult> DeleteParkingLot(int lid, CancellationToken ct)
