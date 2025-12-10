@@ -21,6 +21,7 @@ namespace NewAPITests.ControllerTests
         {
             var config = TestConfig.CreateConfig();
             controller = new ParkingLotController(config);
+            TestAccessBootstrap.Configure(config);
         }
 
         // Helper to create a temporary parking lot for tests
