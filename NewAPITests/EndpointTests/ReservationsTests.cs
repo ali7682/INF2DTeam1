@@ -10,6 +10,7 @@ namespace NewAPITests
     {
         private readonly ReservationController controller;
         private readonly CancellationToken ct = CancellationToken.None;
+        private readonly int _userId = 1;
         private readonly int _userAdminId = 2;
 
         public ReservationControllerTests()
@@ -134,8 +135,8 @@ namespace NewAPITests
             };
             
             string token = Guid.NewGuid().ToString("N");
-            var user = new UserModel { Id = 1, Username = "User", Role = "USER" };
-            await SessionManager.AddSession(token, _userAdminId, TestContext.Current.CancellationToken);
+
+            await SessionManager.AddSession(token, _userId, TestContext.Current.CancellationToken);
             Assert.NotNull(SessionManager.GetSession(token, TestContext.Current.CancellationToken));
 
             controller.ControllerContext = new ControllerContext
@@ -192,8 +193,8 @@ namespace NewAPITests
             };
 
             string token = Guid.NewGuid().ToString("N");
-            var user = new UserModel { Id = 1, Username = "User", Role = "USER" };
-            await SessionManager.AddSession(token, _userAdminId, TestContext.Current.CancellationToken);
+
+            await SessionManager.AddSession(token, _userId, TestContext.Current.CancellationToken);
             Assert.NotNull(SessionManager.GetSession(token, TestContext.Current.CancellationToken));
 
             controller.ControllerContext = new ControllerContext

@@ -16,6 +16,7 @@ namespace NewAPITests.ControllerTests
     {
         private readonly CancellationToken ct = CancellationToken.None;
         private readonly ParkingLotController controller;
+        private readonly int _userId = 1;
         private readonly int _userAdminId = 2;
 
         public ParkingLotTests()
@@ -234,7 +235,7 @@ namespace NewAPITests.ControllerTests
             int sessionId = await ParkingLotAccess.CreateParkingsessionAsync(tempSession, ct);
 
             string token = Guid.NewGuid().ToString("N");
-            SessionManager.AddSession(token, 2, TestContext.Current.CancellationToken);
+            await SessionManager.AddSession(token, _userAdminId, TestContext.Current.CancellationToken);
 
             controller.ControllerContext = new ControllerContext
             {
@@ -250,7 +251,7 @@ namespace NewAPITests.ControllerTests
             var deletedSession = await ParkingLotAccess.GetParkingSessionByIdAsync(testLot.ID, sessionId, TestContext.Current.CancellationToken);
             Assert.Null(deletedSession);
 
-            SessionManager.RemoveSession(token, TestContext.Current.CancellationToken);
+            await SessionManager.RemoveSession(token, TestContext.Current.CancellationToken);
         }
 
         [Fact]
@@ -489,9 +490,9 @@ namespace NewAPITests.ControllerTests
         public async Task TestCreateParkingLot_NonAdmin_ReturnsForbidden()
         {
             string token = Guid.NewGuid().ToString("N");
-            var user = new UserModel { Id = 1, Username = "RegularUser", Role = "USER" };
-            await SessionManager.AddSession(token, _userAdminId);
-            Assert.NotNull(SessionManager.GetSession(token));
+
+            await SessionManager.AddSession(token, _userId, TestContext.Current.CancellationToken);
+            Assert.NotNull(SessionManager.GetSession(token, TestContext.Current.CancellationToken));
 
             controller.ControllerContext = new ControllerContext
             {

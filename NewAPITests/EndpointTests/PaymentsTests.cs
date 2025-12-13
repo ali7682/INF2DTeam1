@@ -10,6 +10,7 @@ using NewAPI.Controllers;
 public class PaymentsTests
 {
     private readonly PaymentController _paymentsController;
+    private readonly int _userId = 1;
     private readonly int _userAdminId = 2;
     public PaymentsTests()
     {
@@ -120,7 +121,7 @@ public class PaymentsTests
     public async Task PostPaymentsRefunds_NonAdminUser_ReturnsForbidden()
     {
         string token = Guid.NewGuid().ToString("N");
-        await SessionManager.AddSession(token, _userAdminId, TestContext.Current.CancellationToken);
+        await SessionManager.AddSession(token, _userId, TestContext.Current.CancellationToken);
 
         var controller = CreateControllerWithToken(token);
 
