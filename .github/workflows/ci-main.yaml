@@ -33,6 +33,7 @@ jobs:
         run: |
           dotnet publish NewAPI/NewAPI.csproj \
             --configuration Release \
+            --no-build \
             --output ./artifacts/publish
 
       - name: Generate version
@@ -40,6 +41,7 @@ jobs:
           MINOR=$((GITHUB_RUN_NUMBER % 100))
           VERSION="1.${MINOR}.${GITHUB_RUN_NUMBER}"
           FILE="MobyPark_API_version_${VERSION}.zip"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "PACKAGE_NAME=$FILE" >> $GITHUB_ENV
 
       - name: Create zip
