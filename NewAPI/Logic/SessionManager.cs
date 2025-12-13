@@ -4,12 +4,11 @@ using MySqlConnector;
 public static class SessionManager
 {
     public static int SessionCount { get; private set; }
-    private static string _connectionString;
 
-    public static void SetConfig(IConfiguration config)
-    {
-        _connectionString = config.GetConnectionString("DefaultConnection");
-    }
+    private static IConfiguration _config;
+
+    public static void SetConfig(IConfiguration config) => _config = config;
+    private static string _connectionString => _config.GetConnectionString("DefaultConnection")!;
 
     public static async Task AddSession(
         string token,
