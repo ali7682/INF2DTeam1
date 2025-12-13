@@ -35,7 +35,7 @@ namespace NewAPITests.ControllerTests
             };
 
             int userId = await UserAccess.CreateUserAsync(rndUser, ct);
-            var created = await UserAccess.GetUserByIdAsync(userId, ct);
+            UserModel? created = await UserAccess.GetUserByIdAsync(userId, ct);
             return created;
         }
 
@@ -172,7 +172,7 @@ namespace NewAPITests.ControllerTests
         // GET Profile
 
         [Fact]
-        public void Profile_Get_WithoutAuth_Unauthorized()
+        public async Task Profile_Get_WithoutAuth_Unauthorized()
         {
             controller.ControllerContext = new ControllerContext
             {
@@ -180,18 +180,20 @@ namespace NewAPITests.ControllerTests
             };
             controller.ControllerContext.HttpContext.Request.Headers.Authorization = "";
 
-            var result = controller.Profile() as ObjectResult;
+            var actionResult = await controller.Profile();
+            var result = actionResult as ObjectResult;
 
             Assert.NotNull(result);
             Assert.Equal(401, result!.StatusCode);
         }
 
         [Fact]
-        public void Profile_Get_WithInvalidToken_Unauthorized()
+        public async Task Profile_Get_WithInvalidToken_Unauthorized()
         {
             SetAuthHeader("wdadwadwiadwaiewajenwaeaj");
 
-            var result = controller.Profile() as ObjectResult;
+            var actionResult = await controller.Profile();
+            var result = actionResult as ObjectResult;
 
             Assert.NotNull(result);
             Assert.Equal(401, result!.StatusCode);
@@ -201,12 +203,14 @@ namespace NewAPITests.ControllerTests
         public async Task Profile_Get_WithValidToken_Ok()
         {
             var user = await CreateTestUser();
-            var login = await controller.Login(new LoginRequest { Username = user.Username, Password = user.Password }, ct) as ObjectResult;
+            var loginAction = await controller.Login(new LoginRequest { Username = user.Username, Password = user.Password }, ct);
+            var login = loginAction as ObjectResult;
             var payload = Assert.IsType<LoginResponse>(login!.Value);
 
             SetAuthHeader(payload.SessionToken);
 
-            var result = controller.Profile() as ObjectResult;
+            var actionResult = await controller.Profile();
+            var result = actionResult as ObjectResult;
 
             Assert.NotNull(result);
             Assert.Equal(200, result!.StatusCode);
@@ -226,7 +230,8 @@ namespace NewAPITests.ControllerTests
             };
             controller.ControllerContext.HttpContext.Request.Headers.Authorization = "";
 
-            var result = await controller.Profile(new ChangeProfileRequest { Username = "x" }) as ObjectResult;
+            var actionResult = await controller.Profile(new ChangeProfileRequest { Username = "x" });
+            var result = actionResult as ObjectResult;
 
             Assert.NotNull(result);
             Assert.Equal(401, result!.StatusCode);
@@ -237,7 +242,8 @@ namespace NewAPITests.ControllerTests
         {
             SetAuthHeader("wdadwadwiadwaiewajenwaeaj");
 
-            var result = await controller.Profile(new ChangeProfileRequest { Username = "x" }) as ObjectResult;
+            var actionResult = await controller.Profile(new ChangeProfileRequest { Username = "x" });
+            var result = actionResult as ObjectResult;
 
             Assert.NotNull(result);
             Assert.Equal(401, result!.StatusCode);
@@ -247,18 +253,21 @@ namespace NewAPITests.ControllerTests
         public async Task Profile_Put_WithValidToken_ChangesUsername_Ok()
         {
             var user = await CreateTestUser();
-            var login = await controller.Login(new LoginRequest { Username = user.Username, Password = user.Password }, ct) as ObjectResult;
+            var loginAction = await controller.Login(new LoginRequest { Username = user.Username, Password = user.Password }, ct);
+            var login = loginAction as ObjectResult;
             var payload = Assert.IsType<LoginResponse>(login!.Value);
 
             SetAuthHeader(payload.SessionToken);
 
             string newUsername = "nieuwenaaaaamje";
 
-            var putResult = await controller.Profile(new ChangeProfileRequest { Username = newUsername }) as ObjectResult;
+            var putAction = await controller.Profile(new ChangeProfileRequest { Username = newUsername });
+            var putResult = putAction as ObjectResult;
             Assert.NotNull(putResult);
             Assert.Equal(200, putResult!.StatusCode);
 
-            var getAfter = controller.Profile() as ObjectResult;
+            var getAfterAction = await controller.Profile();
+            var getAfter = getAfterAction as ObjectResult;
             Assert.NotNull(getAfter);
             Assert.Equal(200, getAfter!.StatusCode);
 
@@ -269,7 +278,7 @@ namespace NewAPITests.ControllerTests
         // Logout
 
         [Fact]
-        public void Logout_WithoutAuthHeader_Unauthorized()
+        public async Task Logout_WithoutAuthHeader_Unauthorized()
         {
             controller.ControllerContext = new ControllerContext
             {
@@ -277,18 +286,20 @@ namespace NewAPITests.ControllerTests
             };
             controller.ControllerContext.HttpContext.Request.Headers.Authorization = "";
 
-            var result = controller.Logout() as ObjectResult;
+            var actionResult = await controller.Logout();
+            var result = actionResult as ObjectResult;
 
             Assert.NotNull(result);
             Assert.Equal(401, result!.StatusCode);
         }
 
         [Fact]
-        public void Logout_WithInvalidToken_Unauthorized()
+        public async Task Logout_WithInvalidToken_Unauthorized()
         {
             SetAuthHeader("wdadwadwiadwaiewajenwaeaj");
 
-            var result = controller.Logout() as ObjectResult;
+            var actionResult = await controller.Logout();
+            var result = actionResult as ObjectResult;
 
             Assert.NotNull(result);
             Assert.Equal(401, result!.StatusCode);
@@ -298,16 +309,19 @@ namespace NewAPITests.ControllerTests
         public async Task Logout_WithValidToken_Ok_ThenProfile401()
         {
             var user = await CreateTestUser();
-            var login = await controller.Login(new LoginRequest { Username = user.Username, Password = user.Password }, ct) as ObjectResult;
+            var loginAction = await controller.Login(new LoginRequest { Username = user.Username, Password = user.Password }, ct);
+            var login = loginAction as ObjectResult;
             var payload = Assert.IsType<LoginResponse>(login!.Value);
 
             SetAuthHeader(payload.SessionToken);
 
-            var bye = controller.Logout() as ObjectResult;
+            var byeAction = await controller.Logout();
+            var bye = byeAction as ObjectResult;
             Assert.NotNull(bye);
             Assert.Equal(200, bye!.StatusCode);
 
-            var after = controller.Profile() as ObjectResult;
+            var afterAction = await controller.Profile();
+            var after = afterAction as ObjectResult;
             Assert.NotNull(after);
             Assert.Equal(401, after!.StatusCode);
         }

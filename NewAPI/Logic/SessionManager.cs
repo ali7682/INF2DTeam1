@@ -1,38 +1,118 @@
-﻿using System.Collections.Concurrent;
+﻿using Dapper;
+using MySqlConnector;
 
 public static class SessionManager
 {
-    private static readonly ConcurrentDictionary<string, UserModel> Sessions = new();
+    public static int SessionCount { get; private set; }
+    private static string _connectionString;
 
-    public static void AddSession(string token, UserModel User)
+    public static void SetConfig(IConfiguration config)
     {
-        Sessions.TryAdd(token, User);
+        _connectionString = config.GetConnectionString("DefaultConnection");
     }
 
-    public static bool RemoveSession(string token)
+    public static async Task AddSession(
+        string token,
+        int userId,
+        CancellationToken ct = default)
     {
-        if (Sessions.TryRemove(token, out _))
-            return true;
+        DateTime expiresAt = DateTime.UtcNow.AddHours(12);
+        const string query = """
+        INSERT INTO api_sessions (token, user_id, expires_at)
+        VALUES (@Token, @UserId, @ExpiresAt);
+        """;
 
-        return false;
+        await using var conn = new MySqlConnection(_connectionString);
+        await conn.OpenAsync(ct);
+
+        var cmd = new CommandDefinition(
+            query,
+            new { Token = token, UserId = userId, ExpiresAt = expiresAt },
+            cancellationToken: ct,
+            commandTimeout: 5);
+
+        await conn.ExecuteAsync(cmd);
+        SessionCount++;
     }
 
-    public static UserModel? GetSession(string token)
+    public static async Task<int?> GetSession(
+        string token,
+        CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(token))
             return null;
 
-        if (Sessions.ContainsKey(token))
-            return Sessions[token];
+        const string query = """
+        SELECT user_id
+        FROM api_sessions
+        WHERE token = @Token
+        """;
 
-        return null;
+        await using var conn = new MySqlConnection(_connectionString);
+        await conn.OpenAsync(ct);
+
+        var cmd = new CommandDefinition(
+            query,
+            new { Token = token },
+            cancellationToken: ct,
+            commandTimeout: 5);
+
+        return await conn.ExecuteScalarAsync<int?>(cmd);
     }
 
-    // AuthController gebruikte 'DoesSessionExist', maar hij bestond niet (gaf een error)
-    public static bool DoesSessionExist(string token)
+    public static async Task<UserModel?> GetUserFromSession(
+        string token,
+        CancellationToken ct = default)
     {
-        bool? exists = Sessions.ContainsKey(token);
+        var userId = await GetSession(token, ct);
+        if (userId == null)
+            return null;
 
-        return exists != null && exists == true;
+        return await UserAccess.GetUserByIdAsync(userId.Value, ct);
+    }
+
+    public static async Task<bool> RemoveSession(
+        string token,
+        CancellationToken ct = default)
+    {
+        const string query = """
+        DELETE FROM api_sessions
+        WHERE token = @Token;
+        """;
+
+        await using var conn = new MySqlConnection(_connectionString);
+        await conn.OpenAsync(ct);
+
+        var cmd = new CommandDefinition(
+            query,
+            new { Token = token },
+            cancellationToken: ct,
+            commandTimeout: 5);
+
+        SessionCount--;
+
+        return await conn.ExecuteAsync(cmd) > 0;
+    }
+
+    public static async Task<bool> DoesSessionExist(
+        string token,
+        CancellationToken ct = default)
+    {
+        const string query = """
+        SELECT COUNT(*)
+        FROM api_sessions
+        WHERE token = @Token
+        """;
+
+        await using var conn = new MySqlConnection(_connectionString);
+        await conn.OpenAsync(ct);
+
+        var cmd = new CommandDefinition(
+            query,
+            new { Token = token },
+            cancellationToken: ct,
+            commandTimeout: 5);
+
+        return await conn.ExecuteScalarAsync<int>(cmd) > 0;
     }
 }
