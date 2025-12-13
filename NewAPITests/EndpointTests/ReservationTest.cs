@@ -10,6 +10,7 @@ using NewAPI.Controllers;
 public class ReservationDeleteTests
 {
     private ReservationController _reservationController;
+    private readonly int _userId = 1;
     private readonly int _userAdminId = 2;
 
     public ReservationDeleteTests()
@@ -113,7 +114,7 @@ public class ReservationDeleteTests
     public async Task DeleteReservation_NonAdminUserNotOwner_ReturnsForbidden()
     {
         string token = Guid.NewGuid().ToString("N");
-        await SessionManager.AddSession(token, _userAdminId, TestContext.Current.CancellationToken);
+        await SessionManager.AddSession(token, _userId, TestContext.Current.CancellationToken);
         var controller = CreateControllerWithToken(token);
 
         var reservation = await CreateTestReservation(2, 1, 1);
