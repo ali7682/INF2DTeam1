@@ -202,7 +202,7 @@ namespace NewAPITests.ControllerTests
         public async Task DeleteParkingLot_NotFound_ReturnsNotFound()
         {
             string token = Guid.NewGuid().ToString("N");
-            SessionManager.AddSession(token, 2, TestContext.Current.CancellationToken);
+            await SessionManager.AddSession(token, _userAdminId, TestContext.Current.CancellationToken);
 
             controller.ControllerContext = new ControllerContext
             {
