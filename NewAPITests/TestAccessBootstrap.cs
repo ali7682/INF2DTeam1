@@ -16,5 +16,6 @@ public static class TestAccessBootstrap
         PaymentAccess.SetConfig(config);
         PaymentDetailsAccess.SetConfig(config);
         ParkingLotAccess.SetConfig(config);
+        SessionManager.SetConfig(config);
     }
 }

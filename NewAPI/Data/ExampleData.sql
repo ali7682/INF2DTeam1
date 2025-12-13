@@ -30010,6 +30010,16 @@ INSERT INTO `vehicles` (`id`, `user_id`, `license_plate`, `make`, `model`, `colo
 	(14222, 2, '76-KGQ-7', 'Peugeot', '308', 'Gray', '2019', '2025-10-29'),
 	(14225, 2, '12-ABC-3', 'Toyota', 'Corolla', 'Blue', '2021', '2025-11-11');
 
+-- Dumping structure for table MobyPark.api_sessions
+CREATE TABLE IF NOT EXISTS `api_sessions` (
+  `token` varchar(128) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `expires_at` datetime NOT NULL,
+  PRIMARY KEY (`token`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Dumping data for table MobyPark.api_sessions: ~0 rows (approximately)
+
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
 /*!40014 SET FOREIGN_KEY_CHECKS=IFNULL(@OLD_FOREIGN_KEY_CHECKS, 1) */;

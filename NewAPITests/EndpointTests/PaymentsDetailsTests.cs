@@ -13,6 +13,7 @@ namespace NewAPITests
     {
         private readonly PaymentDetailsController billingController;
         private readonly CancellationToken ct = CancellationToken.None;
+        private readonly int _userAdminId = 2;
 
         public PaymentsDetailsTests()
         {
@@ -28,8 +29,8 @@ namespace NewAPITests
         {
             string token = Guid.NewGuid().ToString("N");
             var user = new UserModel { Username = "AdminUser", Role = "ADMIN" };
-            SessionManager.AddSession(token, user);
-            Assert.NotNull(SessionManager.GetSession(token));
+            await SessionManager.AddSession(token, _userAdminId, TestContext.Current.CancellationToken);
+            Assert.NotNull(SessionManager.GetSession(token, TestContext.Current.CancellationToken));
 
             billingController.ControllerContext = new ControllerContext
             {
@@ -67,8 +68,8 @@ namespace NewAPITests
 
             string token = Guid.NewGuid().ToString("N");
             var user = new UserModel { Username = "AdminUser", Role = "ADMIN" };
-            SessionManager.AddSession(token, user);
-            Assert.NotNull(SessionManager.GetSession(token));
+            await SessionManager.AddSession(token, _userAdminId, TestContext.Current.CancellationToken);
+            Assert.NotNull(SessionManager.GetSession(token, TestContext.Current.CancellationToken));
 
             billingController.ControllerContext = new ControllerContext
             {
@@ -90,8 +91,8 @@ namespace NewAPITests
         {
             string token = Guid.NewGuid().ToString("N");
             var user = new UserModel { Username = "AdminUser", Role = "ADMIN" };
-            SessionManager.AddSession(token, user);
-            Assert.NotNull(SessionManager.GetSession(token));
+            await SessionManager.AddSession(token, _userAdminId, TestContext.Current.CancellationToken);
+            Assert.NotNull(SessionManager.GetSession(token, TestContext.Current.CancellationToken));
 
             billingController.ControllerContext = new ControllerContext
             {
