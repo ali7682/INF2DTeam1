@@ -66,9 +66,6 @@ jobs:
             - name: Build
               run: dotnet build NewAPI/NewAPI.sln --configuration Release --no-restore
 
-            - name: Debug env vars
-              run: printenv | sort
-
             - name: Test with coverage
               run: |
                   dotnet test NewAPI/NewAPI.sln \
