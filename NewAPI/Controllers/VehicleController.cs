@@ -17,7 +17,7 @@ public class VehicleController : ControllerBase
     public async Task<IActionResult> GetVehicle(int vId)
     {
         string? sessionToken = HttpContext.Request.Headers.Authorization.ToString();
-        UserModel? user = SessionManager.GetSession(sessionToken);
+        UserModel? user = await SessionManager.GetUserFromSession(sessionToken);
 
         if (string.IsNullOrEmpty(sessionToken) || user == null)
         {
@@ -44,7 +44,7 @@ public class VehicleController : ControllerBase
     public async Task<IActionResult> GetVehicleByUserName(string userName, int vId)
     {
         string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
-        UserModel? user = SessionManager.GetSession(sessionToken);
+        UserModel? user = await SessionManager.GetUserFromSession(sessionToken);
 
         if (sessionToken == null || user == null)
         {
@@ -78,7 +78,7 @@ public class VehicleController : ControllerBase
     public async Task<IActionResult> GetReservations(int vId)
     {
         string? sessionToken = HttpContext.Request.Headers.Authorization.ToString();
-        UserModel? user = SessionManager.GetSession(sessionToken);
+        UserModel? user = await SessionManager.GetUserFromSession(sessionToken);
 
         if (string.IsNullOrEmpty(sessionToken) || user == null)
         {
@@ -105,7 +105,7 @@ public class VehicleController : ControllerBase
     public async Task<IActionResult> GetReservationsByUserName(string userName, int vId)
     {
         string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
-        UserModel? user = SessionManager.GetSession(sessionToken);
+        UserModel? user = await SessionManager.GetUserFromSession(sessionToken);
 
         if (sessionToken == null || user == null)
         {
@@ -139,7 +139,7 @@ public class VehicleController : ControllerBase
     public async Task<IActionResult> GetHistory(int vId)
     {
         string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
-        UserModel? user = SessionManager.GetSession(sessionToken);
+        UserModel? user = await SessionManager.GetUserFromSession(sessionToken);
 
         if (sessionToken == null || user == null)
         {
@@ -167,7 +167,7 @@ public class VehicleController : ControllerBase
     public async Task<IActionResult> GetHistory(string userName, int vId)
     {
         string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
-        UserModel? user = SessionManager.GetSession(sessionToken);
+        UserModel? user = await SessionManager.GetUserFromSession(sessionToken);
 
         if (sessionToken == null || user == null)
         {
@@ -206,7 +206,7 @@ public class VehicleController : ControllerBase
             string token = HttpContext.Request.Headers["Authorization"].ToString();
             Console.WriteLine($"[DEBUG] Token: {token}");
 
-            UserModel? sessionUser = SessionManager.GetSession(token);
+            UserModel? sessionUser = await SessionManager.GetUserFromSession(token);
             Console.WriteLine($"[DEBUG] Session user: {(sessionUser == null ? "null" : sessionUser.Role)}");
 
             if (string.IsNullOrEmpty(token) || sessionUser == null)
@@ -250,7 +250,7 @@ public class VehicleController : ControllerBase
             return Unauthorized("Unauthorized: Missing session token");
         }
 
-        UserModel? user = SessionManager.GetSession(authHeader);
+        UserModel? user = await SessionManager.GetUserFromSession(authHeader);
         if (user == null)
         {
             return Unauthorized("Unauthorized: Invalid session token");
@@ -291,7 +291,7 @@ public class VehicleController : ControllerBase
             return Unauthorized("Unauthorized: Missing session token");
         }
 
-        UserModel? user = SessionManager.GetSession(authHeader); // stays sync if memory-based
+        UserModel? user = await SessionManager.GetUserFromSession(authHeader); // stays sync if memory-based
         if (user == null)
         {
             return Unauthorized("Unauthorized: Invalid session token");
@@ -356,7 +356,7 @@ public class VehicleController : ControllerBase
             return StatusCode(401, new { status = "error", message = "Missing session token" });
         }
 
-        UserModel? user = SessionManager.GetSession(authHeader); // stays sync if in-memory
+        UserModel? user = await SessionManager.GetUserFromSession(authHeader); // stays sync if in-memory
         if (user == null)
         {
             return StatusCode(401, new { status = "error", message = "Invalid session token" });

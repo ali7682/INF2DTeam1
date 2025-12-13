@@ -28,7 +28,7 @@ namespace NewAPI.Controllers
         public async Task<IActionResult> GetReservation(int rid)
         {
             string token = HttpContext.Request.Headers.Authorization.ToString();
-            UserModel? sessionUser = SessionManager.GetSession(token);
+            UserModel? sessionUser = await SessionManager.GetUserFromSession(token);
 
             if (string.IsNullOrEmpty(token) || sessionUser == null)
                 return Unauthorized(new { message = "Unauthorized: Invalid or missing session token" });
@@ -49,7 +49,7 @@ namespace NewAPI.Controllers
         public async Task<IActionResult> DeleteReservation(int rid)
         {
             string token = HttpContext.Request.Headers.Authorization.ToString();
-            UserModel? sessionUser = SessionManager.GetSession(token);
+            UserModel? sessionUser = await SessionManager.GetUserFromSession(token);
 
             if (string.IsNullOrEmpty(token) || sessionUser == null)
                 return Unauthorized(new { message = "Unauthorized: Invalid or missing session token" });
@@ -75,7 +75,7 @@ namespace NewAPI.Controllers
         public async Task<IActionResult> PostReservation([FromBody] ReservationRequest body, CancellationToken ct)
         {
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
-            UserModel? user = SessionManager.GetSession(sessionToken);
+            UserModel? user = await SessionManager.GetUserFromSession(sessionToken);
 
             if (sessionToken == null || user == null)
                 return Unauthorized("Unauthorized: Invalid or missing session token");
@@ -135,7 +135,7 @@ namespace NewAPI.Controllers
             }
 
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
-            UserModel? user = SessionManager.GetSession(sessionToken);
+            UserModel? user = await SessionManager.GetUserFromSession(sessionToken);
 
             if (user == null || sessionToken == null)
             {

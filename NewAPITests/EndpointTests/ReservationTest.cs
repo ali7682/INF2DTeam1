@@ -10,6 +10,8 @@ using NewAPI.Controllers;
 public class ReservationDeleteTests
 {
     private ReservationController _reservationController;
+    private readonly int _userAdminId = 2;
+
     public ReservationDeleteTests()
     {
         var config = TestConfig.CreateConfig();
@@ -34,7 +36,7 @@ public class ReservationDeleteTests
             Cost = 10.0m
         };
 
-        int newReservationId = await ReservationAccess.CreateReservationAsync(reservationToCreate);
+        int newReservationId = await ReservationAccess.CreateReservationAsync(reservationToCreate, TestContext.Current.CancellationToken);
 
         return new ReservationModel
         {
@@ -83,7 +85,7 @@ public class ReservationDeleteTests
     public async Task DeleteReservation_ValidAdminToken_ReturnsOk()
     {
         string token = Guid.NewGuid().ToString("N");
-        SessionManager.AddSession(token, new UserModel { Username = "AdminUser", Role = "ADMIN" });
+        await SessionManager.AddSession(token, _userAdminId, TestContext.Current.CancellationToken);
         var controller = CreateControllerWithToken(token);
         var reservation = await CreateTestReservation(2, 1, 1);
 
@@ -97,7 +99,7 @@ public class ReservationDeleteTests
     public async Task DeleteReservation_ReservationNotFound_ReturnsNotFound()
     {
         string token = Guid.NewGuid().ToString("N");
-        SessionManager.AddSession(token, new UserModel { Username = "AdminUser", Role = "ADMIN" });
+        await SessionManager.AddSession(token, _userAdminId, TestContext.Current.CancellationToken);
         var controller = CreateControllerWithToken(token);
         int nonExistentReservationId = 999999;
 
@@ -111,7 +113,7 @@ public class ReservationDeleteTests
     public async Task DeleteReservation_NonAdminUserNotOwner_ReturnsForbidden()
     {
         string token = Guid.NewGuid().ToString("N");
-        SessionManager.AddSession(token, new UserModel { Username = "RegularUser", Role = "USER", Id = 1 });
+        await SessionManager.AddSession(token, _userAdminId, TestContext.Current.CancellationToken);
         var controller = CreateControllerWithToken(token);
 
         var reservation = await CreateTestReservation(2, 1, 1);
