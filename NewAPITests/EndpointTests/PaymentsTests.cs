@@ -10,6 +10,7 @@ using NewAPI.Controllers;
 public class PaymentsTests
 {
     private readonly PaymentController _paymentsController;
+    private readonly int _userAdminId = 2;
     public PaymentsTests()
     {
         var config = TestConfig.CreateConfig();
@@ -41,7 +42,7 @@ public class PaymentsTests
     public async Task PostPayments_ValidBody_ReturnsOk()
     {
         string token = Guid.NewGuid().ToString("N");
-        SessionManager.AddSession(token, new UserModel { Username = "AdminUser", Role = "ADMIN" });
+        await SessionManager.AddSession(token, _userAdminId, TestContext.Current.CancellationToken);
 
         var controller = CreateControllerWithToken(token);
 
@@ -78,7 +79,7 @@ public class PaymentsTests
     public async Task PostPayments_InvalidBody_ReturnsBadRequest()
     {
         string token = Guid.NewGuid().ToString("N");
-        SessionManager.AddSession(token, new UserModel { Username = "AdminUser", Role = "ADMIN" });
+        await SessionManager.AddSession(token, _userAdminId, TestContext.Current.CancellationToken);
 
         var controller = CreateControllerWithToken(token);
 
@@ -99,7 +100,7 @@ public class PaymentsTests
     public async Task PostPaymentsRefunds_ValidAdminBody_ReturnsOk()
     {
         string token = Guid.NewGuid().ToString("N");
-        SessionManager.AddSession(token, new UserModel { Username = "AdminUser", Role = "ADMIN" });
+        await SessionManager.AddSession(token, _userAdminId, TestContext.Current.CancellationToken);
 
         var controller = CreateControllerWithToken(token);
 
@@ -119,7 +120,7 @@ public class PaymentsTests
     public async Task PostPaymentsRefunds_NonAdminUser_ReturnsForbidden()
     {
         string token = Guid.NewGuid().ToString("N");
-        SessionManager.AddSession(token, new UserModel { Username = "RegularUser", Role = "USER" });
+        await SessionManager.AddSession(token, _userAdminId, TestContext.Current.CancellationToken);
 
         var controller = CreateControllerWithToken(token);
 
@@ -140,7 +141,7 @@ public class PaymentsTests
     public async Task PostPaymentsRefunds_InvalidBody_ReturnsBadRequest()
     {
         string token = Guid.NewGuid().ToString("N");
-        SessionManager.AddSession(token, new UserModel { Username = "AdminUser", Role = "ADMIN" });
+        await SessionManager.AddSession(token, _userAdminId, TestContext.Current.CancellationToken);
 
         var controller = CreateControllerWithToken(token);
 

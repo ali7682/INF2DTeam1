@@ -1,63 +1,67 @@
-﻿using Xunit;
+﻿using System.Runtime.CompilerServices;
+using Xunit;
 
 namespace NewAPITests.LogicTests
 {
     public class SessionManagerTests
     {
         [Fact]
-        public void TestAddSession()
+        public async Task TestAddSession()
         {
             // Setup
-            UserModel user = new();
+            int exampleUserId = 1;
 
-            SessionManager.AddSession("tester", user);
+            int sessionCountBefore = SessionManager.SessionCount;
+
+            await SessionManager.AddSession("tester", exampleUserId, TestContext.Current.CancellationToken);
 
             // Assert
 
-            UserModel? requestedSession = SessionManager.GetSession("tester");
+            int? requestedSession = await SessionManager.GetSession("tester", TestContext.Current.CancellationToken);
 
+            Assert.True(SessionManager.SessionCount != sessionCountBefore);
 
             Assert.NotNull(requestedSession);
             
-            Assert.True(requestedSession == user);
+            Assert.True(requestedSession == exampleUserId);
 
             // Cleanup
 
-            SessionManager.RemoveSession("tester");
+            await SessionManager.RemoveSession("tester", TestContext.Current.CancellationToken);
         }
 
         [Fact]
-        public void TestRemoveSession()
+        public async Task TestRemoveSession()
         {
             // Setup 
 
-            UserModel user = new();
-            SessionManager.AddSession("tester", user);
+            int exampleUserId = 1;
+            await SessionManager.AddSession("tester", exampleUserId, TestContext.Current.CancellationToken);
 
             // Assert
 
-            SessionManager.RemoveSession("tester");
+            await SessionManager.RemoveSession("tester", TestContext.Current.CancellationToken);
 
-            Assert.Null(SessionManager.GetSession("tester"));
+            Assert.Null(await SessionManager.GetSession("tester", TestContext.Current.CancellationToken));
         }
 
         [Fact]
-        public void TestGetSession()
+        public async Task TestGetSession()
         {
             // Setup
-            UserModel user = new();
+            int exampleUserId = 1;
 
-            SessionManager.AddSession("tester", user);
+            await SessionManager.AddSession("tester", exampleUserId, TestContext.Current.CancellationToken);
 
             // Assert
 
-            UserModel? requestedSession = SessionManager.GetSession("tester");
+            int? requestedUserId = await SessionManager.GetSession("tester", TestContext.Current.CancellationToken);
 
-            Assert.IsType<UserModel>(requestedSession);
-            Assert.True(requestedSession == user);
+            Assert.NotNull(requestedUserId);
+            Assert.True(requestedUserId == exampleUserId);
 
             // Cleanup
-            SessionManager.RemoveSession("tester");
+            await SessionManager.RemoveSession("tester", TestContext.Current.CancellationToken);
         }
     }
 }
