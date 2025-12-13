@@ -5,6 +5,13 @@ namespace NewAPITests.LogicTests
 {
     public class SessionManagerTests
     {
+        static SessionManagerTests()
+        {
+            var config = TestConfig.CreateConfig();
+
+            TestAccessBootstrap.Configure(config);
+        }
+
         [Fact]
         public async Task TestAddSession()
         {
