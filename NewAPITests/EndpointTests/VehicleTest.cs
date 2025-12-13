@@ -9,6 +9,7 @@ using NewAPI.Controllers;
 public class VehicleDeleteTests
 {
     private VehicleController _vehicleController;
+    private readonly int _userAdminId = 2;
 
     public VehicleDeleteTests()
     {
@@ -80,7 +81,7 @@ public class VehicleDeleteTests
     public async Task DeleteVehicle_ValidAdminToken_ReturnsOk()
     {
         string token = Guid.NewGuid().ToString("N");
-        SessionManager.AddSession(token, new UserModel { Username = "AdminUser", Role = "ADMIN" });
+        await SessionManager.AddSession(token, _userAdminId, TestContext.Current.CancellationToken);
         var controller = CreateControllerWithToken(token);
         var vehicle = await CreateTestVehicle(2);
 
@@ -94,7 +95,7 @@ public class VehicleDeleteTests
     public async Task DeleteVehicle_VehicleNotFound_ReturnsNotFound()
     {
         string token = Guid.NewGuid().ToString("N");
-        SessionManager.AddSession(token, new UserModel { Username = "AdminUser", Role = "ADMIN" });
+        await SessionManager.AddSession(token, _userAdminId, TestContext.Current.CancellationToken);
         var controller = CreateControllerWithToken(token);
         int nonExistentVehicleId = 999999;
 
