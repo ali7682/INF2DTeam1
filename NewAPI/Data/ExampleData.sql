@@ -17244,7 +17244,7 @@ INSERT INTO `users` (`id`, `username`, `password`, `name`, `email`, `phone`, `ro
 	(8598, 'rob1979', '$2a$12$BmJv7KpwBxxuceoaypypyOfh1PHJQUnAr8KihtHpnnV6d8YPsdkha', 'Rob van Wijk', 'rob1979@telfort.nl', '+310507102786', 'USER', '2025-11-03', '1979', 1),
 	(8599, 'fenna.adriaanse', '$2a$12$.nhwNfO7NNkygdeo.rhimOLh81FP83yvk1kpe0.KVF6bMY.MkyeWW', 'Fenna Adriaanse', 'fenna.adriaanse@ziggo.nl', '+310769682812', 'USER', '2025-06-07', '1963', 1),
 	(8600, 'lotte1994', '$2a$12$J6YuBFZFYz20TV28vt/6SOyaneeytpXZhEDUJYoVyMhsMH.dsF8mC', 'Lotte Mulder', 'lotte1994@upcmail.nl', '+310508487744', 'USER', '2025-07-03', '1994', 1),
-	(8603, 'ali1', '$2a$12$G7R5JpDh7CLTPT6YxwhWTePEQ5j7vrfDC7K61cHNyKg6XKQAE.9PW', 'Ali', 'ali@example.com', '+1234567890', 'USER', '2025-10-14', '2003', 1),
+	(8603, 'ali1', '$2a$12$G7R5JpDh7CLTPT6YxwhWTePEQ5j7vrfDC7K61cHNyKg6XKQAE.9PW', 'Ali', 'ali@example.com', '+1234567890', 'USER', '2025-10-14', '2003', 1);
 
 -- Dumping structure for table MobyPark.vehicles
 CREATE TABLE IF NOT EXISTS `vehicles` (
