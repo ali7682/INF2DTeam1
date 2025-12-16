@@ -21,6 +21,7 @@ ReservationAccess.SetConfig(builder.Configuration);
 PaymentAccess.SetConfig(builder.Configuration);
 PaymentDetailsAccess.SetConfig(builder.Configuration);
 ParkingLotAccess.SetConfig(builder.Configuration);
+DiscountAcces.SetConfig(builder.Configuration);
 
 // Configure the HTTP request pipeline.
 Console.WriteLine($"Environment: {app.Environment.EnvironmentName}");
