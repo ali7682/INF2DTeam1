@@ -136,8 +136,7 @@ public static class ParkingLotAccess
         await conn.OpenAsync(ct);
 
         const string sql = """
-            SELECT 
-                SELECT 
+            SELECT
                 id              AS ID,
                 name            AS Name,
                 location        AS Location,

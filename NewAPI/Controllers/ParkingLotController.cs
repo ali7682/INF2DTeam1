@@ -99,7 +99,7 @@ namespace NewAPI.Controllers
         }
 
         // GET /parking-lots/capacity
-        [HttpGet("/occupancy")]
+        [HttpGet("occupancy")]
         public async Task<IActionResult> GetParkingOccupancy(CancellationToken ct)
         {
             string token = HttpContext.Request.Headers.Authorization.ToString();
@@ -126,7 +126,7 @@ namespace NewAPI.Controllers
         }
 
         // GET /parking-lots/profit/{lid}
-        [HttpGet("/profit/{lid}")]
+        [HttpGet("profit/{lid}")]
         public async Task<IActionResult> GetProfitPerParkingLot(int lid, CancellationToken ct)
         {
             string token = HttpContext.Request.Headers.Authorization.ToString();
@@ -142,7 +142,7 @@ namespace NewAPI.Controllers
                 return StatusCode(403, new { message = "Acces denied" });
             }
 
-            ParkingLotModel? parkingLot = ParkingLotAccess.GetProfitParkingLots(lid, ct);
+            ParkingLotModel? parkingLot = await ParkingLotAccess.GetProfitParkingLots(lid, ct);
 
             if (parkingLot is null)
             {
