@@ -17244,6 +17244,21 @@ INSERT INTO `users` (`id`, `username`, `password`, `name`, `email`, `phone`, `ro
 	(8598, 'rob1979', '$2a$12$BmJv7KpwBxxuceoaypypyOfh1PHJQUnAr8KihtHpnnV6d8YPsdkha', 'Rob van Wijk', 'rob1979@telfort.nl', '+310507102786', 'USER', '2025-11-03', '1979', 1),
 	(8599, 'fenna.adriaanse', '$2a$12$.nhwNfO7NNkygdeo.rhimOLh81FP83yvk1kpe0.KVF6bMY.MkyeWW', 'Fenna Adriaanse', 'fenna.adriaanse@ziggo.nl', '+310769682812', 'USER', '2025-06-07', '1963', 1),
 	(8600, 'lotte1994', '$2a$12$J6YuBFZFYz20TV28vt/6SOyaneeytpXZhEDUJYoVyMhsMH.dsF8mC', 'Lotte Mulder', 'lotte1994@upcmail.nl', '+310508487744', 'USER', '2025-07-03', '1994', 1),
+	(8603, 'ali1', '$2a$12$G7R5JpDh7CLTPT6YxwhWTePEQ5j7vrfDC7K61cHNyKg6XKQAE.9PW', 'Ali', 'ali@example.com', '+1234567890', 'USER', '2025-10-14', '2003', 1),
+	(8604, 'ali2', '$2a$12$Ye/SrVZa5dMG51rxLiG7T.GM2jf3imgkwbPQvc0Pcavy2RiRjpOE2', 'Ali', 'ali2@example.com', '+1234567890', 'ADMIN', '2025-10-14', '2003', 1),
+	(9010, 'reg_5399', '$2a$12$Jepoyo6lUf5Rm6IAkNswQOpBUOEJZLeZehQ2irUpat97KWVqOveDi', 'Joris Cicenas', 'pene@deltoro.com', '+37061288742', 'USER', '2025-12-13', '2009', 1),
+	(9011, 'JohnDeere12', '$2a$12$reNltu3Fq5LZYEjMKxHR0u09BT6dDfut1t/BXIIG4MSmPO1jpt3em', 'John Deere', 'john.deere@davidihh.pl', '+480798623268', 'USER', '2025-12-13', '1942', 1),
+	(9012, 'tristenen_8119', '$2a$12$X5Pb/SmJN3/yJiI9T2bgKumrFSqtem5hbjRHTvV35e5j2bICK7x0m', 'Tristenen Galaretka', 'tristenen@poort6.nl', '+310612345678', 'USER', '2025-12-13', '2020', 1),
+	(9013, 'nieuwenaaaaamje', '$2a$12$JbIU79MXwjI3esGY79lnT.PploLE0D3RXZcqItU3YOZQUab9P44Ui', 'Tristenen Galaretka', 'tristenen@poort6.nl', '+310612345678', 'USER', '2025-12-13', '2020', 1),
+	(9014, 'tristenen_9971', '$2a$12$qOWWEFso2MpHVhlHO.B69Ora511Kc8rQaVKhIkqJuX3g5Qa8tcXBK', 'Tristenen Galaretka', 'tristenen@poort6.nl', '+310612345678', 'USER', '2025-12-13', '2020', 1),
+	(9015, 'tristenen_4125', '$2a$12$b39xi4FAHvkIw98a1cRJ1O39Qc4gj8wnImAc8EFhf0Ymv5VjaxrWm', 'Tristenen Galaretka', 'tristenen@poort6.nl', '+310612345678', 'USER', '2025-12-13', '2020', 1),
+	(9016, 'tristenen_5407', '$2a$12$OCVmUh2D.LT24WJWI0H2GukLRN53w1GIaZB48kaEqAtVR4seZdZ2m', 'Tristenen Galaretka', 'tristenen@poort6.nl', '+310612345678', 'USER', '2025-12-13', '2020', 1),
+	(9017, 'reg_9701', '$2a$12$T8fHjJNtExGo6vuTl0442.wCuur6HsfzsQ3loTrjpdC8zsMmq3PcK', 'Joris Cicenas', 'pene@deltoro.com', '+37061288742', 'USER', '2025-12-13', '2009', 1),
+	(9019, 'tristenen_9388', '$2a$12$pfCwgZ25ncgpWPtyO6Kpqu.DXBzQGErPM8p05xVf1715bjS6sDhFC', 'Tristenen Galaretka', 'tristenen@poort6.nl', '+310612345678', 'USER', '2025-12-13', '2020', 1),
+	(9020, 'tristenen_674', '$2a$12$oTPQyHvCCL/pr9EZQTz/AedQe2GhnYeodACqn.avtAq4xxqn6djG.', 'Tristenen Galaretka', 'tristenen@poort6.nl', '+310612345678', 'USER', '2025-12-13', '2020', 1),
+	(9021, 'tristenen_2076', '$2a$12$fRD6Dvd9sJemmByWTiFqmey2JOjVION8HygAIvXcWnmi2KqL9/nGa', 'Tristenen Galaretka', 'tristenen@poort6.nl', '+310612345678', 'USER', '2025-12-13', '2020', 1),
+	(9022, 'tristenen_7010', '$2a$12$KWHRMgENoxbaKsh0kj2QLOyN65wGLfiR6iUA4etaM6lySN6/UBjD6', 'Tristenen Galaretka', 'tristenen@poort6.nl', '+310612345678', 'USER', '2025-12-13', '2020', 1),
+	(9023, 'tristenen_4727', '$2a$12$UBxyYgA4Z2888FzMtwIUVu6DyGZpXkKz1MnhxthdzkK/9huf2qGUO', 'Tristenen Galaretka', 'tristenen@poort6.nl', '+310612345678', 'USER', '2025-12-13', '2020', 1);
 
 -- Dumping structure for table MobyPark.vehicles
 CREATE TABLE IF NOT EXISTS `vehicles` (
