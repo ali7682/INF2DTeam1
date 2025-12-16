@@ -25,8 +25,16 @@ public static class UserAccess
         FROM users
     """;
 
+    private static bool IsValueHashed(string value)
+    {
+        return value.StartsWith("$2a$") || value.StartsWith("$2b$") || value.StartsWith("$2y$");
+    }
+
     public static async Task<int> CreateUserAsync(UserModel user, CancellationToken ct = default)
     {
+        if (!IsValueHashed(user.Password))
+            user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password, workFactor: 12);
+
         const string query = """
             INSERT INTO users
                 (username, password, name, email, phone, role, created_at, birth_year, active)
