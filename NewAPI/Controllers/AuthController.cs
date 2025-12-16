@@ -70,7 +70,7 @@ namespace NewAPI.Controllers
             UserModel newUser = new()
             {
                 Username = body.Username,
-                Password = BCrypt.Net.BCrypt.HashPassword(body.Password, workFactor: 12),
+                Password = body.Password,
                 Name = body.Name,
                 Email = body.Email,
                 Phone = body.Phone,
