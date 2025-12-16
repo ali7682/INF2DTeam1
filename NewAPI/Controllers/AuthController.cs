@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System.Text.Json.Nodes;
 
 public class LoginRequest
 {
@@ -50,7 +49,7 @@ namespace NewAPI.Controllers
 
             UserModel? user = await UserAccess.GetUserByUsernameAsync(body.Username, ct);
 
-            if (user is null || body.Password != user.Password)
+            if (user is null || !BCrypt.Net.BCrypt.Verify(body.Password, user.Password))
                 return Unauthorized(new { message = "Unauthorized: Invalid credentials" });
 
             string sessionToken = Guid.NewGuid().ToString("N");
@@ -71,7 +70,7 @@ namespace NewAPI.Controllers
             UserModel newUser = new()
             {
                 Username = body.Username,
-                Password = body.Password,
+                Password = BCrypt.Net.BCrypt.HashPassword(body.Password, workFactor: 12),
                 Name = body.Name,
                 Email = body.Email,
                 Phone = body.Phone,
