@@ -103,7 +103,7 @@ namespace NewAPI.Controllers
         public async Task<IActionResult> GetParkingOccupancy(CancellationToken ct)
         {
             string token = HttpContext.Request.Headers.Authorization.ToString();
-            UserModel? sessnionUser = await SessionManager.GetSession(token);
+            UserModel? sessnionUser = await SessionManager.GetUserFromSession(token, ct);
 
             if (string.IsNullOrEmpty(token) || sessnionUser == null)
             {
@@ -130,7 +130,7 @@ namespace NewAPI.Controllers
         public async Task<IActionResult> GetProfitPerParkingLot(int lid, CancellationToken ct)
         {
             string token = HttpContext.Request.Headers.Authorization.ToString();
-            UserModel? sessionUser = await SessionManager.GetSession(token);
+            UserModel? sessionUser = await SessionManager.GetUserFromSession(token, ct);
 
             if (string.IsNullOrEmpty(token) || sessionUser == null)
             {
