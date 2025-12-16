@@ -1,0 +1,28 @@
+@startuml Sequence diagram - Start parking session
+
+title Sequence diagram - Start parking session
+
+actor Client
+
+participant "ParkingLotController" as Controller
+participant "SessionManager" as SessionManager
+participant "ParkingLotAccess" as Access
+database "MySQL Database" as DB
+
+Client -> Controller: POST /parking-lots/{lid}/sessions/start (licenseplate, session token)
+
+Controller -> SessionManager: GetUserFromSession(token)
+SessionManager -> DB: Validate session token
+DB --> SessionManager: User data
+SessionManager --> Controller: UserModel
+
+Controller -> Controller: Create ParkingSessionModel
+
+Controller -> Access: CreateParkingsessionAsync(session)
+Access -> DB: INSERT parking session
+DB --> Access: New session ID
+Access --> Controller: session ID
+
+Controller --> Client: 200 OK "Parking session started"
+
+@enduml

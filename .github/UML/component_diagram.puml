@@ -1,0 +1,71 @@
+@startuml Component diagram - MobyPark API
+
+title Component diagram - MobyPark API
+
+package "Client" {
+    [API Consumer]
+}
+
+package "API Layer" {
+    [API Controllers]
+}
+
+package "Logic & Middleware" {
+    [SessionManager]
+    [SessionCalculator]
+    [AccessLogs]
+    [TraceLogs]
+    [DbWarmupService]
+}
+
+package "Domain Model" {
+    [Models]
+}
+
+package "Data Access Layer" {
+    [ParkingLotAccess]
+    [PaymentAccess]
+    [PaymentDetailsAccess]
+    [ReservationAccess]
+    [UserAccess]
+    [VehicleAccess]
+}
+
+database "MySQL database" as ProdDB {
+    note right: Used for development and production
+}
+
+database "Test MySQL database" as TestDB {
+    note right: Test data in exampledata.sql - Used in CI testing only
+}
+
+package "CI/CD & Tooling" {
+    [GitHub Actions]
+    [Dependabot]
+}
+
+package "Automated Tests" {
+    [Controller Tests]
+    [Logic Tests]
+}
+
+[API Consumer] --> [API Controllers]
+
+[API Controllers] --> [Logic & Middleware]
+[API Controllers] --> [Data Access Layer]
+[API Controllers] --> [Domain Model]
+
+[Logic & Middleware] --> [Data Access Layer]
+[Logic & Middleware] --> [Domain Model]
+
+[Data Access Layer] --> ProdDB
+[Automated Tests] --> TestDB
+
+[GitHub Actions] --> [Automated Tests]
+[GitHub Actions] --> [API Controllers]
+[GitHub Actions] --> TestDB
+[GitHub Actions] --> ProdDB
+
+[Dependabot] --> [API Controllers]
+
+@enduml
