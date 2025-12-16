@@ -9,4 +9,5 @@ public class ParkingLotModel
     public double? Tariff { get; set; }
     public double? DayTariff { get; set; }
     public DateTime? CreatedAt { get; set; }
+    public double? TotalProfit { get; set; }
 }
