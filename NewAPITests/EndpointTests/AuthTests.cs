@@ -11,6 +11,7 @@ namespace NewAPITests.ControllerTests
     {
         private readonly CancellationToken ct = CancellationToken.None;
         private readonly AuthController controller;
+        private readonly string _examplePassword = "6b37d1ec969838d29cb611deaff50a6b";
 
         public AuthTests()
         {
@@ -25,7 +26,7 @@ namespace NewAPITests.ControllerTests
             var rndUser = new UserModel
             {
                 Username = username ?? ("tristenen_" + new Random().Next(9999)),
-                Password = "6b37d1ec969838d29cb611deaff50a6b",
+                Password = _examplePassword,
                 Name = "Tristenen Galaretka",
                 Email = "tristenen@poort6.nl",
                 Phone = "+310612345678",
@@ -54,7 +55,7 @@ namespace NewAPITests.ControllerTests
         public async Task Login_ReturnsOk_WithToken()
         {
             var user = await CreateTestUser();
-            var body = new LoginRequest { Username = user.Username, Password = user.Password };
+            var body = new LoginRequest { Username = user.Username, Password = _examplePassword };
 
             var result = await controller.Login(body, ct) as ObjectResult;
 
@@ -118,7 +119,7 @@ namespace NewAPITests.ControllerTests
             var newUser = new UserModel
             {
                 Username = "reg_" + new Random().Next(9999),
-                Password = "6b37d1ec969838d29cb611deaff50a6b",
+                Password = _examplePassword,
                 Name = "Joris Cicenas",
                 Email = "pene@deltoro.com",
                 Phone = "+37061288742",
@@ -131,7 +132,7 @@ namespace NewAPITests.ControllerTests
             Assert.NotNull(reg);
             Assert.Equal(200, reg!.StatusCode);
 
-            var login = await controller.Login(new LoginRequest { Username = newUser.Username, Password = newUser.Password }, ct) as ObjectResult;
+            var login = await controller.Login(new LoginRequest { Username = newUser.Username, Password = _examplePassword }, ct) as ObjectResult;
             Assert.NotNull(login);
             Assert.Equal(200, login!.StatusCode);
         }
@@ -203,7 +204,7 @@ namespace NewAPITests.ControllerTests
         public async Task Profile_Get_WithValidToken_Ok()
         {
             var user = await CreateTestUser();
-            var loginAction = await controller.Login(new LoginRequest { Username = user.Username, Password = user.Password }, ct);
+            var loginAction = await controller.Login(new LoginRequest { Username = user.Username, Password = _examplePassword }, ct);
             var login = loginAction as ObjectResult;
             var payload = Assert.IsType<LoginResponse>(login!.Value);
 
@@ -253,7 +254,7 @@ namespace NewAPITests.ControllerTests
         public async Task Profile_Put_WithValidToken_ChangesUsername_Ok()
         {
             var user = await CreateTestUser();
-            var loginAction = await controller.Login(new LoginRequest { Username = user.Username, Password = user.Password }, ct);
+            var loginAction = await controller.Login(new LoginRequest { Username = user.Username, Password = _examplePassword }, ct);
             var login = loginAction as ObjectResult;
             var payload = Assert.IsType<LoginResponse>(login!.Value);
 
@@ -309,7 +310,7 @@ namespace NewAPITests.ControllerTests
         public async Task Logout_WithValidToken_Ok_ThenProfile401()
         {
             var user = await CreateTestUser();
-            var loginAction = await controller.Login(new LoginRequest { Username = user.Username, Password = user.Password }, ct);
+            var loginAction = await controller.Login(new LoginRequest { Username = user.Username, Password = _examplePassword }, ct);
             var login = loginAction as ObjectResult;
             var payload = Assert.IsType<LoginResponse>(login!.Value);
 
