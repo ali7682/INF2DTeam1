@@ -98,7 +98,7 @@ namespace NewAPI.Controllers
             return Ok(session);
         }
 
-        // GET /parking-lots/capacity
+        // GET /parking-lots/occupancy
         [HttpGet("occupancy")]
         public async Task<IActionResult> GetParkingOccupancy(CancellationToken ct)
         {
@@ -115,11 +115,11 @@ namespace NewAPI.Controllers
                 return StatusCode(403, new { message = "Acces denied" });
             }
 
-            ParkingLotModel? parkingLot = await ParkingLotAccess.GetOccupancyParkingLots(ct);
+            List<ParkingLotModel?> parkingLot = await ParkingLotAccess.GetOccupancyParkingLots(ct);
 
-            if (parkingLot is null)
+            if (!parkingLot.Any())
             {
-                return NotFound(new { message = "NotFound: Parking lots do not exist" });
+                return NotFound(new { message = "NotFound: Occupied parking lots do not exist" });
             }
 
             return Ok(parkingLot);

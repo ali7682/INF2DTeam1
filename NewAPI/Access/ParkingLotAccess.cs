@@ -130,7 +130,7 @@ public static class ParkingLotAccess
 
     // GET gereserveerde parking lots
     // Endpoint: /parking-lots/occupancy
-    public static async Task<ParkingLotModel?> GetOccupancyParkingLots(CancellationToken ct)
+    public static async Task<List<ParkingLotModel?>> GetOccupancyParkingLots(CancellationToken ct)
     {
         await using MySqlConnection conn = new(Cs);
         await conn.OpenAsync(ct);
@@ -150,7 +150,8 @@ public static class ParkingLotAccess
             WHERE reserved > 0;
         """;
 
-        return await conn.QueryFirstOrDefaultAsync<ParkingLotModel?>(sql);
+        var result = await conn.QueryAsync<ParkingLotModel?>(sql);
+        return result.AsList();
     }
 
     // GET tariff en daytariff om profit te berekenen van een parking-lot
