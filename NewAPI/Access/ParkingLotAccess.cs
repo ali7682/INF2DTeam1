@@ -128,6 +128,53 @@ public static class ParkingLotAccess
         return session;
     }
 
+    // GET gereserveerde parking lots
+    // Endpoint: /parking-lots/occupancy
+    public static async Task<List<ParkingLotModel?>> GetOccupancyParkingLots(CancellationToken ct)
+    {
+        await using MySqlConnection conn = new(Cs);
+        await conn.OpenAsync(ct);
+
+        const string sql = """
+            SELECT
+                id              AS ID,
+                name            AS Name,
+                location        AS Location,
+                address         AS Address,
+                capacity        AS Capacity,
+                reserved        AS Reserved,
+                tariff          AS Tariff,
+                daytariff       AS DayTariff,
+                created_at      AS CreatedAt
+            FROM parking_lots
+            WHERE reserved > 0;
+        """;
+
+        var result = await conn.QueryAsync<ParkingLotModel?>(sql);
+        return result.AsList();
+    }
+
+    // GET tariff en daytariff om profit te berekenen van een parking-lot
+    // Endpoint: /parking-lots/profit/{lid}
+    public static async Task<ParkingLotModel?> GetProfitParkingLots(int parkingLotId, CancellationToken ct)
+    {
+        await using MySqlConnection conn = new(Cs);
+        await conn.OpenAsync(ct);
+
+        const string sql = """
+                SELECT 
+                id              AS ID,
+                name            AS Name,
+                tariff          AS Tariff,
+                daytariff       AS DayTariff,
+                (COALESCE(tariff, 0) + COALESCE(daytariff, 0)) AS TotalProfit
+            FROM parking_lots
+            WHERE id = @parkingLotId;
+        """;
+
+        return await conn.QueryFirstOrDefaultAsync<ParkingLotModel?>(sql, new { parkingLotId });
+    }
+
     // DELETE een parking lot met bijbehorende parking sessions met parking lot ID
     // Endpoint: /parking-lots/{lid}
     public static async Task<bool> DeleteParkingLotByIdAsync(int parkingLotId, CancellationToken ct = default)
