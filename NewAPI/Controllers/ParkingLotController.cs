@@ -98,6 +98,61 @@ namespace NewAPI.Controllers
             return Ok(session);
         }
 
+        // GET /parking-lots/occupancy
+        [HttpGet("occupancy")]
+        public async Task<IActionResult> GetParkingOccupancy(CancellationToken ct)
+        {
+            string token = HttpContext.Request.Headers.Authorization.ToString();
+            UserModel? sessnionUser = await SessionManager.GetUserFromSession(token, ct);
+
+            if (string.IsNullOrEmpty(token) || sessnionUser == null)
+            {
+                return Unauthorized(new { message = "Unauthorized: Invalid or missing session token" });
+            }
+
+            if (sessnionUser.Role != "ADMIN")
+            {
+                return StatusCode(403, new { message = "Acces denied" });
+            }
+
+            List<ParkingLotModel?> parkingLot = await ParkingLotAccess.GetOccupancyParkingLots(ct);
+
+            if (!parkingLot.Any())
+            {
+                return NotFound(new { message = "NotFound: Occupied parking lots do not exist" });
+            }
+
+            return Ok(parkingLot);
+        }
+
+        // GET /parking-lots/profit/{lid}
+        [HttpGet("profit/{lid}")]
+        public async Task<IActionResult> GetProfitPerParkingLot(int lid, CancellationToken ct)
+        {
+            string token = HttpContext.Request.Headers.Authorization.ToString();
+            UserModel? sessionUser = await SessionManager.GetUserFromSession(token, ct);
+
+            if (string.IsNullOrEmpty(token) || sessionUser == null)
+            {
+                return Unauthorized(new { message = "Unauthorized: Invalid or missing session token" });
+            }
+
+            if (sessionUser.Role != "ADMIN")
+            {
+                return StatusCode(403, new { message = "Acces denied" });
+            }
+
+            ParkingLotModel? parkingLot = await ParkingLotAccess.GetProfitParkingLots(lid, ct);
+
+            if (parkingLot is null)
+            {
+                return NotFound(new { message = "NotFound: Parking lot does not exist" });
+            }
+
+            return Ok(parkingLot);
+        }
+
+
         // DELETE /parking-lots/{lid}
         [HttpDelete("{lid:int}")]
         public async Task<IActionResult> DeleteParkingLot(int lid, CancellationToken ct)
