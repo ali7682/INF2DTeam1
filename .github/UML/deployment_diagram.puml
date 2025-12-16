@@ -1,0 +1,35 @@
+@startuml Deployment diagram - MobyPark API
+
+title Deployment diagram - MobyPark API
+
+node "Client Device" {
+    [API Consumer]
+}
+
+node "Production Environment" {
+    node "Ubuntu Server" as UbuntuServer {
+        [MobyPark API (.NET 8)]
+        [systemd service (newapi.service)]
+    }
+
+    database "MySQL database" as ProdDB
+}
+
+node "CI Environment (GitHub Actions)" {
+    node "Ubuntu Runner" {
+        [.NET SDK 8]
+        [Automated Tests]
+    }
+
+    node "Docker Container" {
+        database "Test MySQL database" as TestDB
+    }
+}
+
+[API Consumer] --> [MobyPark API (.NET 8)]
+[MobyPark API (.NET 8)] --> ProdDB
+[Automated Tests] --> TestDB
+
+[CI Environment (GitHub Actions)] --> [UbuntuServer] : Deploy via SSH (SCP + systemctl restart) (maar werkt nog niet, firewall blokkeert toegang tot SSH)
+
+@enduml
