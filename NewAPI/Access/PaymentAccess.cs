@@ -11,24 +11,25 @@ public static class PaymentAccess
     private static string Cs => _config.GetConnectionString("DefaultConnection")!;
 
     private const string SqlSelectBase = """
-        SELECT
-            transaction_id     AS TransactionId,
-            transaction        AS Transaction,
-            amount             AS Amount,
-            initiator          AS Initiator,
-            created_at         AS Created_at,
-            completed          AS Completed,
-            hash               AS Hash
-        FROM payments
+    SELECT
+        transaction_id     AS TransactionId,
+        transaction        AS Transaction,
+        amount             AS Amount,
+        initiator          AS Initiator,
+        created_at         AS Created_at,
+        completed          AS Completed,
+        hash               AS Hash,
+        discount_code_id   AS DiscountCodeId
+    FROM payments
     """;
 
     public static async Task<int> CreatePaymentAsync(PaymentModel payment, CancellationToken ct = default)
     {
         const string query = """
         INSERT INTO payments
-            (amount, transaction, initiator, created_at, completed, hash)
+            (amount, transaction, initiator, created_at, completed, hash, discount_code_id)
         VALUES
-            (@Amount, @Transaction, @Initiator, @Created_at, @Completed, @Hash);
+            (@Amount, @Transaction, @Initiator, @Created_at, @Completed, @Hash, @DiscountCodeId);
         SELECT LAST_INSERT_ID();
         """;
 
@@ -60,15 +61,16 @@ public static class PaymentAccess
 
         const string sql = """
         SELECT 
-                transaction_id           AS TransactionId,
-                amount     AS Amount,
-                initiator     AS Initiator,
-                created_at         AS Created_at,
-                completed        AS Completed,
-                hash        AS Hash
-            FROM payments
-            WHERE transaction_id = @transaction_Id
-            LIMIT 1;
+            transaction_id           AS TransactionId,
+            amount                   AS Amount,
+            initiator                AS Initiator,
+            created_at               AS Created_at,
+            completed                AS Completed,
+            hash                     AS Hash,
+            discount_code_id         AS DiscountCodeId
+        FROM payments
+        WHERE transaction_id = @transaction_Id
+        LIMIT 1;
         """;
 
         return conn.Query<PaymentModel>(sql, new { transaction_Id }).First();
@@ -82,15 +84,16 @@ public static class PaymentAccess
 
         const string sql = """
         SELECT 
-                transaction_id           AS TransactionId,
-                amount     AS Amount,
-                initiator     AS Initiator,
-                created_at         AS Created_at,
-                completed        AS Completed,
-                hash        AS Hash
-            FROM payments
-            WHERE initiator = @initiator
-            LIMIT 1;
+            transaction_id           AS TransactionId,
+            amount                   AS Amount,
+            initiator                AS Initiator,
+            created_at               AS Created_at,
+            completed                AS Completed,
+            hash                     AS Hash,
+            discount_code_id         AS DiscountCodeId
+        FROM payments
+        WHERE transaction_id = @transaction_Id
+        LIMIT 1;
         """;
 
         return conn.Query<PaymentModel>(sql, new { initiator }).First();
@@ -101,12 +104,12 @@ public static class PaymentAccess
         const string sql = """
             UPDATE payments
             SET
-                transaction_id   = @TransactionId,
-                amount   = @Amount,
-                initiator       = @Initiator,
-                created_at      = @Created_at,
-                completed      = @Completed,
-                hash       = @Hash
+                amount           = @Amount,
+                initiator        = @Initiator,
+                created_at       = @Created_at,
+                completed        = @Completed,
+                hash             = @Hash,
+                discount_code_id = @DiscountCodeId
             WHERE transaction_id = @TransactionId;
         """;
 
@@ -120,7 +123,8 @@ public static class PaymentAccess
             payment.Initiator,
             payment.Created_at,
             payment.Completed,
-            payment.Hash
+            payment.Hash,
+            payment.DiscountCodeId
         }, cancellationToken: ct, commandTimeout: 5);
 
         var rows = await conn.ExecuteAsync(cmd);
