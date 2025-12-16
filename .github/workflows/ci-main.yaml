@@ -39,7 +39,7 @@ jobs:
       - name: Generate version
         run: |
           MINOR=$((GITHUB_RUN_NUMBER % 100))
-          VERSION="1.${MINOR}.${GITHUB_RUN_NUMBER}"
+          VERSION="1.${GITHUB_RUN_NUMBER}"
           FILE="MobyPark_API_version_${VERSION}.zip"
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "PACKAGE_NAME=$FILE" >> $GITHUB_ENV
