@@ -4,9 +4,21 @@ using Microsoft.Extensions.Configuration;
 using Xunit;
 using System;
 using System.IO;
+using NewAPI.Controllers;
 
 public class VehicleDeleteTests
 {
+    private VehicleController _vehicleController;
+    private readonly int _userAdminId = 2;
+
+    public VehicleDeleteTests()
+    {
+        var config = TestConfig.CreateConfig();
+        _vehicleController = new VehicleController(config);
+
+        TestAccessBootstrap.Configure(config);
+    }
+
     // Helper to create a test vehicle in the DB
     private async Task<VehicleModel> CreateTestVehicle(int userId)
     {
@@ -36,13 +48,9 @@ public class VehicleDeleteTests
         };
     }
 
-    // Create controller using appsettings.json like ParkingLotController
     private VehicleController CreateControllerWithToken(string token)
     {
-        var config = new ConfigurationBuilder()
-            .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), @"..\..\..\..", "NewAPI")) // adjust path to your API project
-            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-            .Build();
+        var config = TestConfig.CreateConfig();
 
         var controller = new VehicleController(config)
         {
@@ -53,6 +61,7 @@ public class VehicleDeleteTests
         };
 
         controller.HttpContext.Request.Headers["Authorization"] = token;
+
         return controller;
     }
 
@@ -72,7 +81,7 @@ public class VehicleDeleteTests
     public async Task DeleteVehicle_ValidAdminToken_ReturnsOk()
     {
         string token = Guid.NewGuid().ToString("N");
-        SessionManager.AddSession(token, new UserModel { Username = "AdminUser", Role = "ADMIN" });
+        await SessionManager.AddSession(token, _userAdminId, TestContext.Current.CancellationToken);
         var controller = CreateControllerWithToken(token);
         var vehicle = await CreateTestVehicle(2);
 
@@ -86,7 +95,7 @@ public class VehicleDeleteTests
     public async Task DeleteVehicle_VehicleNotFound_ReturnsNotFound()
     {
         string token = Guid.NewGuid().ToString("N");
-        SessionManager.AddSession(token, new UserModel { Username = "AdminUser", Role = "ADMIN" });
+        await SessionManager.AddSession(token, _userAdminId, TestContext.Current.CancellationToken);
         var controller = CreateControllerWithToken(token);
         int nonExistentVehicleId = 999999;
 

@@ -37,7 +37,7 @@ public class AccessLogs
         string endpoint = context.Request.Path.Value.ToLower() ?? "/";
         string timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss");
 
-        UserModel? user = SessionManager.GetSession(sessionToken);
+        UserModel? user = await SessionManager.GetUserFromSession(sessionToken);
 
         int userId = user != null ? user.Id : 0;
         string? userRole = user != null ? user.Role : "none";

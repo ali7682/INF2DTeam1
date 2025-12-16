@@ -56,7 +56,7 @@ namespace NewAPI.Controllers
         public async Task<IActionResult> GetParkingSessions(int lid, CancellationToken ct)
         {
             string token = HttpContext.Request.Headers.Authorization.ToString();
-            UserModel? sessionUser = SessionManager.GetSession(token);
+            UserModel? sessionUser = await SessionManager.GetUserFromSession(token, ct);
 
             if (string.IsNullOrEmpty(token) || sessionUser == null)
                 return Unauthorized(new { message = "Unauthorized: Invalid or missing session token" });
@@ -82,7 +82,7 @@ namespace NewAPI.Controllers
         public async Task<IActionResult> GetParkingSession(int lid, int sid, CancellationToken ct)
         {
             string token = HttpContext.Request.Headers.Authorization.ToString();
-            UserModel? sessionUser = SessionManager.GetSession(token);
+            UserModel? sessionUser = await SessionManager.GetUserFromSession(token, ct);
 
             if (string.IsNullOrEmpty(token) || sessionUser == null)
                 return Unauthorized(new { message = "Unauthorized: Invalid or missing session token" });
@@ -158,7 +158,7 @@ namespace NewAPI.Controllers
         public async Task<IActionResult> DeleteParkingLot(int lid, CancellationToken ct)
         {
             string token = HttpContext.Request.Headers.Authorization.ToString();
-            UserModel? sessionUser = SessionManager.GetSession(token);
+            UserModel? sessionUser = await SessionManager.GetUserFromSession(token, ct);
 
             if (string.IsNullOrEmpty(token) || sessionUser == null)
                 return Unauthorized(new { message = "Unauthorized: Invalid or missing session token" });
@@ -179,7 +179,7 @@ namespace NewAPI.Controllers
         public async Task<IActionResult> DeleteParkingSession(int lid, int sid, CancellationToken ct)
         {
             string token = HttpContext.Request.Headers["Authorization"].ToString();
-            UserModel? sessionUser = SessionManager.GetSession(token);
+            UserModel? sessionUser = await SessionManager.GetUserFromSession(token, ct);
 
             if (string.IsNullOrEmpty(token) || sessionUser == null)
                 return Unauthorized(new { message = "Unauthorized: Invalid or missing session token" });
@@ -200,7 +200,7 @@ namespace NewAPI.Controllers
         public async Task<IActionResult> PostParkinglot([FromBody] ParkinglotRequest body, CancellationToken ct)
         {
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
-            UserModel? user = SessionManager.GetSession(sessionToken);
+            UserModel? user = await SessionManager.GetUserFromSession(sessionToken);
 
             if (sessionToken == null || user == null)
                 return Unauthorized("Unauthorized: Invalid or missing session token");
@@ -233,7 +233,7 @@ namespace NewAPI.Controllers
         public async Task<IActionResult> PostParkinglotStart([FromBody] LicenseplateRequest body, CancellationToken ct, int lid)
         {
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
-            UserModel? user = SessionManager.GetSession(sessionToken);
+            UserModel? user = await SessionManager.GetUserFromSession(sessionToken);
 
             if (sessionToken == null || user == null)
                 return Unauthorized("Unauthorized: Invalid or missing session token");
@@ -266,7 +266,7 @@ namespace NewAPI.Controllers
         public async Task<IActionResult> PostParkinglotStop([FromBody] LicenseplateRequest body, CancellationToken ct, int lid)
         {
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
-            UserModel? user = SessionManager.GetSession(sessionToken);
+            UserModel? user = await SessionManager.GetUserFromSession(sessionToken);
 
             if (sessionToken == null || user == null)
                 return Unauthorized("Unauthorized: Invalid or missing session token");
@@ -299,7 +299,7 @@ namespace NewAPI.Controllers
             }
 
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
-            UserModel? user = SessionManager.GetSession(sessionToken);
+            UserModel? user = await SessionManager.GetUserFromSession(sessionToken);
 
             if (user == null || sessionToken == null)
             {
