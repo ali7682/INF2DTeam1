@@ -28,7 +28,7 @@ namespace NewAPI.Controllers
         public async Task<IActionResult> PostPayments([FromBody] PaymentRequest body, CancellationToken ct)
         {
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
-            UserModel? user = SessionManager.GetSession(sessionToken);
+            UserModel? user = await SessionManager.GetUserFromSession(sessionToken);
 
             if (sessionToken == null || user == null)
             {
@@ -59,7 +59,7 @@ namespace NewAPI.Controllers
         {
 
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
-            UserModel? user = SessionManager.GetSession(sessionToken);
+            UserModel? user = await SessionManager.GetUserFromSession(sessionToken);
 
             if (sessionToken == null || user == null)
             {
@@ -103,7 +103,7 @@ namespace NewAPI.Controllers
         public async Task<IActionResult> GetPayments(CancellationToken ct)
         {
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
-            UserModel? user = SessionManager.GetSession(sessionToken);
+            UserModel? user = await SessionManager.GetUserFromSession(sessionToken);
 
             if (sessionToken == null || user == null)
             {
@@ -125,7 +125,7 @@ namespace NewAPI.Controllers
         public async Task<IActionResult> GetPaymentsByUserName(string userName, CancellationToken ct)
         {
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
-            UserModel? user = SessionManager.GetSession(sessionToken);
+            UserModel? user = await SessionManager.GetUserFromSession(sessionToken);
 
             if (sessionToken == null || user == null)
             {

@@ -15,8 +15,8 @@ jobs:
       - name: Download API build artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ env.PACKAGE_NAME }}
-          path: api.zip
+          name: api-publish
+          path: .
 
       # Upload build to ubuntu server using SSH
       - name: Copy build to server

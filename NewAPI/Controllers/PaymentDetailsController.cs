@@ -19,7 +19,7 @@ namespace NewAPI.Controllers
         public async Task<IActionResult> GetBilling(CancellationToken ct)
         {
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
-            UserModel? user = SessionManager.GetSession(sessionToken);
+            UserModel? user = await SessionManager.GetUserFromSession(sessionToken);
 
             if (sessionToken == null || user == null)
             {
@@ -43,7 +43,7 @@ namespace NewAPI.Controllers
         public async Task<IActionResult> GetBillingByUser(string userName, CancellationToken ct)
         {
             string? sessionToken = HttpContext.Request.Headers["Authorization"].ToString();
-            UserModel? user = SessionManager.GetSession(sessionToken);
+            UserModel? user = await SessionManager.GetUserFromSession(sessionToken, ct);
 
             if (sessionToken == null || user == null)
             {

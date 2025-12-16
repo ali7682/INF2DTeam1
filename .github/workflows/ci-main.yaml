@@ -4,6 +4,9 @@ on:
   push:
     branches: [ main ]
 
+permissions:
+  contents: write
+
 jobs:
   build-release:
     runs-on: ubuntu-latest
@@ -30,6 +33,7 @@ jobs:
         run: |
           dotnet publish NewAPI/NewAPI.csproj \
             --configuration Release \
+            --no-build \
             --output ./artifacts/publish
 
       - name: Generate version
@@ -37,6 +41,7 @@ jobs:
           MINOR=$((GITHUB_RUN_NUMBER % 100))
           VERSION="1.${MINOR}.${GITHUB_RUN_NUMBER}"
           FILE="MobyPark_API_version_${VERSION}.zip"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "PACKAGE_NAME=$FILE" >> $GITHUB_ENV
 
       - name: Create zip
@@ -44,8 +49,9 @@ jobs:
           cd artifacts/publish
           zip -r "../${PACKAGE_NAME}" .
 
-      - name: Upload release
-        uses: actions/upload-artifact@v4
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
         with:
-          name: ${{ env.PACKAGE_NAME }}
-          path: artifacts/${{ env.PACKAGE_NAME }}
+          tag_name: v${{ env.VERSION }}
+          name: MobyPark API v${{ env.VERSION }}
+          files: artifacts/${{ env.PACKAGE_NAME }}

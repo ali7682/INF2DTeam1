@@ -13,15 +13,14 @@ namespace NewAPITests
     {
         private readonly PaymentDetailsController billingController;
         private readonly CancellationToken ct = CancellationToken.None;
+        private readonly int _userAdminId = 2;
 
         public PaymentsDetailsTests()
         {
-            IConfigurationRoot config = new ConfigurationBuilder()
-                .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), @"..\..\..\..", "NewAPI"))
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .Build();
+            var config = TestConfig.CreateConfig();
             PaymentDetailsAccess.SetConfig(config);
             billingController = new PaymentDetailsController(config);
+            TestAccessBootstrap.Configure(config);
         }
 
         // Test GET: /billings
@@ -30,8 +29,8 @@ namespace NewAPITests
         {
             string token = Guid.NewGuid().ToString("N");
             var user = new UserModel { Username = "AdminUser", Role = "ADMIN" };
-            SessionManager.AddSession(token, user);
-            Assert.NotNull(SessionManager.GetSession(token));
+            await SessionManager.AddSession(token, _userAdminId, TestContext.Current.CancellationToken);
+            Assert.NotNull(SessionManager.GetSession(token, TestContext.Current.CancellationToken));
 
             billingController.ControllerContext = new ControllerContext
             {
@@ -52,10 +51,25 @@ namespace NewAPITests
         [Fact]
         public async Task TestValidGetBillingsByUserName()
         {
+            UserModel newUser = new()
+            {
+                Username = "JohnDeere12",
+                Password = "Example",
+                Name = "John Deere",
+                Email = "john.deere@davidihh.pl",
+                Phone = "+480798623268",
+                Role = "USER",
+                CreatedAt = DateTime.UtcNow,
+                BirthYear = 1942,
+                Active = true,
+            };
+
+            await UserAccess.CreateUserAsync(newUser, ct);
+
             string token = Guid.NewGuid().ToString("N");
             var user = new UserModel { Username = "AdminUser", Role = "ADMIN" };
-            SessionManager.AddSession(token, user);
-            Assert.NotNull(SessionManager.GetSession(token));
+            await SessionManager.AddSession(token, _userAdminId, TestContext.Current.CancellationToken);
+            Assert.NotNull(SessionManager.GetSession(token, TestContext.Current.CancellationToken));
 
             billingController.ControllerContext = new ControllerContext
             {
@@ -77,8 +91,8 @@ namespace NewAPITests
         {
             string token = Guid.NewGuid().ToString("N");
             var user = new UserModel { Username = "AdminUser", Role = "ADMIN" };
-            SessionManager.AddSession(token, user);
-            Assert.NotNull(SessionManager.GetSession(token));
+            await SessionManager.AddSession(token, _userAdminId, TestContext.Current.CancellationToken);
+            Assert.NotNull(SessionManager.GetSession(token, TestContext.Current.CancellationToken));
 
             billingController.ControllerContext = new ControllerContext
             {

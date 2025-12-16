@@ -16,15 +16,14 @@ namespace NewAPITests.ControllerTests
     {
         private readonly CancellationToken ct = CancellationToken.None;
         private readonly ParkingLotController controller;
+        private readonly int _userId = 1;
+        private readonly int _userAdminId = 2;
 
         public ParkingLotTests()
         {
-            IConfigurationRoot config = new ConfigurationBuilder()
-                .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), @"..\..\..\..", "NewAPI"))
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .Build();
-
+            var config = TestConfig.CreateConfig();
             controller = new ParkingLotController(config);
+            TestAccessBootstrap.Configure(config);
         }
 
         // Helper to create a temporary parking lot for tests
@@ -113,7 +112,7 @@ namespace NewAPITests.ControllerTests
         public async Task TestGetParkingSessions_ValidAdminToken_ReturnsOk()
         {
             string token = Guid.NewGuid().ToString("N");
-            SessionManager.AddSession(token, new UserModel { Username = "AdminUser", Role = "ADMIN" });
+            await SessionManager.AddSession(token, 2, TestContext.Current.CancellationToken);
 
             controller.ControllerContext = new ControllerContext
             {
@@ -126,7 +125,7 @@ namespace NewAPITests.ControllerTests
             Assert.NotNull(result);
             Assert.Equal(200, result.StatusCode);
 
-            SessionManager.RemoveSession(token);
+            await SessionManager.RemoveSession(token, TestContext.Current.CancellationToken);
         }
 
         // GET /parking-lots/{lid}/sessions/{sid}
@@ -149,7 +148,7 @@ namespace NewAPITests.ControllerTests
         public async Task TestGetParkingSession_ValidAdminToken_ReturnsOk()
         {
             string token = Guid.NewGuid().ToString("N");
-            SessionManager.AddSession(token, new UserModel { Username = "AdminUser", Role = "ADMIN" });
+            await SessionManager.AddSession(token, _userAdminId, TestContext.Current.CancellationToken);
 
             var tempLot = await CreateTestParkingLot();
 
@@ -173,7 +172,7 @@ namespace NewAPITests.ControllerTests
             Assert.NotNull(result);
             Assert.Equal(200, result.StatusCode);
 
-            SessionManager.RemoveSession(token);
+            await SessionManager.RemoveSession(token, TestContext.Current.CancellationToken);
         }
 
         // DELETE ParkingLots
@@ -183,7 +182,7 @@ namespace NewAPITests.ControllerTests
             var testLot = await CreateTestParkingLot();
 
             string token = Guid.NewGuid().ToString("N");
-            SessionManager.AddSession(token, new UserModel { Username = "AdminUser", Role = "ADMIN" });
+            await SessionManager.AddSession(token, 2, TestContext.Current.CancellationToken);
 
             controller.ControllerContext = new ControllerContext
             {
@@ -196,14 +195,14 @@ namespace NewAPITests.ControllerTests
             var okResult = Assert.IsType<OkObjectResult>(result);
             Assert.NotNull(okResult.Value);
 
-            SessionManager.RemoveSession(token);
+            await SessionManager.RemoveSession(token, TestContext.Current.CancellationToken);
         }
 
         [Fact]
         public async Task DeleteParkingLot_NotFound_ReturnsNotFound()
         {
             string token = Guid.NewGuid().ToString("N");
-            SessionManager.AddSession(token, new UserModel { Username = "AdminUser", Role = "ADMIN" });
+            await SessionManager.AddSession(token, _userAdminId, TestContext.Current.CancellationToken);
 
             controller.ControllerContext = new ControllerContext
             {
@@ -217,7 +216,7 @@ namespace NewAPITests.ControllerTests
             var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
             Assert.NotNull(notFoundResult.Value);
 
-            SessionManager.RemoveSession(token);
+            await SessionManager.RemoveSession(token, TestContext.Current.CancellationToken);
         }
 
 
@@ -236,7 +235,7 @@ namespace NewAPITests.ControllerTests
             int sessionId = await ParkingLotAccess.CreateParkingsessionAsync(tempSession, ct);
 
             string token = Guid.NewGuid().ToString("N");
-            SessionManager.AddSession(token, new UserModel { Username = "AdminUser", Role = "ADMIN" });
+            await SessionManager.AddSession(token, _userAdminId, TestContext.Current.CancellationToken);
 
             controller.ControllerContext = new ControllerContext
             {
@@ -249,10 +248,10 @@ namespace NewAPITests.ControllerTests
             var okResult = Assert.IsType<OkObjectResult>(result);
             Assert.NotNull(okResult.Value);
 
-            var deletedSession = await ParkingLotAccess.GetParkingSessionByIdAsync(testLot.ID, sessionId);
+            var deletedSession = await ParkingLotAccess.GetParkingSessionByIdAsync(testLot.ID, sessionId, TestContext.Current.CancellationToken);
             Assert.Null(deletedSession);
 
-            SessionManager.RemoveSession(token);
+            await SessionManager.RemoveSession(token, TestContext.Current.CancellationToken);
         }
 
         [Fact]
@@ -261,7 +260,7 @@ namespace NewAPITests.ControllerTests
             var testLot = await CreateTestParkingLot();
 
             string token = Guid.NewGuid().ToString("N");
-            SessionManager.AddSession(token, new UserModel { Username = "AdminUser", Role = "ADMIN" });
+            await SessionManager.AddSession(token, 2, TestContext.Current.CancellationToken);
 
             controller.ControllerContext = new ControllerContext
             {
@@ -276,7 +275,7 @@ namespace NewAPITests.ControllerTests
             var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
             Assert.NotNull(notFoundResult.Value);
 
-            SessionManager.RemoveSession(token);
+            await SessionManager.RemoveSession(token, TestContext.Current.CancellationToken);
         }
 
         [Fact]
@@ -309,9 +308,8 @@ namespace NewAPITests.ControllerTests
         public async Task TestValidUpdateReservationById()
         {
             string token = Guid.NewGuid().ToString("N");
-            var user = new UserModel { Id = 1, Username = "AdminUser", Role = "ADMIN" };
-            SessionManager.AddSession(token, user);
-            Assert.NotNull(SessionManager.GetSession(token));
+            await SessionManager.AddSession(token, _userAdminId, TestContext.Current.CancellationToken);
+            Assert.NotNull(SessionManager.GetSession(token, TestContext.Current.CancellationToken));
 
             controller.ControllerContext = new ControllerContext
             {
@@ -344,9 +342,9 @@ namespace NewAPITests.ControllerTests
         public async Task TestInvalidUpdateReservationModel()
         {
             string token = Guid.NewGuid().ToString("N");
-            var user = new UserModel { Id = 1, Username = "AdminUser", Role = "ADMIN" };
-            SessionManager.AddSession(token, user);
-            Assert.NotNull(SessionManager.GetSession(token));
+
+            await SessionManager.AddSession(token, _userAdminId, TestContext.Current.CancellationToken);
+            Assert.NotNull(SessionManager.GetSession(token, TestContext.Current.CancellationToken));
 
             controller.ControllerContext = new ControllerContext
             {
@@ -397,8 +395,8 @@ namespace NewAPITests.ControllerTests
         {
             string token = Guid.NewGuid().ToString("N");
             var user = new UserModel { Id = 1, Username = "AdminUser", Role = "ADMIN" };
-            SessionManager.AddSession(token, user);
-            Assert.NotNull(SessionManager.GetSession(token));
+            await SessionManager.AddSession(token, _userAdminId, TestContext.Current.CancellationToken);
+            Assert.NotNull(SessionManager.GetSession(token, TestContext.Current.CancellationToken));
 
             controller.ControllerContext = new ControllerContext
             {
@@ -431,8 +429,8 @@ namespace NewAPITests.ControllerTests
         {
             string token = Guid.NewGuid().ToString("N");
             var user = new UserModel { Id = 1, Username = "AdminUser", Role = "ADMIN" };
-            SessionManager.AddSession(token, user);
-            Assert.NotNull(SessionManager.GetSession(token));
+            await SessionManager.AddSession(token, _userAdminId, TestContext.Current.CancellationToken);
+            Assert.NotNull(SessionManager.GetSession(token, TestContext.Current.CancellationToken));
 
             controller.ControllerContext = new ControllerContext
             {
@@ -492,9 +490,9 @@ namespace NewAPITests.ControllerTests
         public async Task TestCreateParkingLot_NonAdmin_ReturnsForbidden()
         {
             string token = Guid.NewGuid().ToString("N");
-            var user = new UserModel { Id = 1, Username = "RegularUser", Role = "USER" };
-            SessionManager.AddSession(token, user);
-            Assert.NotNull(SessionManager.GetSession(token));
+
+            await SessionManager.AddSession(token, _userId, TestContext.Current.CancellationToken);
+            Assert.NotNull(SessionManager.GetSession(token, TestContext.Current.CancellationToken));
 
             controller.ControllerContext = new ControllerContext
             {
@@ -529,9 +527,9 @@ namespace NewAPITests.ControllerTests
             var testLot = await CreateTestParkingLot();
 
             string token = Guid.NewGuid().ToString("N");
-            var user = new UserModel { Id = 1, Username = "RegularUser", Role = "USER" };
-            SessionManager.AddSession(token, user);
-            Assert.NotNull(SessionManager.GetSession(token));
+
+            await SessionManager.AddSession(token, _userId, TestContext.Current.CancellationToken);
+            Assert.NotNull(SessionManager.GetSession(token, TestContext.Current.CancellationToken));
 
             controller.ControllerContext = new ControllerContext
             {
@@ -559,9 +557,9 @@ namespace NewAPITests.ControllerTests
             var testLot = await CreateTestParkingLot();
 
             string token = Guid.NewGuid().ToString("N");
-            var user = new UserModel { Id = 1, Username = "RegularUser", Role = "USER" };
-            SessionManager.AddSession(token, user);
-            Assert.NotNull(SessionManager.GetSession(token));
+
+            await SessionManager.AddSession(token, _userId, TestContext.Current.CancellationToken);
+            Assert.NotNull(SessionManager.GetSession(token, TestContext.Current.CancellationToken));
 
             controller.ControllerContext = new ControllerContext
             {
@@ -614,8 +612,8 @@ namespace NewAPITests.ControllerTests
 
             string token = Guid.NewGuid().ToString("N");
             var user = new UserModel { Id = 1, Username = "AdminUser", Role = "ADMIN" };
-            SessionManager.AddSession(token, user);
-            Assert.NotNull(SessionManager.GetSession(token));
+            await SessionManager.AddSession(token, _userAdminId, TestContext.Current.CancellationToken);
+            Assert.NotNull(SessionManager.GetSession(token, TestContext.Current.CancellationToken));
 
             controller.ControllerContext = new ControllerContext
             {
@@ -629,6 +627,7 @@ namespace NewAPITests.ControllerTests
             };
 
             var rawResult = await controller.PostParkinglotStart(body, ct, testLot.ID);
+            rawResult = await controller.PostParkinglotStart(body, ct, testLot.ID); // try to start again
             Console.WriteLine($"Result type: {rawResult?.GetType().Name ?? "NULL"}");
 
             var result = rawResult as ObjectResult;
@@ -645,8 +644,8 @@ namespace NewAPITests.ControllerTests
 
             string token = Guid.NewGuid().ToString("N");
             var user = new UserModel { Id = 1, Username = "RegularUser", Role = "USER" };
-            SessionManager.AddSession(token, user);
-            Assert.NotNull(SessionManager.GetSession(token));
+            await SessionManager.AddSession(token, _userAdminId, TestContext.Current.CancellationToken);
+            Assert.NotNull(SessionManager.GetSession(token, TestContext.Current.CancellationToken));
 
             controller.ControllerContext = new ControllerContext
             {
@@ -659,7 +658,8 @@ namespace NewAPITests.ControllerTests
                 Licenseplate = "XYZ-123"
             };
 
-            var rawResult = await controller.PostParkinglotStop(body, ct, testLot.ID);
+            var rawResult = await controller.PostParkinglotStart(body, ct, testLot.ID); // first start a session
+            rawResult = await controller.PostParkinglotStop(body, ct, testLot.ID);
             Console.WriteLine($"Result type: {rawResult?.GetType().Name ?? "NULL"}");
 
             var result = rawResult as OkObjectResult;
@@ -675,8 +675,8 @@ namespace NewAPITests.ControllerTests
 
             string token = Guid.NewGuid().ToString("N");
             var user = new UserModel { Id = 1, Username = "RegularUser", Role = "USER" };
-            SessionManager.AddSession(token, user);
-            Assert.NotNull(SessionManager.GetSession(token));
+            await SessionManager.AddSession(token, _userAdminId, TestContext.Current.CancellationToken);
+            Assert.NotNull(SessionManager.GetSession(token, TestContext.Current.CancellationToken));
 
             controller.ControllerContext = new ControllerContext
             {
@@ -729,8 +729,8 @@ namespace NewAPITests.ControllerTests
 
             string token = Guid.NewGuid().ToString("N");
             var user = new UserModel { Id = 1, Username = "AdminUser", Role = "ADMIN" };
-            SessionManager.AddSession(token, user);
-            Assert.NotNull(SessionManager.GetSession(token));
+            await SessionManager.AddSession(token, _userAdminId, TestContext.Current.CancellationToken);
+            Assert.NotNull(SessionManager.GetSession(token, TestContext.Current.CancellationToken));
 
             controller.ControllerContext = new ControllerContext
             {
