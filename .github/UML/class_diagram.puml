@@ -1,0 +1,93 @@
+@startuml Class diagram - MobyPark API
+
+title Class diagram - MobyPark API
+
+class UserModel {
+    Id : int
+    Username : string
+    Email : string
+    Role : string
+    Active : bool
+    IsAdmin() : bool
+    Update() : Task<bool>
+}
+
+class VehicleModel {
+    ID : int
+    LicensePlate : string
+    Make : string
+    Model : string
+    Color : string
+    Year : int
+    Update() : bool
+}
+
+class ParkingLotModel {
+    ID : int
+    Name : string
+    Location : string
+    Capacity : int
+    Tariff : double
+    DayTariff : double
+}
+
+class ReservationModel {
+    ID : int
+    StartTime : DateTime
+    EndTime : DateTime
+    Status : string
+    Cost : decimal
+}
+
+class ParkingSessionModel {
+    ID : int
+    LicensePlate : string
+    Started : DateTime
+    Stopped : DateTime
+    DurationMinutes : int
+    Cost : double
+    PaymentStatus : string
+}
+
+class PaymentModel {
+    TransactionId : int
+    Amount : decimal
+    Initiator : string
+    Completed : int
+    Hash : string
+}
+
+class PaymentDetailsModel {
+    Id : int
+    Amount : decimal
+    Method : string
+    Issuer : string
+    Bank : string
+    }
+
+class SessionCalculator {
+    CalculatePrice()
+    GeneratePaymentHash()
+}
+
+class SessionManager {
+    SessionCount : int
+    AddSession()
+    GetSession()
+    RemoveSession()
+}
+
+UserModel "1" --> "*" VehicleModel
+UserModel "1" --> "*" ReservationModel
+ReservationModel "*" --> "1" ParkingLotModel
+ReservationModel "*" --> "1" VehicleModel
+
+PaymentModel "1" --> "1" PaymentDetailsModel
+
+SessionCalculator ..> ParkingLotModel
+SessionCalculator ..> ReservationModel
+SessionCalculator ..> ParkingSessionModel
+
+SessionManager ..> UserModel
+
+@enduml
