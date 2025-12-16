@@ -10,26 +10,24 @@ namespace NewAPITests
     {
         private readonly ReservationController controller;
         private readonly CancellationToken ct = CancellationToken.None;
+        private readonly int _userId = 1;
+        private readonly int _userAdminId = 2;
 
         public ReservationControllerTests()
         {
-            // Load appsettings.json from NewAPI project folder
-            IConfigurationRoot config = new ConfigurationBuilder()
-                .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), @"..\..\..\..", "NewAPI"))
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .Build();
+            var config = TestConfig.CreateConfig();
 
             ReservationAccess.SetConfig(config);
             controller = new ReservationController(config);
+            TestAccessBootstrap.Configure(config);
         }
 
         [Fact]
         public async Task TestValidUpdateReservationById()
         {
             string token = Guid.NewGuid().ToString("N");
-            var user = new UserModel { Id = 1, Username = "AdminUser", Role = "ADMIN" };
-            SessionManager.AddSession(token, user);
-            Assert.NotNull(SessionManager.GetSession(token));
+            await SessionManager.AddSession(token, _userAdminId, TestContext.Current.CancellationToken);
+            Assert.NotNull(SessionManager.GetSession(token, TestContext.Current.CancellationToken));
 
             controller.ControllerContext = new ControllerContext
             {
@@ -63,8 +61,8 @@ namespace NewAPITests
         {
             string token = Guid.NewGuid().ToString("N");
             var user = new UserModel { Id = 1, Username = "AdminUser", Role = "ADMIN" };
-            SessionManager.AddSession(token, user);
-            Assert.NotNull(SessionManager.GetSession(token));
+            await SessionManager.AddSession(token, _userAdminId, TestContext.Current.CancellationToken);
+            Assert.NotNull(SessionManager.GetSession(token, TestContext.Current.CancellationToken));
 
             controller.ControllerContext = new ControllerContext
             {
@@ -137,9 +135,9 @@ namespace NewAPITests
             };
             
             string token = Guid.NewGuid().ToString("N");
-            var user = new UserModel { Id = 1, Username = "User", Role = "USER" };
-            SessionManager.AddSession(token, user);
-            Assert.NotNull(SessionManager.GetSession(token));
+
+            await SessionManager.AddSession(token, _userId, TestContext.Current.CancellationToken);
+            Assert.NotNull(SessionManager.GetSession(token, TestContext.Current.CancellationToken));
 
             controller.ControllerContext = new ControllerContext
             {
@@ -195,9 +193,9 @@ namespace NewAPITests
             };
 
             string token = Guid.NewGuid().ToString("N");
-            var user = new UserModel { Id = 1, Username = "User", Role = "USER" };
-            SessionManager.AddSession(token, user);
-            Assert.NotNull(SessionManager.GetSession(token));
+
+            await SessionManager.AddSession(token, _userId, TestContext.Current.CancellationToken);
+            Assert.NotNull(SessionManager.GetSession(token, TestContext.Current.CancellationToken));
 
             controller.ControllerContext = new ControllerContext
             {

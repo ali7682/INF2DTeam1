@@ -1,69 +1,95 @@
 name: CI - development
 
 on:
-  push:
-    branches: [ development ]
-  pull_request:
-    branches: [ development ]
+    push:
+        branches: [development]
+    pull_request:
+        branches: [development]
 
 jobs:
-  build-test:
-    runs-on: ubuntu-latest
+    build-test:
+        runs-on: ubuntu-latest
 
-    env:
-      DOTNET_VERSION: "8.0.x"
+        env:
+            DOTNET_VERSION: "8.0.x"
+            ConnectionStrings__DefaultConnection: "Server=127.0.0.1;Port=3307;Database=MobyPark;User ID=api;Password=S3cure!ApiPW;Pooling=True;MaximumPoolSize=200;DefaultCommandTimeout=5;"
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
+            # ConnectionString moet gelijk zijn met degene in de appsettings
+            - name: Start MySQL container
+              run: |
+                  docker run --name mysql-test \
+                    -e MYSQL_ROOT_PASSWORD=rootpwd \
+                    -e MYSQL_DATABASE=MobyPark \
+                    -e MYSQL_USER=api \
+                    -e MYSQL_PASSWORD='S3cure!ApiPW' \
+                    -p 3307:3306 \
+                    -d mysql:8.0
 
-      - name: Restore
-        run: dotnet restore NewAPI/NewAPI.sln
+            - name: Wacht tot MySQL klaar is
+              run: |
+                  for i in {1..30}; do
+                    if docker exec mysql-test sh -c 'mysql -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" -e "SELECT 1" "$MYSQL_DATABASE"' > /dev/null 2>&1; then
+                      echo "MySQL is up!"
+                      exit 0
+                    fi
+                    echo "Waiting for MySQL..."
+                    sleep 2
+                  done
+                  echo "MySQL did not start in time"
+                  docker logs mysql-test
+                  exit 1
 
-      - name: Build
-        run: dotnet build NewAPI/NewAPI.sln --configuration Release --no-restore
+            - name: Seed database met ExampleData.sql
+              run: |
+                  SQL_FILE="NewAPI/Data/ExampleData.sql"
 
-      - name: Test with coverage
-        run: |
-          dotnet test NewAPI/NewAPI.sln \
-            --configuration Release \
-            --no-build \
-            --logger "trx;LogFileName=test_results.trx" \
-            --collect "XPlat Code Coverage"
+                  if [ ! -f "$SQL_FILE" ]; then
+                    echo "$SQL_FILE niet gevonden!"
+                    exit 1
+                  fi
 
-      - name: Verzamel testresultaten en coverage
-        run: |
-          mkdir -p artifacts/testresults
-          mkdir -p artifacts/coverage
-          find . -type f -name "test_results.trx" -exec cp {} artifacts/testresults/ \;
-          find . -type f -name "coverage.cobertura.xml" -exec cp {} artifacts/coverage/ \; || true
-          find . -type f -name "coverage.json" -exec cp {} artifacts/coverage/ \; || true
+                  # Run sql bestand
+                  docker exec -i mysql-test sh -c 'mysql -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE"' < "$SQL_FILE"
 
-      - name: Upload testresultaten artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: testresults
-          path: artifacts/testresults
+            - name: Setup .NET
+              uses: actions/setup-dotnet@v4
+              with:
+                  dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Upload coverage artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage
-          path: artifacts/coverage
+            - name: Restore
+              run: dotnet restore NewAPI/NewAPI.sln
 
-      - name: Publish API
-        run: |
-          dotnet publish NewAPI/NewAPI.csproj \
-            --configuration Release \
-            --output ./artifacts/publish
+            - name: Build
+              run: dotnet build NewAPI/NewAPI.sln --configuration Release --no-restore
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: api-publish
-          path: artifacts/publish
+            - name: Test with coverage
+              run: |
+                  dotnet test NewAPI/NewAPI.sln \
+                    --configuration Release \
+                    --no-build \
+                    --logger "trx;LogFileName=test_results.trx" \
+                    --collect "XPlat Code Coverage"
+
+            - name: Verzamel testresultaten en coverage
+              run: |
+                  mkdir -p artifacts/testresults
+                  mkdir -p artifacts/coverage
+                  find . -type f -name "test_results.trx" -exec cp {} artifacts/testresults/ \;
+                  find . -type f -name "coverage.cobertura.xml" -exec cp {} artifacts/coverage/ \; || true
+                  find . -type f -name "coverage.json" -exec cp {} artifacts/coverage/ \; || true
+
+            - name: Upload testresultaten artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: testresults
+                  path: artifacts/testresults
+
+            - name: Upload coverage artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: coverage
+                  path: artifacts/coverage

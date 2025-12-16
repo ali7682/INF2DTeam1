@@ -55,9 +55,9 @@ namespace NewAPI.Controllers
 
             string sessionToken = Guid.NewGuid().ToString("N");
 
-            SessionManager.AddSession(sessionToken, user);
+            await SessionManager.AddSession(sessionToken, user.Id, ct);
 
-            LoginResponse loginResponse = new($"User logged in successfully as {body.Username}", sessionToken);
+            LoginResponse loginResponse = new($"User logged in successfully as {user.Username}", sessionToken);
 
             return Ok(loginResponse);
         }
@@ -87,17 +87,19 @@ namespace NewAPI.Controllers
         }
 
         [HttpPost("Logout")]
-        public IActionResult Logout()
+        public async Task<IActionResult> Logout()
         {
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
 
             if (sessionToken == null || sessionToken == string.Empty)
                 return Unauthorized(new { message = "Unauthorized: Missing session token" });
 
-            if (!SessionManager.DoesSessionExist(sessionToken))
+            bool doesSessionExist = await SessionManager.DoesSessionExist(sessionToken);
+
+            if (!doesSessionExist)
                 return Unauthorized(new { message = "Unauthorized: Invalid session token" });
 
-            SessionManager.RemoveSession(sessionToken);
+            await SessionManager.RemoveSession(sessionToken);
 
             return Ok(new { message = "User logged out successfully" });
         }
@@ -106,7 +108,7 @@ namespace NewAPI.Controllers
         public async Task<IActionResult> Profile([FromBody] ChangeProfileRequest body)
         {
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
-            UserModel? user = SessionManager.GetSession(sessionToken);
+            UserModel? user = await SessionManager.GetUserFromSession(sessionToken);
 
             if (sessionToken == null || user == null)
             {
@@ -121,10 +123,10 @@ namespace NewAPI.Controllers
         }
 
         [HttpGet("Profile")]
-        public IActionResult Profile()
+        public async Task<IActionResult> Profile()
         {
             string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
-            UserModel? user = SessionManager.GetSession(sessionToken);
+            UserModel? user = await SessionManager.GetUserFromSession(sessionToken);
 
             if (sessionToken == null || user == null)
             {
