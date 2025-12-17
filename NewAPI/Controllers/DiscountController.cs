@@ -38,19 +38,6 @@ public class DiscountController : ControllerBase
         return Ok(new { message = $"Discount code {id} activated successfully" });
     }
 
-    // discount/{id}/activate
-    [HttpPatch("{id}/Maxuses")]
-    public async Task<ActionResult> SetUsesAsync(int id, int maxUse)
-    {
-        bool success = await DiscountAcces.SetMaxUsesAsync(id, maxUse);
-
-        if (!success)
-            return NotFound(new { message = "Discount code not found" });
-
-        // Return a success message
-        return Ok(new { message = $"Succesfully changed MaxUses from Discount code {id} " });
-    }
-
     // POST: api/discount
     [HttpPost]
     public async Task<IActionResult> PostDiscount([FromBody] DiscountModel body, CancellationToken ct)
