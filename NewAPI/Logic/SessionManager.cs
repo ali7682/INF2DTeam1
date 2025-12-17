@@ -1,35 +1,117 @@
-﻿using System.Collections.Concurrent;
+﻿using Dapper;
+using MySqlConnector;
 
 public static class SessionManager
 {
-    private static readonly ConcurrentDictionary<string, UserModel> Sessions = new();
+    public static int SessionCount { get; private set; }
 
-    public static void AddSession(string token, UserModel User)
+    private static IConfiguration _config;
+
+    public static void SetConfig(IConfiguration config) => _config = config;
+    private static string _connectionString => _config.GetConnectionString("DefaultConnection")!;
+
+    public static async Task AddSession(
+        string token,
+        int userId,
+        CancellationToken ct = default)
     {
-        Sessions.TryAdd(token, User);
+        DateTime expiresAt = DateTime.UtcNow.AddHours(12);
+        const string query = """
+        INSERT INTO api_sessions (token, user_id, expires_at)
+        VALUES (@Token, @UserId, @ExpiresAt);
+        """;
+
+        await using var conn = new MySqlConnection(_connectionString);
+        await conn.OpenAsync(ct);
+
+        var cmd = new CommandDefinition(
+            query,
+            new { Token = token, UserId = userId, ExpiresAt = expiresAt },
+            cancellationToken: ct,
+            commandTimeout: 5);
+
+        await conn.ExecuteAsync(cmd);
+        SessionCount++;
     }
 
-    public static bool RemoveSession(string token)
+    public static async Task<int?> GetSession(
+        string token,
+        CancellationToken ct = default)
     {
-        if (Sessions.TryRemove(token, out _))
-            return true;
+        if (string.IsNullOrWhiteSpace(token))
+            return null;
 
-        return false;
+        const string query = """
+        SELECT user_id
+        FROM api_sessions
+        WHERE token = @Token
+        """;
+
+        await using var conn = new MySqlConnection(_connectionString);
+        await conn.OpenAsync(ct);
+
+        var cmd = new CommandDefinition(
+            query,
+            new { Token = token },
+            cancellationToken: ct,
+            commandTimeout: 5);
+
+        return await conn.ExecuteScalarAsync<int?>(cmd);
     }
 
-    public static UserModel? GetSession(string token)
+    public static async Task<UserModel?> GetUserFromSession(
+        string token,
+        CancellationToken ct = default)
     {
-        if (Sessions.ContainsKey(token))
-            return Sessions[token];
+        var userId = await GetSession(token, ct);
+        if (userId == null)
+            return null;
 
-        return null;
+        return await UserAccess.GetUserByIdAsync(userId.Value, ct);
     }
 
-    // AuthController gebruikte 'DoesSessionExist', maar hij bestond niet (gaf een error)
-    public static bool DoesSessionExist(string token)
+    public static async Task<bool> RemoveSession(
+        string token,
+        CancellationToken ct = default)
     {
-        bool? exists = Sessions.ContainsKey(token);
+        const string query = """
+        DELETE FROM api_sessions
+        WHERE token = @Token;
+        """;
 
-        return exists != null && exists == true;
+        await using var conn = new MySqlConnection(_connectionString);
+        await conn.OpenAsync(ct);
+
+        var cmd = new CommandDefinition(
+            query,
+            new { Token = token },
+            cancellationToken: ct,
+            commandTimeout: 5);
+
+        SessionCount--;
+
+        return await conn.ExecuteAsync(cmd) > 0;
+    }
+
+    public static async Task<bool> DoesSessionExist(
+        string token,
+        CancellationToken ct = default)
+    {
+        const string query = """
+        SELECT COUNT(*)
+        FROM api_sessions
+        WHERE token = @Token
+        """;
+
+        await using var conn = new MySqlConnection(_connectionString);
+        await conn.OpenAsync(ct);
+
+        var cmd = new CommandDefinition(
+            query,
+            new { Token = token },
+            cancellationToken: ct,
+            commandTimeout: 5);
+
+        return await conn.ExecuteScalarAsync<int>(cmd) > 0;
     }
 }
