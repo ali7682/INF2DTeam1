@@ -25,7 +25,7 @@ public static class DiscountAcces
             updated_at        AS UpdatedAt,
             max_uses          AS MaxUses,
             uses              AS Uses,
-            is_active         AS IsActive
+            is_active         AS IsActive,
             allowed_plates    AS AllowedPlates
         FROM discount_codes
     """;
