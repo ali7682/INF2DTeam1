@@ -55,21 +55,24 @@ public class DiscountController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> PostDiscount([FromBody] DiscountModel body, CancellationToken ct)
     {
-        // Get session token and user
         string sessionToken = HttpContext.Request.Headers.Authorization.ToString();
-        UserModel? user = SessionManager.GetSession(sessionToken);
 
-        if (string.IsNullOrWhiteSpace(sessionToken) || user == null)
+        int? userId = await SessionManager.GetSession(sessionToken, ct);
+
+        if (string.IsNullOrWhiteSpace(sessionToken) || userId == null)
             return Unauthorized("Unauthorized: Invalid or missing session token");
+
+        UserModel? user = await UserAccess.GetUserByIdAsync(userId.Value, ct);
+
+        if (user == null)
+            return Unauthorized("User not found");
 
         if (user.Role != "ADMIN")
             return StatusCode(403, new { message = "Access denied" });
 
-        // Validate input
         if (body is null || string.IsNullOrWhiteSpace(body.Code) || body.Percentage <= 0)
             return BadRequest(new { error = "Bad request: Missing or invalid discount details" });
 
-        // Insert into DB
         int newId = await DiscountAcces.CreateDiscountAsync(body, ct);
 
         return Ok(new { message = $"Discount created successfully with ID {newId}" });
