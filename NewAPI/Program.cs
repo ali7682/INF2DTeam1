@@ -29,6 +29,7 @@ ReservationAccess.SetConfig(builder.Configuration);
 PaymentAccess.SetConfig(builder.Configuration);
 PaymentDetailsAccess.SetConfig(builder.Configuration);
 ParkingLotAccess.SetConfig(builder.Configuration);
+DiscountAcces.SetConfig(builder.Configuration);
 SessionManager.SetConfig(builder.Configuration);
 
 app.UseMiddleware<TraceLogs>();
