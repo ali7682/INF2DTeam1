@@ -154,9 +154,9 @@ public static class ParkingLotAccess
         return result.AsList();
     }
 
-    // GET tariff en daytariff om profit te berekenen van een parking-lot
+    // GET tariff en daytariff om opbrengst te berekenen van alle parking-lot
     // Endpoint: /parking-lots/profit/{lid}
-    public static async Task<ParkingLotModel?> GetProfitParkingLots(int parkingLotId, CancellationToken ct)
+    public static async Task<List<ParkingLotDto?>> GetProfitParkingLots(int parkingLotId, CancellationToken ct)
     {
         await using MySqlConnection conn = new(Cs);
         await conn.OpenAsync(ct);
@@ -164,15 +164,16 @@ public static class ParkingLotAccess
         const string sql = """
                 SELECT 
                 id              AS ID,
-                name            AS Name,
-                tariff          AS Tariff,
-                daytariff       AS DayTariff,
-                (COALESCE(tariff, 0) + COALESCE(daytariff, 0)) AS TotalProfit
-            FROM parking_lots
-            WHERE id = @parkingLotId;
+                parking_lot_id  AS ParkingLotID,
+                COUNT(*)        AS TotalSessions,
+                SUM(cost)       AS TotalRevenue
+            FROM parking_sessions
+            WHERE parking_lot_id = @parkingLotId
+            AND payment_status = "paid";
         """;
 
-        return await conn.QueryFirstOrDefaultAsync<ParkingLotModel?>(sql, new { parkingLotId });
+        var result = await conn.QueryAsync<ParkingLotDto?>(sql, new { parkingLotId });
+        return result.AsList();
     }
 
     // DELETE een parking lot met bijbehorende parking sessions met parking lot ID
