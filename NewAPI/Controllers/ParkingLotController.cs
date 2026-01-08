@@ -115,7 +115,7 @@ namespace NewAPI.Controllers
                 return StatusCode(403, new { message = "Acces denied" });
             }
 
-            List<ParkingLotModel?> parkingLot = await ParkingLotAccess.GetOccupancyParkingLots(ct);
+            List<ParkingLotOccupancyDto?> parkingLot = await ParkingLotAccess.GetOccupancyParkingLots(ct);
 
             if (!parkingLot.Any())
             {
@@ -127,7 +127,7 @@ namespace NewAPI.Controllers
 
         // GET /parking-lots/profit/{lid}
         [HttpGet("profit/{lid}")]
-        public async Task<IActionResult> GetProfitPerParkingLot(int lid, CancellationToken ct)
+        public async Task<IActionResult> GetRevenuePerParkingLot(int lid, CancellationToken ct)
         {
             string token = HttpContext.Request.Headers.Authorization.ToString();
             UserModel? sessionUser = await SessionManager.GetUserFromSession(token, ct);
@@ -142,7 +142,7 @@ namespace NewAPI.Controllers
                 return StatusCode(403, new { message = "Acces denied" });
             }
 
-            ParkingLotDto? parkingLot = await ParkingLotAccess.GetProfitParkingLots(lid, ct);
+            ParkingLotRevenueDto? parkingLot = await ParkingLotAccess.GetRevenueParkingLots(lid, ct);
 
             if (parkingLot is null)
             {
