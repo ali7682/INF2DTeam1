@@ -142,7 +142,7 @@ namespace NewAPI.Controllers
                 return StatusCode(403, new { message = "Acces denied" });
             }
 
-            ParkingLotRevenueDto? parkingLot = await ParkingLotAccess.GetRevenueParkingLots(lid, ct);
+            List<ParkingLotRevenueDto?> parkingLot = await ParkingLotAccess.GetRevenueParkingLots(lid, ct);
 
             if (parkingLot is null)
             {

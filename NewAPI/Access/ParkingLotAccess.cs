@@ -156,8 +156,7 @@ public static class ParkingLotAccess
         await conn.OpenAsync(ct);
 
         const string sql = """
-                SELECT 
-                id              AS ID,
+                SELECT
                 parking_lot_id  AS ParkingLotId,
                 COUNT(*)        AS TotalSessions,
                 SUM(cost)       AS TotalRevenue
