@@ -144,7 +144,7 @@ namespace NewAPI.Controllers
 
             List<ParkingLotRevenueDto?> parkingLot = await ParkingLotAccess.GetRevenueParkingLots(lid, ct);
 
-            if (parkingLot is null)
+            if (parkingLot == null || parkingLot.Any(x => x != null))
             {
                 return NotFound(new { message = "NotFound: Parking lot does not exist" });
             }
