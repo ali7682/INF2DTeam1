@@ -126,7 +126,7 @@ namespace NewAPI.Controllers
         }
 
         // GET /parking-lots/profit/{lid}
-        [HttpGet("profit/{lid}")]
+        [HttpGet("revenue/{lid}")]
         public async Task<IActionResult> GetRevenuePerParkingLot(int lid, CancellationToken ct)
         {
             string token = HttpContext.Request.Headers.Authorization.ToString();
