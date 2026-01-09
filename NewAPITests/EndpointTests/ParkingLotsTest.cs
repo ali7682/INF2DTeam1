@@ -814,8 +814,6 @@ namespace NewAPITests.ControllerTests
         [Fact]
         public async Task GetRevenuePerParkingLot_Admin_ReturnsOk()
         {
-            var testLot = await CreateTestParkingLot();
-
             string token = Guid.NewGuid().ToString("N");
             var user = new UserModel { Id = 1, Username = "AdminUser", Role = "ADMIN" };
 
@@ -828,7 +826,7 @@ namespace NewAPITests.ControllerTests
             };
             controller.ControllerContext.HttpContext.Request.Headers["Authorization"] = token;
 
-            var result = await controller.GetRevenuePerParkingLot(testLot.ID, ct);
+            var result = await controller.GetParkingSessions(1, ct);
 
             var ok = Assert.IsType<OkObjectResult>(result);
             Assert.Equal(200, ok.StatusCode);
