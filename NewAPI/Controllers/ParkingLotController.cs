@@ -117,7 +117,7 @@ namespace NewAPI.Controllers
 
             List<ParkingLotOccupancyDto?> parkingLot = await ParkingLotAccess.GetOccupancyParkingLots(ct);
 
-            if (!parkingLot.Any())
+            if (parkingLot.Any(x => x != null))
             {
                 return NotFound(new { message = "NotFound: Occupied parking lots do not exist" });
             }
