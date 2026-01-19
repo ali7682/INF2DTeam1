@@ -104,4 +104,34 @@ public static class DiscountAcces
         int affectedRows = await conn.ExecuteAsync(sql, new { discountId, maxUses });
         return affectedRows > 0;
     }
+
+    public static async Task<DiscountModel?> GetDiscountByIdAsync(int discountId, CancellationToken ct = default)
+    {
+        await using var conn = new MySqlConnection(Cs);
+        await conn.OpenAsync(ct);
+
+        const string sql = """
+        SELECT
+            id                AS ID,
+            code              AS Code,
+            percentage        AS Percentage,
+            valid_from        AS ValidFrom,
+            valid_to          AS ValidTo,
+            locations_allowed AS LocationsAllowed,
+            times_allowed     AS TimesAllowed,
+            conditions        AS Conditions,
+            created_at        AS CreatedAt,
+            updated_at        AS UpdatedAt,
+            max_uses          AS MaxUses,
+            uses              AS Uses,
+            is_active         AS IsActive,
+            allowed_plates    AS AllowedPlates
+        FROM discount_codes
+        WHERE id = @discountId
+        LIMIT 1;
+    """;
+
+        var discount = await conn.QuerySingleOrDefaultAsync<DiscountModel>(sql, new { discountId });
+        return discount;
+    }
 }
