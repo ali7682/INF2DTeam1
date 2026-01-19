@@ -23,6 +23,8 @@ builder.WebHost.UseUrls("http://0.0.0.0:8000");
 
 var app = builder.Build();
 
+// DI injectie van de configuratie
+
 UserAccess.SetConfig(builder.Configuration);
 VehicleAccess.SetConfig(builder.Configuration);
 ReservationAccess.SetConfig(builder.Configuration);
