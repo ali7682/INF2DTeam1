@@ -115,9 +115,9 @@ namespace NewAPI.Controllers
                 return StatusCode(403, new { message = "Acces denied" });
             }
 
-            List<ParkingLotModel?> parkingLot = await ParkingLotAccess.GetOccupancyParkingLots(ct);
+            List<ParkingLotOccupancyDto?> parkingLot = await ParkingLotAccess.GetOccupancyParkingLots(ct);
 
-            if (!parkingLot.Any())
+            if (parkingLot.Any(x => x != null))
             {
                 return NotFound(new { message = "NotFound: Occupied parking lots do not exist" });
             }
@@ -126,8 +126,8 @@ namespace NewAPI.Controllers
         }
 
         // GET /parking-lots/profit/{lid}
-        [HttpGet("profit/{lid}")]
-        public async Task<IActionResult> GetProfitPerParkingLot(int lid, CancellationToken ct)
+        [HttpGet("revenue/{lid}")]
+        public async Task<IActionResult> GetRevenuePerParkingLot(int lid, CancellationToken ct)
         {
             string token = HttpContext.Request.Headers.Authorization.ToString();
             UserModel? sessionUser = await SessionManager.GetUserFromSession(token, ct);
@@ -142,9 +142,9 @@ namespace NewAPI.Controllers
                 return StatusCode(403, new { message = "Acces denied" });
             }
 
-            ParkingLotModel? parkingLot = await ParkingLotAccess.GetProfitParkingLots(lid, ct);
+            List<ParkingLotRevenueDto?> parkingLot = await ParkingLotAccess.GetRevenueParkingLots(lid, ct);
 
-            if (parkingLot is null)
+            if (parkingLot == null || parkingLot.Any(x => x != null))
             {
                 return NotFound(new { message = "NotFound: Parking lot does not exist" });
             }
