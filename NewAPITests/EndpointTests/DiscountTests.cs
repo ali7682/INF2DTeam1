@@ -4,16 +4,24 @@ using Xunit;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 
 public class DiscountControllerTests
 {
     private readonly int _adminUserId = 2;
     private readonly int _normalUserId = 1;
+    private readonly IConfiguration _config;
+
+    public DiscountControllerTests()
+    {
+        _config = TestConfig.CreateConfig();
+
+        DiscountAcces.SetConfig(_config);
+        TestAccessBootstrap.Configure(_config);
+    }
 
     private DiscountController CreateControllerWithToken(string token)
     {
-        var config = TestConfig.CreateConfig();
-
         var controller = new DiscountController
         {
             ControllerContext = new ControllerContext

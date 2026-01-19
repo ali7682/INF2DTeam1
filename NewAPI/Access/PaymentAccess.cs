@@ -18,20 +18,20 @@ public static class PaymentAccess
             initiator          AS Initiator,
             created_at         AS Created_at,
             completed          AS Completed,
-            hash               AS Hash
+            hash               AS Hash,
+            discount_code_id   AS DiscountCodeId
         FROM payments
     """;
 
     public static async Task<int> CreatePaymentAsync(PaymentModel payment, CancellationToken ct = default)
     {
         const string query = """
-        INSERT INTO payments
-            (amount, transaction, initiator, created_at, completed, hash)
-        VALUES
-            (@Amount, @Transaction, @Initiator, @Created_at, @Completed, @Hash);
-        SELECT LAST_INSERT_ID();
-        """;
-
+            INSERT INTO payments
+                (amount, transaction, initiator, created_at, completed, hash, discount_code_id)
+            VALUES
+                (@Amount, @Transaction, @Initiator, @Created_at, @Completed, @Hash, @DiscountCodeId);
+            SELECT LAST_INSERT_ID();
+            """;
         await using var conn = new MySqlConnection(Cs);
         await conn.OpenAsync(ct);
 
@@ -101,12 +101,12 @@ public static class PaymentAccess
         const string sql = """
             UPDATE payments
             SET
-                transaction_id   = @TransactionId,
-                amount   = @Amount,
-                initiator       = @Initiator,
-                created_at      = @Created_at,
-                completed      = @Completed,
-                hash       = @Hash
+                amount            = @Amount,
+                initiator         = @Initiator,
+                created_at        = @Created_at,
+                completed         = @Completed,
+                hash              = @Hash,
+                discount_code_id  = @DiscountCodeId
             WHERE transaction_id = @TransactionId;
         """;
 
