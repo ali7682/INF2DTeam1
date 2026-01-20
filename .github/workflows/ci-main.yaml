@@ -49,6 +49,13 @@ jobs:
           cd artifacts/publish
           zip -r "../${PACKAGE_NAME}" .
 
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-publish
+          path: artifacts/${{ env.PACKAGE_NAME }}
+          retention-days: 5
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
