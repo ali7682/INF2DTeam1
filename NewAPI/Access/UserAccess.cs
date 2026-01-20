@@ -1,4 +1,4 @@
-﻿using Dapper;
+﻿﻿using Dapper;
 using MySqlConnector;
 
 public static class UserAccess
@@ -35,18 +35,9 @@ public static class UserAccess
         if (!IsValueHashed(user.Password))
             user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password, workFactor: 12);
 
-        var dbUser = new
-        {
-            Username  = EncryptionService.Encrypt(user.Username),
-            Password  = user.Password,
-            Name      = user.Name,
-            Email     = EncryptionService.Encrypt(user.Email),
-            Phone     = user.Phone,
-            Role      = user.Role,
-            CreatedAt = user.CreatedAt,
-            BirthYear = user.BirthYear,
-            Active    = user.Active
-        };
+        user.Email = EncryptionService.Encrypt(user.Email);
+        user.Phone = EncryptionService.Encrypt(user.Phone);
+        user.Name  = EncryptionService.Encrypt(user.Name);
 
         const string query = """
             INSERT INTO users
@@ -59,7 +50,7 @@ public static class UserAccess
         await using var conn = new MySqlConnection(Cs);
         await conn.OpenAsync(ct);
 
-        var cmd = new CommandDefinition(query, dbUser, cancellationToken: ct, commandTimeout: 5);
+        var cmd = new CommandDefinition(query, user, cancellationToken: ct, commandTimeout: 5);
         return await conn.ExecuteScalarAsync<int>(cmd);
     }
 
@@ -72,59 +63,41 @@ public static class UserAccess
         var cmd = new CommandDefinition(sql, new { userId }, cancellationToken: ct, commandTimeout: 5);
         var user = await conn.QueryFirstOrDefaultAsync<UserModel>(cmd);
 
-        if (user is null)
-            return null;
-
-        user.Username = EncryptionService.Decrypt(user.Username);
-        user.Email    = EncryptionService.Decrypt(user.Email);
+        if (user != null)
+        {
+            user.Email = EncryptionService.Decrypt(user.Email);
+            user.Phone = EncryptionService.Decrypt(user.Phone);
+            user.Name  = EncryptionService.Decrypt(user.Name);
+        }
 
         return user;
     }
 
     public static async Task<UserModel?> GetUserByUsernameAsync(string userName, CancellationToken ct = default)
     {
+        var sql = $"{SqlSelectBase} WHERE username = @userName LIMIT 1;";
         await using var conn = new MySqlConnection(Cs);
         await conn.OpenAsync(ct);
 
-        // Encrypt the input for new users
-        var encryptedInput = EncryptionService.Encrypt(userName);
-
-        // Query for either encrypted or plain-text username
-        var sql = $"{SqlSelectBase} WHERE username = @EncryptedUsername OR username = @PlainUsername LIMIT 1;";
-
-        var cmd = new CommandDefinition(
-            sql,
-            new
-            {
-                EncryptedUsername = encryptedInput,
-                PlainUsername     = userName
-            },
-            cancellationToken: ct,
-            commandTimeout: 5
-        );
-
+        var cmd = new CommandDefinition(sql, new { userName }, cancellationToken: ct, commandTimeout: 5);
         var user = await conn.QueryFirstOrDefaultAsync<UserModel>(cmd);
 
-        if (user is null)
-            return null;
-
-        // Decrypt if needed (only if it’s encrypted)
-        try
+        if (user != null)
         {
-            user.Username = EncryptionService.Decrypt(user.Username);
-            user.Email    = EncryptionService.Decrypt(user.Email);
-        }
-        catch
-        {
-            // If decryption fails, it was plain-text — leave as-is
+            user.Email = EncryptionService.Decrypt(user.Email);
+            user.Phone = EncryptionService.Decrypt(user.Phone);
+            user.Name  = EncryptionService.Decrypt(user.Name);
         }
 
         return user;
     }
 
-
     public static async Task<bool> UpdateUserAsync(UserModel user, CancellationToken ct = default)
     {
+        user.Email = EncryptionService.Encrypt(user.Email);
+        user.Phone = EncryptionService.Encrypt(user.Phone);
+        user.Name  = EncryptionService.Encrypt(user.Name);
+
         const string sql = """
             UPDATE users
             SET
@@ -145,10 +118,10 @@ public static class UserAccess
         var cmd = new CommandDefinition(sql, new
         {
             user.Id,
-            Username = EncryptionService.Encrypt(user.Username),
+            user.Username,
             user.Password,
             user.Name,
-            Email = EncryptionService.Encrypt(user.Email),
+            user.Email,
             user.Phone,
             user.Role,
             user.BirthYear,
