@@ -128,51 +128,45 @@ public static class ParkingLotAccess
         return session;
     }
 
-    // GET gereserveerde parking lots
+    // GET parking sessies die nog bezig zijn a.k.a bezet
     // Endpoint: /parking-lots/occupancy
-    public static async Task<List<ParkingLotModel?>> GetOccupancyParkingLots(CancellationToken ct)
+    public static async Task<List<ParkingLotOccupancyDto?>> GetOccupancyParkingLots(CancellationToken ct)
     {
         await using MySqlConnection conn = new(Cs);
         await conn.OpenAsync(ct);
 
         const string sql = """
             SELECT
-                id              AS ID,
-                name            AS Name,
-                location        AS Location,
-                address         AS Address,
-                capacity        AS Capacity,
-                reserved        AS Reserved,
-                tariff          AS Tariff,
-                daytariff       AS DayTariff,
-                created_at      AS CreatedAt
-            FROM parking_lots
-            WHERE reserved > 0;
+                parking_lot_id  AS ParkingLotId,
+                COUNT(*)        AS TotalSessions
+            FROM parking_sessions
+            WHERE payment_status IS NULL
+            GROUP BY parking_lot_id;
         """;
 
-        var result = await conn.QueryAsync<ParkingLotModel?>(sql);
+        var result = await conn.QueryAsync<ParkingLotOccupancyDto?>(sql);
         return result.AsList();
     }
 
-    // GET tariff en daytariff om profit te berekenen van een parking-lot
+    // GET telt alle betaalde parking sessies bij elkaar op voor de totale opbrengst
     // Endpoint: /parking-lots/profit/{lid}
-    public static async Task<ParkingLotModel?> GetProfitParkingLots(int parkingLotId, CancellationToken ct)
+    public static async Task<List<ParkingLotRevenueDto?>> GetRevenueParkingLots(int parkingLotId, CancellationToken ct)
     {
         await using MySqlConnection conn = new(Cs);
         await conn.OpenAsync(ct);
 
         const string sql = """
-                SELECT 
-                id              AS ID,
-                name            AS Name,
-                tariff          AS Tariff,
-                daytariff       AS DayTariff,
-                (COALESCE(tariff, 0) + COALESCE(daytariff, 0)) AS TotalProfit
-            FROM parking_lots
-            WHERE id = @parkingLotId;
+                SELECT
+                parking_lot_id  AS ParkingLotId,
+                COUNT(*)        AS TotalSessions,
+                SUM(cost)       AS TotalRevenue
+            FROM parking_sessions
+            WHERE parking_lot_id = @parkingLotId
+            AND payment_status = "paid";
         """;
 
-        return await conn.QueryFirstOrDefaultAsync<ParkingLotModel?>(sql, new { parkingLotId });
+        var result = await conn.QueryAsync<ParkingLotRevenueDto?>(sql, new { parkingLotId });
+        return result.AsList();
     }
 
     // DELETE een parking lot met bijbehorende parking sessions met parking lot ID
