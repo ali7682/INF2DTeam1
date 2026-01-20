@@ -35,6 +35,19 @@ public static class UserAccess
         if (!IsValueHashed(user.Password))
             user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password, workFactor: 12);
 
+        var dbUser = new
+        {
+            Username  = EncryptionService.Encrypt(user.Username),
+            Password  = user.Password,
+            Name      = user.Name,
+            Email     = EncryptionService.Encrypt(user.Email),
+            Phone     = user.Phone,
+            Role      = user.Role,
+            CreatedAt = user.CreatedAt,
+            BirthYear = user.BirthYear,
+            Active    = user.Active
+        };
+
         const string query = """
             INSERT INTO users
                 (username, password, name, email, phone, role, created_at, birth_year, active)
@@ -46,7 +59,7 @@ public static class UserAccess
         await using var conn = new MySqlConnection(Cs);
         await conn.OpenAsync(ct);
 
-        var cmd = new CommandDefinition(query, user, cancellationToken: ct, commandTimeout: 5);
+        var cmd = new CommandDefinition(query, dbUser, cancellationToken: ct, commandTimeout: 5);
         return await conn.ExecuteScalarAsync<int>(cmd);
     }
 
@@ -57,18 +70,58 @@ public static class UserAccess
         await conn.OpenAsync(ct);
 
         var cmd = new CommandDefinition(sql, new { userId }, cancellationToken: ct, commandTimeout: 5);
-        return await conn.QueryFirstOrDefaultAsync<UserModel>(cmd);
+        var user = await conn.QueryFirstOrDefaultAsync<UserModel>(cmd);
+
+        if (user is null)
+            return null;
+
+        user.Username = EncryptionService.Decrypt(user.Username);
+        user.Email    = EncryptionService.Decrypt(user.Email);
+
+        return user;
     }
 
     public static async Task<UserModel?> GetUserByUsernameAsync(string userName, CancellationToken ct = default)
     {
-        var sql = $"{SqlSelectBase} WHERE username = @userName LIMIT 1;";
         await using var conn = new MySqlConnection(Cs);
         await conn.OpenAsync(ct);
 
-        var cmd = new CommandDefinition(sql, new { userName }, cancellationToken: ct, commandTimeout: 5);
-        return await conn.QueryFirstOrDefaultAsync<UserModel>(cmd);
+        // Encrypt the input for new users
+        var encryptedInput = EncryptionService.Encrypt(userName);
+
+        // Query for either encrypted or plain-text username
+        var sql = $"{SqlSelectBase} WHERE username = @EncryptedUsername OR username = @PlainUsername LIMIT 1;";
+
+        var cmd = new CommandDefinition(
+            sql,
+            new
+            {
+                EncryptedUsername = encryptedInput,
+                PlainUsername     = userName
+            },
+            cancellationToken: ct,
+            commandTimeout: 5
+        );
+
+        var user = await conn.QueryFirstOrDefaultAsync<UserModel>(cmd);
+
+        if (user is null)
+            return null;
+
+        // Decrypt if needed (only if it’s encrypted)
+        try
+        {
+            user.Username = EncryptionService.Decrypt(user.Username);
+            user.Email    = EncryptionService.Decrypt(user.Email);
+        }
+        catch
+        {
+            // If decryption fails, it was plain-text — leave as-is
+        }
+
+        return user;
     }
+
 
     public static async Task<bool> UpdateUserAsync(UserModel user, CancellationToken ct = default)
     {
@@ -92,10 +145,10 @@ public static class UserAccess
         var cmd = new CommandDefinition(sql, new
         {
             user.Id,
-            user.Username,
+            Username = EncryptionService.Encrypt(user.Username),
             user.Password,
             user.Name,
-            user.Email,
+            Email = EncryptionService.Encrypt(user.Email),
             user.Phone,
             user.Role,
             user.BirthYear,

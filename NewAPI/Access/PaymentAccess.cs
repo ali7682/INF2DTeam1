@@ -32,10 +32,20 @@ public static class PaymentAccess
         SELECT LAST_INSERT_ID();
         """;
 
+        var dbPayment = new
+        {
+            payment.Amount,
+            payment.Transaction,
+            Initiator = EncryptionService.Encrypt(payment.Initiator),
+            payment.Created_at,
+            payment.Completed,
+            payment.Hash
+        };
+
         await using var conn = new MySqlConnection(Cs);
         await conn.OpenAsync(ct);
 
-        var cmd = new CommandDefinition(query, payment, cancellationToken: ct, commandTimeout: 5);
+        var cmd = new CommandDefinition(query, dbPayment, cancellationToken: ct, commandTimeout: 5);
         return await conn.ExecuteScalarAsync<int>(cmd);
     }
 
@@ -49,6 +59,11 @@ public static class PaymentAccess
 
         // var cmd = new CommandDefinition(sql, cancellationToken: ct, commandTimeout: 5);
         var result = await conn.QueryAsync<PaymentModel>(sql);
+
+
+        foreach (var payment in result)
+            payment.Initiator = EncryptionService.Decrypt(payment.Initiator);
+
         return result.AsList();
     }
 
@@ -71,7 +86,11 @@ public static class PaymentAccess
             LIMIT 1;
         """;
 
-        return conn.Query<PaymentModel>(sql, new { transaction_Id }).First();
+        var payment = conn.Query<PaymentModel>(sql, new { transaction_Id }).First();
+
+        payment.Initiator = EncryptionService.Decrypt(payment.Initiator);
+
+        return payment;
     }
 
     public static PaymentModel GetUserByInitiator(string initiator)
@@ -79,6 +98,8 @@ public static class PaymentAccess
         string cs = _config.GetConnectionString("DefaultConnection")!;
         using MySqlConnection conn = new(cs);
         conn.Open();
+
+        var encryptedInput = EncryptionService.Encrypt(initiator);
 
         const string sql = """
         SELECT 
@@ -93,7 +114,11 @@ public static class PaymentAccess
             LIMIT 1;
         """;
 
-        return conn.Query<PaymentModel>(sql, new { initiator }).First();
+        var payment = conn.Query<PaymentModel>(sql, new { initiator = encryptedInput }).First();
+
+        payment.Initiator = EncryptionService.Decrypt(payment.Initiator);
+
+        return payment;
     }
 
     public static async Task<bool> UpdatePaymentAsync(PaymentModel payment, CancellationToken ct = default)
@@ -101,29 +126,31 @@ public static class PaymentAccess
         const string sql = """
             UPDATE payments
             SET
-                transaction_id   = @TransactionId,
-                amount   = @Amount,
-                initiator       = @Initiator,
-                created_at      = @Created_at,
+                transaction_id = @TransactionId,
+                amount         = @Amount,
+                initiator      = @Initiator,
+                created_at     = @Created_at,
                 completed      = @Completed,
-                hash       = @Hash
+                hash           = @Hash
             WHERE transaction_id = @TransactionId;
         """;
+
+        var dbPayment = new
+        {
+            payment.TransactionId,
+            payment.Amount,
+            Initiator = EncryptionService.Encrypt(payment.Initiator),
+            payment.Created_at,
+            payment.Completed,
+            payment.Hash
+        };
 
         await using var conn = new MySqlConnection(Cs);
         await conn.OpenAsync(ct);
 
-        var cmd = new CommandDefinition(sql, new
-        {
-            payment.TransactionId,
-            payment.Amount,
-            payment.Initiator,
-            payment.Created_at,
-            payment.Completed,
-            payment.Hash
-        }, cancellationToken: ct, commandTimeout: 5);
-
+        var cmd = new CommandDefinition(sql, dbPayment, cancellationToken: ct, commandTimeout: 5);
         var rows = await conn.ExecuteAsync(cmd);
+
         return rows > 0;
     }
 }
