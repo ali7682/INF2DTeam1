@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS `discount_codes` (
   `max_uses` int(11) DEFAULT NULL,
   `uses` int(11) DEFAULT 0,
   `is_active` int(11) NOT NULL DEFAULT 1,
+  `allowed_plates` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `code` (`code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -69,7 +70,39 @@ CREATE TABLE IF NOT EXISTS `users` (
   `active` tinyint(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `payments` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `transaction_id` INT NOT NULL,
+  `transaction` VARCHAR(255) NOT NULL,
+  `amount` DECIMAL(10,2) DEFAULT NULL,
+  `initiator` VARCHAR(512) DEFAULT NULL,
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `completed` INT DEFAULT 0,
+  `hash` VARCHAR(255) DEFAULT NULL,
+  `discount_code_id` INT DEFAULT NULL,
+
+  PRIMARY KEY (`id`),
+
+  INDEX `idx_transaction_id` (`transaction_id`),
+  INDEX `idx_discount_code_id` (`discount_code_id`),
+
+  CONSTRAINT `fk_payments_transaction`
+    FOREIGN KEY (`transaction_id`)
+    REFERENCES `payment_details` (`transaction_id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+
+  CONSTRAINT `fk_payments_discount_code`
+    FOREIGN KEY (`discount_code_id`)
+    REFERENCES `discount_codes` (`id`)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE
+) ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COLLATE=utf8mb4_general_ci;
+
 
 
 -- Dumping data for table MobyPark.parking_lots: ~1.501 rows (approximately)
