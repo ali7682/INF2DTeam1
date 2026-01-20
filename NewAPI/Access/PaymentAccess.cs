@@ -18,7 +18,8 @@ public static class PaymentAccess
             initiator          AS Initiator,
             created_at         AS Created_at,
             completed          AS Completed,
-            hash               AS Hash
+            hash               AS Hash,
+            discount_code_id   AS DiscountCodeId
         FROM payments
     """;
 
@@ -26,9 +27,9 @@ public static class PaymentAccess
     {
         const string query = """
         INSERT INTO payments
-            (amount, transaction, initiator, created_at, completed, hash)
+            (amount, transaction, initiator, created_at, completed, hash, discount_code_id)
         VALUES
-            (@Amount, @Transaction, @Initiator, @Created_at, @Completed, @Hash);
+            (@Amount, @Transaction, @Initiator, @Created_at, @Completed, @Hash, @DiscountCodeId);
         SELECT LAST_INSERT_ID();
         """;
 
@@ -39,7 +40,8 @@ public static class PaymentAccess
             Initiator = EncryptionService.Encrypt(payment.Initiator),
             payment.Created_at,
             payment.Completed,
-            payment.Hash
+            payment.Hash,
+            payment.DiscountCodeId
         };
 
         await using var conn = new MySqlConnection(Cs);
@@ -131,7 +133,8 @@ public static class PaymentAccess
                 initiator      = @Initiator,
                 created_at     = @Created_at,
                 completed      = @Completed,
-                hash           = @Hash
+                hash           = @Hash,
+                discount_code_id  = @DiscountCodeId
             WHERE transaction_id = @TransactionId;
         """;
 
@@ -142,7 +145,8 @@ public static class PaymentAccess
             Initiator = EncryptionService.Encrypt(payment.Initiator),
             payment.Created_at,
             payment.Completed,
-            payment.Hash
+            payment.Hash,
+            payment.DiscountCodeId
         };
 
         await using var conn = new MySqlConnection(Cs);
