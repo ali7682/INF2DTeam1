@@ -1,4 +1,5 @@
 var builder = WebApplication.CreateBuilder(args);
+Environment.SetEnvironmentVariable("ENCRYPTION_KEY", builder.Configuration["EncryptionKey"]);
 
 // Logs
 
