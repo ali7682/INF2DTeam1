@@ -86,7 +86,7 @@ public static class UserAccess
         {
             user.Email = DecryptSafe(user.Email);
             user.Phone = DecryptSafe(user.Phone);
-        user.Name  = DecryptSafe(user.Name);
+            user.Name  = DecryptSafe(user.Name);
         }
 
         return user;
