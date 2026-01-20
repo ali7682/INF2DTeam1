@@ -751,5 +751,145 @@ namespace NewAPITests.ControllerTests
             Assert.NotNull(result);
             Assert.Equal(401, result.StatusCode);
         }
+
+        // GET occupancy: returns OK
+        [Fact]
+        public async Task GetParkingOccupancy_Admin_ReturnsOk()
+        {
+            string token = Guid.NewGuid().ToString("N");
+            var user = new UserModel { Id = 1, Username = "AdminUser", Role = "ADMIN" };
+
+            await SessionManager.AddSession(token, _userAdminId, TestContext.Current.CancellationToken);
+            Assert.NotNull(SessionManager.GetSession(token, TestContext.Current.CancellationToken));
+
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+            controller.ControllerContext.HttpContext.Request.Headers["Authorization"] = token;
+
+            var result = await controller.GetParkingOccupancy(ct);
+
+            var ok = Assert.IsType<OkObjectResult>(result);
+            Assert.Equal(200, ok.StatusCode);
+        }
+
+        // GET occupancy: returns unauthorized
+        [Fact]
+        public async Task GetParkingOccupancy_NoToken_ReturnsUnauthorized()
+        {
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+
+            var result = await controller.GetParkingOccupancy(ct);
+
+            var unauthorized = Assert.IsType<UnauthorizedObjectResult>(result);
+            Assert.Equal(401, unauthorized.StatusCode);
+        }
+
+        // GET occupancy: returns forbidden
+        [Fact]
+        public async Task GetParkingOccupancy_NonAdmin_ReturnsForbidden()
+        {
+            string token = Guid.NewGuid().ToString("N");
+            var user = new UserModel { Id = 1, Username = "RegularUser", Role = "USER" };
+
+            await SessionManager.AddSession(token, _userId, TestContext.Current.CancellationToken);
+            Assert.NotNull(SessionManager.GetSession(token, TestContext.Current.CancellationToken));
+
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+            controller.ControllerContext.HttpContext.Request.Headers["Authorization"] = token;
+
+            var result = await controller.GetParkingOccupancy(ct);
+
+            var forbidden = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(403, forbidden.StatusCode);
+        }
+
+        [Fact]
+        public async Task GetRevenuePerParkingLot_Admin_ReturnsOk()
+        {
+            string token = Guid.NewGuid().ToString("N");
+            var user = new UserModel { Id = 1, Username = "AdminUser", Role = "ADMIN" };
+
+            await SessionManager.AddSession(token, _userAdminId, TestContext.Current.CancellationToken);
+            Assert.NotNull(SessionManager.GetSession(token, TestContext.Current.CancellationToken));
+
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+            controller.ControllerContext.HttpContext.Request.Headers["Authorization"] = token;
+
+            var result = await controller.GetParkingSessions(1, ct);
+
+            var ok = Assert.IsType<OkObjectResult>(result);
+            Assert.Equal(200, ok.StatusCode);
+        }
+
+        [Fact]
+        public async Task GetRevenuePerParkingLot_NoToken_ReturnsUnauthorized()
+        {
+            var testLot = await CreateTestParkingLot();
+
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+
+            var result = await controller.GetRevenuePerParkingLot(testLot.ID, ct);
+
+            var unauthorized = Assert.IsType<UnauthorizedObjectResult>(result);
+            Assert.Equal(401, unauthorized.StatusCode);
+        }
+
+        [Fact]
+        public async Task GetRevenuePerParkingLot_InvalidId_ReturnsNotFound()
+        {
+            string token = Guid.NewGuid().ToString("N");
+            var user = new UserModel { Id = 1, Username = "AdminUser", Role = "ADMIN" };
+
+            await SessionManager.AddSession(token, _userAdminId, TestContext.Current.CancellationToken);
+            Assert.NotNull(SessionManager.GetSession(token, TestContext.Current.CancellationToken));
+
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+            controller.ControllerContext.HttpContext.Request.Headers["Authorization"] = token;
+
+            var result = await controller.GetRevenuePerParkingLot(999999, ct);
+
+            var notFound = Assert.IsType<NotFoundObjectResult>(result);
+            Assert.Equal(404, notFound.StatusCode);
+        }
+
+        [Fact]
+        public async Task GetRevenuePerParkingLot_NonAdmin_ReturnsForbidden()
+        {
+            var testLot = await CreateTestParkingLot();
+
+            string token = Guid.NewGuid().ToString("N");
+            var user = new UserModel { Id = 1, Username = "RegularUser", Role = "USER" };
+
+            await SessionManager.AddSession(token, _userId, TestContext.Current.CancellationToken);
+            Assert.NotNull(SessionManager.GetSession(token, TestContext.Current.CancellationToken));
+
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+            controller.ControllerContext.HttpContext.Request.Headers["Authorization"] = token;
+
+            var result = await controller.GetRevenuePerParkingLot(testLot.ID, ct);
+
+            var forbidden = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(403, forbidden.StatusCode);
+        }
     }
 }
