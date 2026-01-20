@@ -145,17 +145,17 @@ public static class UserAccess
     }
 
     private static string DecryptSafe(string? cipherText)
-{
-    if (string.IsNullOrWhiteSpace(cipherText))
-        return cipherText ?? "";
+    {
+        if (string.IsNullOrWhiteSpace(cipherText))
+            return cipherText ?? "";
 
-    try
-    {
-        return EncryptionService.Decrypt(cipherText);
+        try
+        {
+            return EncryptionService.Decrypt(cipherText);
+        }
+        catch
+        {
+            return cipherText;
+        }
     }
-    catch
-    {
-        return cipherText;
-    }
-}
 }
