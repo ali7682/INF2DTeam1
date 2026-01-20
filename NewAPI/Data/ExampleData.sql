@@ -56,6 +56,22 @@ CREATE TABLE IF NOT EXISTS `parking_lots` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1868 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+CREATE TABLE IF NOT EXISTS `users` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `username` varchar(50) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `name` varchar(255) DEFAULT NULL,
+  `email` varchar(255) DEFAULT NULL,
+  `phone` varchar(255) DEFAULT NULL,
+  `role` varchar(10) DEFAULT 'USER',
+  `created_at` datetime DEFAULT NULL,
+  `birth_year` smallint DEFAULT NULL,
+  `active` tinyint(1) NOT NULL DEFAULT 1,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `username` (`username`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
 -- Dumping data for table MobyPark.parking_lots: ~1.501 rows (approximately)
 INSERT INTO `parking_lots` (`id`, `name`, `location`, `address`, `capacity`, `reserved`, `tariff`, `daytariff`, `created_at`, `lat`, `lng`) VALUES
 	(-1, 'Bedrijventerrein Almere Parkeergarage', 'Industrial Zone', 'Schanssingel 337, 2421 BS Almere', 335, 87, 1.90, 11.00, '2020-03-25', 52.313300, 5.223400),
