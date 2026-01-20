@@ -8,4 +8,5 @@ public sealed class PaymentModel
     public int? Completed { get; set; }
     public string? Hash { get; set; }
     public PaymentDetailsModel? T_data { get; set; }
+    public int? DiscountCodeId { get; set; }
 }
