@@ -65,9 +65,9 @@ public static class UserAccess
 
         if (user != null)
         {
-            user.Email = EncryptionService.Decrypt(user.Email);
-            user.Phone = EncryptionService.Decrypt(user.Phone);
-            user.Name  = EncryptionService.Decrypt(user.Name);
+            user.Email = DecryptSafe(user.Email);
+            user.Phone = DecryptSafe(user.Phone);
+            user.Name  = DecryptSafe(user.Name);
         }
 
         return user;
@@ -84,9 +84,9 @@ public static class UserAccess
 
         if (user != null)
         {
-            user.Email = EncryptionService.Decrypt(user.Email);
-            user.Phone = EncryptionService.Decrypt(user.Phone);
-            user.Name  = EncryptionService.Decrypt(user.Name);
+            user.Email = DecryptSafe(user.Email);
+            user.Phone = DecryptSafe(user.Phone);
+        user.Name  = DecryptSafe(user.Name);
         }
 
         return user;
@@ -143,4 +143,19 @@ public static class UserAccess
         var rows = await conn.ExecuteAsync(cmd);
         return rows > 0;
     }
+
+    private static string DecryptSafe(string? cipherText)
+{
+    if (string.IsNullOrWhiteSpace(cipherText))
+        return cipherText ?? "";
+
+    try
+    {
+        return EncryptionService.Decrypt(cipherText);
+    }
+    catch
+    {
+        return cipherText;
+    }
+}
 }
