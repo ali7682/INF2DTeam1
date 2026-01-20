@@ -1,4 +1,4 @@
-﻿using Dapper;
+﻿﻿using Dapper;
 using MySqlConnector;
 
 public static class UserAccess
@@ -35,6 +35,10 @@ public static class UserAccess
         if (!IsValueHashed(user.Password))
             user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password, workFactor: 12);
 
+        user.Email = EncryptionService.Encrypt(user.Email);
+        user.Phone = EncryptionService.Encrypt(user.Phone);
+        user.Name  = EncryptionService.Encrypt(user.Name);
+
         const string query = """
             INSERT INTO users
                 (username, password, name, email, phone, role, created_at, birth_year, active)
@@ -57,7 +61,16 @@ public static class UserAccess
         await conn.OpenAsync(ct);
 
         var cmd = new CommandDefinition(sql, new { userId }, cancellationToken: ct, commandTimeout: 5);
-        return await conn.QueryFirstOrDefaultAsync<UserModel>(cmd);
+        var user = await conn.QueryFirstOrDefaultAsync<UserModel>(cmd);
+
+        if (user != null)
+        {
+            user.Email = EncryptionService.Decrypt(user.Email);
+            user.Phone = EncryptionService.Decrypt(user.Phone);
+            user.Name  = EncryptionService.Decrypt(user.Name);
+        }
+
+        return user;
     }
 
     public static async Task<UserModel?> GetUserByUsernameAsync(string userName, CancellationToken ct = default)
@@ -67,11 +80,24 @@ public static class UserAccess
         await conn.OpenAsync(ct);
 
         var cmd = new CommandDefinition(sql, new { userName }, cancellationToken: ct, commandTimeout: 5);
-        return await conn.QueryFirstOrDefaultAsync<UserModel>(cmd);
+        var user = await conn.QueryFirstOrDefaultAsync<UserModel>(cmd);
+
+        if (user != null)
+        {
+            user.Email = EncryptionService.Decrypt(user.Email);
+            user.Phone = EncryptionService.Decrypt(user.Phone);
+            user.Name  = EncryptionService.Decrypt(user.Name);
+        }
+
+        return user;
     }
 
     public static async Task<bool> UpdateUserAsync(UserModel user, CancellationToken ct = default)
     {
+        user.Email = EncryptionService.Encrypt(user.Email);
+        user.Phone = EncryptionService.Encrypt(user.Phone);
+        user.Name  = EncryptionService.Encrypt(user.Name);
+
         const string sql = """
             UPDATE users
             SET

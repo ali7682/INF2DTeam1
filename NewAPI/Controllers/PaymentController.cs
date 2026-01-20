@@ -7,6 +7,7 @@ public class PaymentRequest
 {
     public string? Transaction { get; set; }
     public decimal Amount { get; set; }
+    public int? DiscountCodeId { get; set; }
 }
 
 namespace NewAPI.Controllers
@@ -37,6 +38,16 @@ namespace NewAPI.Controllers
 
             if (body is null || string.IsNullOrWhiteSpace(body.Transaction) || body.Amount <= 0)
                 return BadRequest(new { error = "Bad request: Missing or invalid payment details" });
+
+            if (body.DiscountCodeId.HasValue)
+            {
+                var discount = await DiscountAcces.GetDiscountByIdAsync(body.DiscountCodeId.Value, ct);
+                if (discount == null || !discount.IsActive)
+                    return BadRequest(new { error = "Invalid or inactive discount code" });
+
+                body.Amount -= body.Amount * (discount.Percentage / 100M);
+                if (body.Amount < 0) body.Amount = 0;
+            }
 
             PaymentModel newPayment = new()
             {
@@ -83,14 +94,25 @@ namespace NewAPI.Controllers
                 TransactionsHash = Convert.ToHexString(bytes).ToLower();
             }
 
+            if (body.DiscountCodeId.HasValue)
+            {
+                var discount = await DiscountAcces.GetDiscountByIdAsync(body.DiscountCodeId.Value, ct);
+                if (discount == null || !discount.IsActive)
+                    return BadRequest(new { error = "Invalid or inactive discount code" });
+
+                body.Amount -= body.Amount * (discount.Percentage / 100M);
+                if (body.Amount < 0) body.Amount = 0;
+            }
+
             PaymentModel newPayment = new()
             {
-                Transaction = TransactionsHash,
-                Amount = -Math.Abs(body.Amount),
+                Transaction = body.Transaction,
+                Amount = body.Amount,
                 Initiator = user.Username,
                 Created_at = DateTime.UtcNow,
                 Completed = 0,
-                Hash = Guid.NewGuid().ToString("N")
+                Hash = Guid.NewGuid().ToString("N"),
+                DiscountCodeId = body.DiscountCodeId
             };
 
             int newId = await PaymentAccess.CreatePaymentAsync(newPayment, ct);
@@ -150,9 +172,8 @@ namespace NewAPI.Controllers
             }
 
             List<PaymentModel> userPayments = payment.Where(x => x.Initiator == requestUser.Username).ToList();
-            
+
             return Ok(userPayments);
         }
     }
 }
-    
